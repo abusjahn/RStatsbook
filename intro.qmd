@@ -1,7 +1,13 @@
 # Introduction
 
-This is a book created from markdown and executable code.
+This booklet is meant as companion to my R / statistics seminars. It is NOT a complete guide to either R or statistical data analysis.
 
-See @knuth84 for additional discussion of literate programming.
+There are plenty of books available, check out e.g.
 
-...
+[R for Data Science](https://r4ds.hadley.nz/ "R for Data Science"){target="_blank"}
+
+[Modern Statistics for Modern Biology](https://www.huber.embl.de/msmb/){target="_blank"}
+
+[Modern R with the tidyverse](http://modern-rstats.eu/){target="_blank"}
+
+[ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/){target="_blank"}

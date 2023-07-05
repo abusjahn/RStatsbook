@@ -1,0 +1,259 @@
+# Intro to lm
+
+
+In this chapter, linear models (including linear regression and ANOVA) will be introduced.\
+Output is not optimized for print, but rather for interactive use.
+
+## Setup
+
+All packages necessary will be invoked by p_load. Packages with only a single function call or potential for name conflicts can be unloaded, this way we still checked for their existence and installed them if need be.
+
+```{r}
+pacman::p_load(conflicted,wrappedtools,car,nlme,broom,
+               multcomp,tidyverse,foreign,DescTools, ez,
+               ggbeeswarm,
+               lme4, nlme,merTools,
+               easystats, patchwork,here)#conflicted,
+# rayshader,av)
+# pacman::p_unload(DescTools, foreign)
+# conflict_scout()
+conflicts_prefer(dplyr::select,
+                 dplyr::filter,
+                 modelbased::standardize)
+base_dir <- here::here()
+```
+
+## Import / Preparation
+
+Data are read from an SPSS file. Numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA. The call to here() expands the path to a file from the project directory to the full system path.
+
+```{r}
+rawdata<-foreign::read.spss(file=here('Data/Zellbeads.sav'),
+                            use.value.labels=T,to.data.frame=T) %>%
+  as_tibble() %>%
+  dplyr::select(-ZahlZellen) |> 
+  rename(Growth=Wachstum,Treatment=Bedingung) |> 
+  mutate(Passage_F=factor(Passage),
+         Treatment=fct_recode(Treatment,
+                              Control="Kontrolle"))
+```
+
+## Graphical exploration
+
+First impression of the data will be attempted by grouped boxplot, followed by interaction plots, both as basic and ggplot with variations.
+
+```{r}
+ggplot(rawdata,aes(Passage_F,Growth, fill=Treatment))+
+  geom_boxplot(coef=3)
+with(rawdata, interaction.plot(
+  x.factor=Passage, trace.factor=Treatment, response=Growth,
+  ylim = c(90, 160), lty = c(1,3,12), lwd = 5,
+  ylab = "Growth", xlab = "Passage",
+  trace.label = "Treatment"))
+# p1<-ggplot(rawdata,aes(x=Passage,y=Growth))+
+#    stat_summary(geom='line',fun='mean',aes(color=Treatment))+
+#    stat_summary(geom='line',fun='mean')
+p1<-ggplot(rawdata,aes(x=Passage,y=Growth))+
+  stat_summary(geom='line',fun='mean',aes(color=Treatment))+
+  stat_summary(aes(color=Treatment))+
+  ylab('Growth \u00b1 SEM')
+p1
+p1+geom_smooth(method='lm',color='black',se=F)+
+  geom_smooth(method='lm',aes(color=Treatment),se=F)
+
+ggplot(rawdata,aes(x=Passage,y=Growth))+
+  stat_summary(geom='line',fun='mean')+
+  geom_smooth(method='lm')+
+  facet_grid(cols = vars(Treatment), margins=T)
+
+
+```
+
+## Linear Models
+
+### Linear regression
+
+We will analyse the relation between indepemdent variable (IV) Passage and dependent variable (DV) Growth.
+
+#### Graphical exploration
+
+```{r}
+ggplot(rawdata,aes(Passage,Growth))+
+  geom_point()+
+  geom_smooth(method=lm)
+ggplot(rawdata,aes(Passage,Growth))+
+  geom_point()+
+  scale_x_continuous(breaks=seq(0,10,1))+
+  geom_smooth(linewidth=2)+
+  geom_smooth(method=lm,se=F,color='red')
+```
+
+#### Modelling
+
+This takes 2 steps, building the model and computing p-values.
+
+```{r}
+# model
+(regressionOut<-lm(Growth~Passage,data=rawdata))
+# model and p.value for slope, not recommended
+tidy(regressionOut)
+# computation of SSQs and p-values, use this!
+(anova_out<-anova(regressionOut))
+anova_out$`Pr(>F)` #|> na.omit()
+tidy(anova_out)
+# summary(regressionOut)
+# str(regressionOut)
+```
+
+#### Adjusting
+
+To take out the variance due to Passage effects, we can use the residuals and shift them to the original mean:
+
+```{r}
+rawdata <- 
+  mutate(rawdata,
+         growthAdj = regressionOut$residuals+mean(Growth))
+
+summarise(rawdata,
+          across(contains('growth'),
+                 ~meansd(.x,roundDig =4)))
+
+ggplot(rawdata,aes(Passage,growthAdj))+
+  geom_point()+
+  geom_smooth(method = 'lm')
+lm(growthAdj~Passage,data=rawdata) |> tidy()
+```
+
+### ANOVA
+
+In the linear regression, we had Passage as a continuous IV, estimating a global 'universal' effect supposed to be constant. Now we look at Passege_F and model a discrete IV, allowing for specific effects, and thereby comparing means between groups.
+
+#### Graphical exploration
+
+```{r}
+ggplot(rawdata,aes(x = Passage_F, y = Growth))+
+  geom_boxplot(outlier.alpha = 0)+
+  geom_beeswarm(alpha=.5)+
+  scale_y_continuous(breaks=seq(0,1000,10))
+
+ggplot(rawdata,aes(x = Passage_F, y = Growth))+
+  geom_violin(draw_quantiles = c(.25,.5,.75))+
+  geom_beeswarm(alpha=.5)
+```
+
+#### Modelling
+
+```{r}
+(AnovaOut<-lm(Growth~Passage_F,data=rawdata))
+tidy(AnovaOut)
+# summary(AnovaOut)
+(t <- anova(AnovaOut))
+t$`Pr(>F)`
+tidy(t)
+```
+
+#### Post-hoc analyses
+
+The p-value from our model only tests the global Null hypothesis of no differences between any group (all means are the same / all groups come from the same population). Post-hoc tests are used to figure out which groups are different. Those tests need to take multiple testing into account. Try to limit selection of tests!
+
+```{r}
+# possible in a loop, but nominal p
+t.test(rawdata$Growth[which(rawdata$Passage==1)],
+       rawdata$Growth[which(rawdata$Passage==2)],
+       var.equal = T)
+# all pairwise group combinations
+pt_out<-pairwise.t.test(x=rawdata$Growth,
+                        g=rawdata$Passage_F,
+                        p.adjust.method='none')
+pt_out
+pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage,
+                p.adjust.method='fdr')
+pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage,
+                p.adjust.method='bonferroni')
+# comparison against reference group 1
+pt_out$p.value[,1]
+# comparison against reference group 6
+pt_out$p.value[5,]
+# comparison for selection
+c(pt_out$p.value[1,1],pt_out$p.value[3,2],
+  pt_out$p.value[5,1])
+# comparison against next level
+diag(pt_out$p.value)
+# adjusting for multiple testing for selected comparisons
+p.adjust(diag(pt_out$p.value),method='fdr')
+formatP(p.adjust(pt_out$p.value[,1],method='fdr'))
+```
+
+### LM with continuous AND categorical IV
+
+Traditionally you may thing of *regression* **OR** *ANOVA*, but they are no different and can be combined. This is called a general linear model. Multivariable models may contain interactions between independent variables V IV1\*IV2.
+
+#### Graphical exploration
+
+```{r}
+#| fig-width: 6
+#| fig-height: 6
+p0 <- ggplot(rawdata,aes(Treatment,Growth))+ 
+  geom_boxplot() 
+p1 <- ggplot(rawdata,aes(Treatment,Growth, color=Passage_F))+ 
+  geom_boxplot() 
+p2 <- ggplot(rawdata,aes(color=Treatment,Growth, x=Passage_F))+ 
+  geom_boxplot() 
+p3 <- ggplot(rawdata,aes(Treatment,Growth))+ 
+  geom_boxplot()+ 
+  facet_wrap(facets = vars(Passage_F), labeller='label_both') 
+# from patchwork 
+(p1+p2)/p3 
+```
+
+#### Modelling
+
+Models with (\*) and without (+) interaction are build and tested.
+
+```{r}
+lmOut_interaction<-lm(Growth~Passage*Treatment,data=rawdata)
+Anova(lmOut_interaction,type = 3)
+#
+lmOut_additive<-lm(Growth~Passage+Treatment,data=rawdata)
+Anova(lmOut_additive,type=2)
+
+# for comparison, here is the univariable model
+lmOut_uni<-lm(Growth~Treatment,data=rawdata)
+aOut<-Anova(lmOut_uni,type=3)
+a_uni <- anova(lmOut_uni)
+a_uni$`Pr(>F)`
+```
+
+#### Post-hoc analyses
+
+For multivariable models, pairwise.t.test() is not appropriate, Dunnet or Tukey tests (depending on hypothesis) are typical solutions.
+
+```{r}
+summary(glht(model=lmOut_additive,linfct=mcp(Treatment='Dunnett')))
+summary(glht(model=lmOut_additive,linfct=mcp(Treatment='Tukey')))
+DescTools::DunnettTest(Growth~Passage_F,data=rawdata)
+pairwise.t.test(rawdata$Growth,rawdata$Treatment,p.adjust.method = 'n')
+mean(rawdata$Growth[which(rawdata$Passage==1 & 
+                            rawdata$Treatment=='Control')]) 
+aOut$'Pr(>F)' 
+aOut$`Sum Sq` 
+summary(lmOut_additive) 
+(result<-tibble(predictor=rownames(aOut), 
+                    p=formatP(aOut$'Pr(>F)',ndigits=5))) 
+broom::tidy(aOut)
+```
+
+\newpage
+
+### Model exploration with package performance
+
+```{r}
+#| fig-width: 6
+#| fig-height: 8
+#| fig-dpi: 1200
+# x11() #interactive only!
+
+# from package performance
+check_model(lmOut_additive)
+
+```

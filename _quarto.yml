@@ -1,0 +1,26 @@
+project:
+  type: book
+
+book:
+  title: "RStatsbook"
+  author: "Andreas Busjahn"
+  date: "3.7.2023"
+  chapters:
+    - index.qmd
+    - intro.qmd
+    - lm.qmd
+    - summary.qmd
+    - references.qmd
+
+bibliography: references.bib
+
+format:
+  # html:
+  #   theme: cosmo
+  pdf:
+    documentclass: scrreprt
+  # word:
+  #   template:
+
+editor: visual
+

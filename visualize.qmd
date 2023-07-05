@@ -1,0 +1,297 @@
+# Visualize data with ggplot
+
+```{r}
+pacman::p_load(tidyverse,#plotrix,
+               grid,gridExtra,car,
+               ggsci,ggsignif, ggthemes, ggridges,
+               gganimate,ggforce,
+               # survival, survminer,
+               ggdendro, ggbeeswarm,
+               rpart,rpart.plot,
+               gapminder,
+               wrappedtools)
+
+#sample data
+head(diamonds)
+head(mtcars)
+
+ggplot(data=diamonds,mapping = aes(x=clarity))+
+  geom_bar()
+
+#define aesthetics
+ggplot(data=diamonds,aes(x=clarity,fill=cut))+
+  geom_bar()
+
+#aesthetics outside aes
+ggplot(data=diamonds,aes(x=clarity))+
+  geom_bar(fill='gold')
+
+ggplot(data=diamonds,aes(x=clarity))+
+  geom_bar(aes(fill='gold')) #should be outside aes!
+
+ggplot(data=diamonds,aes(x=clarity))+
+  geom_bar(aes(fill=cut))
+#fill/color
+ggplot(data=diamonds,aes(x=clarity,color=cut))+
+  geom_bar()
+ggplot(data=mtcars,aes(factor(cyl),fill=factor(cyl)))+
+  geom_bar(color='black')
+ggplot(data=mtcars,aes(factor(cyl),color=factor(cyl)))+
+  geom_bar()
+
+help(points)
+
+#other color systems
+(plottemp <- ggplot(data=diamonds,aes(x=clarity,fill=cut))+
+    geom_bar())
+plottemp + scale_fill_brewer(palette='Set2') #in-built
+plottemp + scale_fill_grey(name = "cut of\ndiamonds")
+plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
+  theme_bw()+
+  theme(panel.grid.minor.x=element_blank(),
+        panel.grid.major.x = element_blank())#+
+# scale_y_continuous(expand = expansion(mult = c(0,.5)))
+
+# ggsci ####
+plottemp+scale_fill_lancet()
+plottemp+scale_fill_jama()
+plottemp+scale_fill_npg()
+printplot <- plottemp+scale_fill_startrek()
+
+#save ggplots
+# ggsave(filename = 'Graphs/ggtestplot.png',
+#        plot = printplot,
+#        width=20,height=20,
+#        units='cm',dpi=150)
+# alternative:
+# png(filename = 'Graphs/ggtestplot2.png',
+#     width = 20,height = 20,units = 'cm',res = 150)
+# plottemp
+# dev.off()
+# scatterplot
+
+#other geoms
+ggplot(data=mtcars,aes(x = wt,y = mpg))+
+  geom_point()
+
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot() #default 1.5 IQR
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot(coef=3)
+ggplot(mtcars,aes(x = factor(gear),y = wt,
+                  fill=factor(cyl)))+
+  geom_boxplot(coef=3)
+
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot(coef=3)+
+  geom_point(size=2)
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot(coef=3)+
+  geom_point(position = position_jitter(width = .1))
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot(coef=3)+
+  geom_dotplot(alpha=.7,
+               binaxis = 'y',stackdir = 'center',
+               stackratio = .9,dotsize = .6)
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot(coef=3)+
+  ggbeeswarm::geom_beeswarm(cex = 2,size=3,alpha=.25)
+ggplot(mtcars,aes(x = factor(gear),y = wt))+
+  geom_boxplot(outlier.alpha = 0)+
+  geom_beeswarm(cex = 2,size=3,alpha=.25)
+
+
+#aesthetics again (finetuning)
+ggplot(data=mtcars,aes(wt, mpg,color=qsec))+
+  geom_point(size=4) #outside aes!
+
+ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
+  geom_point()
+ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
+  scale_color_gradient(low='darkred',high='blue')+
+  geom_point()
+ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
+  scale_color_gradient2(low='red',high='darkblue',
+                        mid='white',
+                        limits=c(13,23),midpoint=18)+
+  geom_point()+
+  scale_x_continuous(breaks = seq(0,100,5),
+                     minor_breaks=seq(0,100,1),
+                     limits = c(0,10))+
+  scale_y_log10(minor_breaks=seq(0,100,1))
+
+ggplot(diamonds,aes(carat,price,color=clarity))+
+  geom_point()
+ggplot(diamonds,aes(carat,price,color=clarity))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()
+ggplot(diamonds,aes(carat,price,color=clarity))+
+  geom_point()+
+  scale_x_log10(minor_breaks=logrange_123456789)+
+  scale_y_log10(
+    breaks=logrange_12357,
+    minor_breaks=logrange_123456789)
+# use different aesthetic mappings
+ggplot(data=mtcars,
+       aes(wt, mpg,size=qsec, shape=factor(cyl)))+
+  geom_point()
+
+# ggplot(data=mtcars,aes(carb, mpg,color=qsec, size=wt))+
+#   geom_point(shape='\u2642')
+
+#location, location,position
+
+p<-ggplot(data=diamonds,aes(clarity,fill=cut))
+p+geom_bar(position="stack")
+p+geom_bar(position="dodge")
+p+geom_bar(position=position_dodge(width = .4))
+p+geom_bar(position="fill")
+p+geom_bar(position="fill")+
+  scale_y_continuous('Frequency (%)',
+                     breaks=seq(0,1,.2),
+                     labels=seq(0,100,20))
+p+geom_bar(position="fill")+
+  scale_y_continuous('Frequency',
+                     breaks=seq(0,1,.1),
+                     labels=scales::percent)+
+  theme(axis.title.y = element_text(angle = 0,
+                                    vjust = .5))+
+  geom_hline(yintercept = .5, linetype=2)
+p+geom_bar(position="identity")
+p+geom_bar(position="identity",alpha=.5)
+ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
+  geom_freqpoly(stat='count',position="identity",lwd=1.5)+
+  geom_point(stat='count',size=5)+
+  scale_color_manual(values = c('green','lightblue',
+                                'darkblue',
+                                rgb(253,79,54,maxColorValue = 255),
+                                '#00798d'))
+
+#layer/order / computed geoms
+ggplot(data=mtcars,aes(wt, mpg))+
+  geom_point(size=4)+
+  geom_smooth(size=3)+
+  geom_smooth(data=mtcars %>% filter(wt>3),
+              method='lm',size=3, color='red')
+
+
+ggplot(data=mtcars,aes(wt, mpg))+
+  geom_smooth(size=3)+
+  geom_point(size=4)
+ggplot(data=mtcars,aes(wt, mpg))+
+  geom_smooth(size=3,color='red')+
+  geom_smooth(method='lm',size=3)+
+  geom_point(size=4)
+ggplot(data=mtcars,aes(wt, mpg,
+                       color=factor(cyl)))+
+  geom_point(size=4)+
+  geom_smooth(method='lm',size=1)
+ggplot(data=mtcars,aes(wt, mpg,
+                       color=factor(cyl),
+                       shape=factor(am)))+
+  geom_point(size=2)+
+  geom_smooth(method='lm',size=1,se=F)
+
+#? lm for all?
+ggplot(data=mtcars,aes(wt, mpg))+
+  geom_smooth(size=1,color='black',fill='yellow')+
+  geom_point(size=3,aes(color=factor(cyl),shape=factor(am))) #aes for geom only
+
+# facet_wrap / facet_grid
+(p.tmp <- ggplot(mtcars, aes(mpg, wt)) +
+    geom_point())
+p.tmp + facet_wrap(facets = vars(cyl))
+p.tmp + facet_wrap(facets = vars(cyl), ncol=2)
+#p.tmp + facet_wrap(~cyl, ncol=2)
+p.tmp + facet_grid(rows = vars(gear),
+                   cols = vars(`Number of Cylinders`=
+                                 cyl),
+                   labeller=label_both,margins='gear')
+options(warn=-1)
+p.tmp + geom_smooth()+
+  facet_grid(gear~cyl, labeller=label_both,margins=T)
+options(warn=0)
+
+p.tmp + facet_wrap(~cyl+gear,labeller=label_both) # empty combination is dropped
+
+# controlling scales in facets (default: scales="fixed")
+p.tmp + facet_grid(gear~cyl, scales="fixed")
+p.tmp + facet_grid(gear~cyl, scales="free")
+p.tmp + facet_grid(gear~cyl, scales="free_x")
+p.tmp + facet_grid(gear~cyl, scales="free_y")
+
+# summaries ####
+(plottemp <- ggplot(mtcars,aes(factor(gear),mpg))+
+   geom_point())
+plottemp+stat_summary(color='red')
+plottemp+stat_summary(geom = 'point', shape=17,size=5,
+                      fun = 'mean',color='red')
+plottemp+stat_summary(fun.data='mean_cl_boot',color='red')+
+  ylab('mpg (mean \u00b1 95% CI)')+
+  xlab('Gear')
+plottemp+stat_summary(fun.data='mean_cl_normal',color='red')+
+  ylab('mpg (mean \u00b1 95% CI)')+
+  xlab('Gear')
+plottemp+stat_summary(fun.data='median_hilow',color='red')+
+  ylab('mpg median \u00b1 95%')
+# geom_pointrange()
+
+# ggsign ####
+p <- round(wilcox.test(mtcars$mpg~mtcars$am)$p.value,5)
+(plottemp <- ggplot(mtcars,aes(as.factor(am),mpg))+
+    geom_boxplot())
+plottemp+geom_signif(
+  comparisons=list(c(1,2)),
+  # aes(y=0),
+  # textsize = rel(3), vjust = .0,
+  #y_position=max(mtcars$mpg+3),
+  annotations=paste0('p = ', p),
+  # annotations=p,
+  tip_length=.02)
+
+plottemp + geom_signif(
+  comparisons=list(1:2))+
+  scale_y_continuous(expand = expansion(mult=c(0.05,.2)))
+
+old <- theme_set(theme_wsj())
+# theme_set(theme_wsj())
+ggplot(data=diamonds,aes(x=clarity,fill=cut))+
+  geom_bar()
+theme_update(legend.position="bottom",
+             axis.text=element_text(colour = "darkblue",
+                                    size=12),
+             axis.text.x=element_text(vjust=0.5,angle=45),
+             axis.title=element_text(size=15),
+             plot.margin=unit(c(3,4,.5,.3),'lines'),    #N,E,S,W
+             axis.title.y=element_text(vjust=0.4,angle=45),
+             legend.key.size=unit(2.5,'lines'),
+             panel.background=element_rect(fill='darkgrey'),
+             panel.grid.minor = element_line(colour='white'),
+             panel.grid.major = element_line(
+               linetype=1,
+               color='violet',size = 2),
+             legend.text = element_text(size = 8))
+ggplot(data=diamonds,aes(x=clarity,fill=cut))+
+  geom_bar()
+theme_set(theme_grey())
+#theme_set(old)
+ggplot(data=diamonds,aes(x=clarity,fill=cut))+
+  geom_bar()
+
+# ggthemes ####
+plottemp+theme_economist()
+plottemp+theme_excel()+
+  theme(axis.title.x =  element_text(face='bold', hjust=0.95))
+plottemp+theme_minimal()
+
+# https://github.com/thomasp85/patchwork
+
+
+
+# https://www.data-imaginist.com/2019/a-flurry-of-facets/
+
+# https://github.com/thomasp85/gganimate
+
+
+```

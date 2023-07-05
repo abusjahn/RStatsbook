@@ -1,0 +1,21 @@
+# Grouping of variables by type / distribution / use
+
+```{r}
+pacman::p_load(wrappedtools)
+
+```
+
+```{r}
+load('data/testdata.RData')
+quantvars <- ColSeeker(data = rawdata,
+                       varclass = "numeric",
+                       exclude = "code")
+gaussvars <- ColSeeker(namepattern = c("si","we","BMI","BP","mri"))
+
+ordvars <- ColSeeker(namepattern = c("age","lab"))
+
+factvars <- ColSeeker(namepattern = c("sex","med","NYHA"),
+                      returnclass = TRUE)
+save(rawdata,list = ls(pattern = "vars"),file = "data/testdata.RData")
+
+```

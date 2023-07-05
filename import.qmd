@@ -1,0 +1,12 @@
+# Importing data
+
+## Import from text files (.txt, .csv)
+
+## Import from Excel
+### Tidy Excel files
+
+### Dirty Excel files
+
+## Import from SPSS
+
+## Import from SAS

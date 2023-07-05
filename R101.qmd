@@ -1,0 +1,507 @@
+# Syntax rules / basic things to know about R
+
+## Script preparation / basic setup
+
+At the beginning of (almost) every script we define packages to be used. This could be done by either
+
+-   checking if packages needed are installed and otherwise do so
+
+-   simplifying this using function p_load() from package pacman; if you want to create fool-prof scripts, check for pacman and install if needed.
+
+```{r}
+if(!require(pacman,quietly = TRUE)){
+  install.packages('pacman')
+}
+pacman::p_load(
+  tidyverse, # metapackage 
+  wrappedtools # my own tools package
+  )
+
+```
+
+## Numeric operations
+
+```{r}
+### simple calculations ####
+2+5
+3*5
+15/3 #not 15:3!!
+3^2
+9^0.5
+10%%3 #modulo
+```
+
+## Variable names
+
+Naming things is harder than you may expect. Try to be verbose and consistent in language and style. Commonly used are snake_case_style and CamelCaseStyle.
+
+Decide about computer-friendly (syntactical) or human-friendly names, illegal names can be used inside backticks: \`measure \[unit\]\`. My preference is syntactical for script variables and humane for data variables, e.g. column names, print labels etc.
+
+There are rules for valid syntactical names:
+
+-   UPPERCASE and lowercase are distinguished
+
+-   start with letter or symbols as **.** **\_** , but not with a number
+
+-   no mathematical symbols or brackets allowed
+
+To store some value into a variable, use the assignment operator **\<-** ; while it possible to use **=** or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
+
+```{r}
+### Variable names ####
+test <- 1
+test1 <- 1
+# 1test <- 2 # wrong, would result in error
+`1test` <- 2 # this would be possible
+test_1<- 5
+test.1 <- 2
+`test-1` <- 6
+`test(1)` <- 5
+Test <- 'bla'
+HereAreFilteredData <- '' #CamelCase
+here_are_filtered_data <- "test" #snake_case
+`Gewicht [kg]` <- 67
+```
+
+##  Basic classes of data
+
+R is 'guessing' the suitable type of data from input. This should be checked after e.g. importing data! If elements of different classes are found, the more inclusive is used. There are functions to change / force a type if needed.
+
+The **`class()`** function returns the class of an object, which determines how it behaves with respect to functions like **`print()`**. The class of an object can be changed by using generic functions and methods.
+
+The **`typeof()`** function returns the basic data type of an object, which determines how it is stored in memory. The basic data type of an object cannot be changed.
+
+The **`str()`** function shows class and examples of an object.
+
+### Guessed classes
+
+```{r}
+float_num <- 123.456
+class(float_num)
+typeof(float_num)
+int_num <- 123L # L specifies integer, guessing requires more values
+class(int_num)
+typeof(int_num)
+result<-9^(1/2)
+result
+print(result)
+cat(result)
+
+char_var <- ' some words'
+class(char_var)
+typeof(char_var)
+
+logical_var <- TRUE
+class(logical_var)
+typeof(logical_var)
+logical(length = 3)
+# logicals usualy are defined by conditions:
+int_num < float_num
+# all numbers are true but 0
+as.logical(c(0,1,5,-7.45678)) # c() combines values into a vector
+
+factor_var <- factor(c("m","m","f","m","f","f","?"))
+factor_var
+class(factor_var)
+typeof(factor_var)
+# factor definition can reorder, rename, and drop levels:
+factor_var2 <- factor(c("m","m","f","m","f","f","?"),
+                     levels=c("m","f"),
+                     labels=c("male","female"))
+factor_var2
+# everything intended to group subjects or representing categories should be stored as factor
+# package forcats provides nice tools for factors
+
+(date_var <- Sys.Date())
+class(date_var)
+typeof(date_var)
+
+# mixed classes
+test2 <- c(1,2,'a','b')
+class(test2)
+
+```
+
+### Forcing / casting classes
+
+Casting functions usually start with as\_ , when creating variables filled with NA, use casting functions or specific variants of NA to force type!
+
+```{r}
+(test<-c(1,2,3,'a','b','c')) 
+(test_n<-as.numeric(test))
+as.numeric(factor_var)
+as.character(10:19)
+
+# NAs
+class(NA_real_)
+class(NA_integer_)
+class(NA_character_)
+class(NA_Date_)
+```
+
+### Indexing variables
+
+The most general kind of indexing is by position, starting with 1. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can be variable instead of hard coded numbers.
+
+```{r}
+(numbers1<-c(5,3,6,8,2,1))
+numbers1[1]
+numbers1[1:3]
+numbers1[-1]
+numbers2 <- 1:3
+numbers1[numbers2]
+```
+
+To get first or last entries, head() and tail() can be used. By default 6 entries are returned.
+
+```{r}
+tail(x=numbers1,n = 1)
+head(x = numbers1, n = 3)
+```
+
+```{r}
+ #outer() creates immediate output
+numbers1+numbers2 #not stored anywhere
+c(2,4,6,8)+1 # R (usually) recycles  arguments!
+c(2,4,6,8)+c(1,2)
+c(2,4,6,8)+c(1,2,3)
+test_na<-is.na(test_n)
+str(test_na)   #Structure of a variable
+as.numeric(test_na)
+cat(a <- 6)
+print(a <- 6)
+
+### functions -----
+# FunctionName(parameter1=x1,parameter2=x2,x3,...)
+c('my','name')
+mean(x = c(3,5,7,NA),na.rm=TRUE)
+mean(na.rm=T,x=c(3,5,7,NA))
+?mean
+mean(c(3,5,7,NA),na.rm=T)
+sd(x = c(3,5,7,NA),na.rm = T)
+median(x = 1:100,na.rm = T)
+# will become more and more complex in future lessons
+# functions may be nested:
+floor(as.numeric(as.Date(Sys.Date())-
+                   as.Date('1985/12/10'))/
+        365.25)
+# or (usually better) piped:
+results <- mtcars |>
+  dplyr::mutate(am=factor(am))  |>
+  dplyr::filter(vs==1) |>
+  group_by(am) |>
+  summarize(across(c(wt, mpg, qsec, disp),
+                   mean))  |>
+  pivot_longer(cols = -am,names_to = 'Measure')  |>
+  pivot_wider(id_cols = Measure, names_from = am,
+              values_from = value)
+
+# can be combined into higher order functions:
+compare2numvars(data = mtcars,
+                dep_vars = c('mpg','wt','qsec'),
+                indep_var = 'am',
+                add_n = TRUE,
+                gaussian = TRUE)
+
+### More complex data types, created by functions -----
+# Matrix: 2 dimensions, 1 data type
+my1.Matrix<-
+  matrix(data=1:12,
+         # nrow=4,
+         ncol=3,
+         byrow=T,
+         dimnames=list(paste0('row',1:4),
+                       paste0('col',1:3)))
+print(my1.Matrix)
+data <- 1:100
+nrow <- 20
+matrix(data=data,
+       nrow=nrow,
+       byrow=T,
+       dimnames=list(paste0('row',1:nrow),
+                     paste0('col',1:(length(data)/nrow))))
+
+my1.Matrix[2,3]   #Index:[row,column]
+my1.Matrix[2,]
+my1.Matrix[,2]
+my1.Matrix[c(1,3),-2]
+my1.Matrix[1,1]<-NA
+mdat <- matrix(c(1,2,3, 11,12,13),
+               nrow = 2, ncol=3) #byrow=TRUE,
+mdat
+
+# Data frame: 2 dimensions, various data types (1 per columns)
+patientN<-15
+#options(stringsAsFactors =F)
+(myTable<-data.frame(
+  patientCode=paste0('pat',1:patientN),
+  Var1=1,
+  Var2=NA_Date_))
+str(myTable)
+set.seed(501)
+myTable<-data.frame(
+  patientCode=paste0('pat',1:patientN),
+  Age=runif(n=patientN,min=18,max=65)  |>  floor(),
+  Sex=factor(rep(x=NA,times=patientN),
+             levels=c('m','f')),
+  sysRR=round(rnorm(n=patientN,mean=140,sd=10)))
+
+head(myTable)
+
+
+
+myTable[,1]
+myTable$patientCode
+myTable[,"patientCode"]
+spalten<-c('Sex',"Age")
+myTable[,spalten]
+myTable[,c('patientCode','Age')]
+
+myTable$Sex[]<-sample(x=c('m','f',NA),
+                      size=patientN,
+                      prob = c(.4,.4,.2),
+                      replace=T)
+str(myTable)
+
+
+myTable[,1]<-paste0('Code',1:patientN)
+
+str(myTable)
+myTable[c(1,3,4),c(1,4)]
+
+#lists
+shopping<-list(beverages=c('beer','water',
+                           'gin(not Gordons!!)','tonic'),
+               snacks=c('chips','pretzels'),
+               nonfood=c('DVDs','Akku'),
+               mengen=1:10,
+               volumen=rnorm(50,100,2))
+shopping
+shopping$snacks
+shopping[1]    #returns a list
+shopping[[1]]  #returns a vector
+str(shopping[1])
+str(shopping[[1]])
+str(shopping$beverages)
+shopping[1][2]
+shopping[[1]][2]
+shopping$beverages[2]
+t_out <- t.test(x = rnorm(n = 20,mean = 10,sd = 1),
+                y = rnorm(20,12,1))
+str(t_out)
+t_out$p.value
+
+#package rlist
+
+# tibble ####
+pacman::p_load(wrappedtools, randomNames)
+patientN <- 200
+rawdata <- tibble(
+  PatID=paste('P',1:patientN), #wie bei data.frame
+  Sex=sample(x = c('male','female'),
+             size = patientN,replace = T,
+             prob = c(.7,.3)),
+  Ethnicity=sample(1:6,patientN,T,c(.01,.01,.05,.03,.75,.15)),
+  `Given name`=randomNames(n = patientN,
+                           gender = Sex,
+                           ethnicity = Ethnicity,
+                           which.names = 'first'),
+  `Family name`=randomNames(n = patientN,
+                            ethnicity = Ethnicity,
+                            which.names = 'last'),
+  Treatment=sample(c('Placebo','Verum'),patientN,T),
+  `sysRR (mmHg)`=round(rnorm(n=patientN,mean=140,sd=10))-
+    (Treatment=='Verum')*15,
+  diaRR=round(rnorm(n=patientN,mean=80,sd=10))-
+    (Treatment=='Verum')*10,
+  HR=round(rnorm(n=patientN,mean=90,sd=7)))
+rawdata
+colnames(rawdata)
+cn()
+rawdata <- rawdata  |>
+  mutate(Ethnicity=factor(
+    Ethnicity,levels = 1:6,
+    labels=	c(
+      'American Indian or Native Alaskan',
+      'Asian or Pacific Islander',
+      'Black (not Hispanic)',
+      'Hispanic',
+      'White (not Hispanic)',
+      'Middle-Eastern, Arabic')))
+ggplot(rawdata,aes(x = Treatment,y = `sysRR (mmHg)`))+
+  geom_boxplot()
+rawdata[1:5,1:2]
+rawdata[,6]
+rawdata[6]
+rawdata[[6]]
+rawdata$`Family name`
+
+#tibble and [ always returns tibble
+#tibble and [[ always returns vector
+#data.frame and [ may return data.frame or vector
+#data.frame and [[ always returns vector
+rawdata_df <- as.data.frame(rawdata)
+rawdata[2] #returns Tibble with 1 column
+rawdata[[2]] #returns vector
+rawdata[,2] #returns Tibble with 1 column
+rawdata[,2:3] #returns tibble with 2 columns
+rawdata_df[2] #returns DF with 1 column
+rawdata_df[[2]] #returns vector
+rawdata_df[,2] #returns vector
+rawdata_df[,2:3] #returns DF with 2 columns
+
+rawdata %>% select(PatID:Ethnicity,`sysRR (mmHg)`:HR)
+rawdata %>% select(PatID:Ethnicity,`sysRR (mmHg)`:HR) %>% slice(1:5)
+rawdata %>% select(contains('RR',ignore.case = F))
+rawdata %>% select(ends_with('r'))
+rawdata %>% select(-contains('name'))
+rawdata %>% select(`sysRR (mmHg)`)
+rawdata %>% select(contains('r'),-contains('rr'))
+rawdata %>% pull(`sysRR (mmHg)`)
+
+testvars <- FindVars(varnames = c('Eth','Sex','R'))
+rawdata %>% select(testvars$index)
+normvars <- FindVars(varnames = c('R'))
+for(var_i in 3:5){
+  print(ggplot(rawdata,aes_string(x = 'Treatment',
+                                  y = testvars$bticked[var_i]))+
+          geom_boxplot())
+}
+for(var_i in testvars$bticked[3:5]){
+  print(ggplot(rawdata,aes_string(x = 'Treatment',
+                                  y = var_i))+
+          geom_boxplot())
+}
+
+# Example cruet_stand / Gewürzmenage
+n_elements <- 5*10^3
+# tibble menage with columns saltshaker, peppercaster and n_elements each
+# saltgrain and pepperflake
+# print saltshaker
+# print salt
+# print 100 saltgrain
+
+
+
+
+
+### functions ####
+#FunctionName<-function(parameters...){definition}
+markSign<-function(SignIn) {
+  SignIn <- as.numeric(SignIn)
+  if(is.na(SignIn)){
+    SignOut<-'wrong input, stupido!'
+  } else {
+    # if (!is.na(SignIn)) {
+    SignOut<-'n.s.'
+    if (SignIn<=0.1) {SignOut<-'+'}
+    if (SignIn<=0.05) {SignOut<-'*'}
+    if (SignIn<=0.01) {SignOut<-'**'}
+    if (SignIn<=0.001) {SignOut<-'***'}
+  }
+  return(SignOut)
+}
+
+markSign(SignIn=0.035)
+markSign(SignIn="0.35")
+markSign(SignIn = 'p=3,5%')   #wrong parameter
+
+Mymean<-function(werte)
+{
+  return(base::mean(werte,na.rm=T))
+}
+# source('myfunctions.R')
+### loops ####
+print('### Game of Loops ###')
+for(season_i in 1:3) {
+  cat(paste('GoL Season',season_i,'\n'))
+  for(episode_i in 1:5) {
+    cat(paste0('   GoL S.',season_i,
+                 ' Episode ',episode_i,'\n'))
+  }
+  cat('\n')
+}
+
+for(col_i in colnames(rawdata)){
+  print(col_i)
+}
+
+for(col_i in shopping){
+  print(col_i)
+}
+for(col_i in 1:length(colnames(rawdata))){
+  print(colnames(rawdata)[col_i])
+}
+for(col_i in seq_along(colnames(rawdata))){
+  print(colnames(rawdata)[col_i])
+}
+
+for(col_i in seq_len(0)){
+  print(colnames(rawdata)[col_i])
+}
+
+
+test <- 0
+while(test<100){
+  print(test)
+  test   <- test + 1 #test <- test+1
+}
+
+### conditions -----
+sex<-'male'
+if (sex=='male')  {
+  print('Male')
+} else {
+  print('Female')
+}
+
+
+if (sex=='male')  {
+  print('Male')
+}
+if (sex!='male'){
+  print('Female')
+}
+
+
+
+if (sex!='male') {
+  print('not male')
+} else {
+  print('male')
+}
+if (!sex=='male') {
+  print('not male')
+} else {
+  print('male')
+}
+
+print(ifelse(test = sex=='male',
+             yes = 'is male',
+             no = 'is female'))
+
+p <- .0012
+paste0('That is ',
+       ifelse(test = p<=.05,yes = '',no = 'not '),
+       'significant')
+
+testvar <- 3
+if(testvar %in% c(1,3,5)){
+  print('uneven')
+}
+
+TRUE&FALSE
+(1>10)&(1<5)
+TRUE|FALSE
+(1>10)|(1<5)
+
+#case_when
+
+### useful tools -----
+?any
+?'%in%'
+2%in%1:5
+2%in%c(1,3,4,5)
+
+
+```

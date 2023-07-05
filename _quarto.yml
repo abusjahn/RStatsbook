@@ -5,9 +5,21 @@ book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
   date: "3.7.2023"
+  page-footer:
+    left: |
+      R Intro by Andreas Busjahn
+    right: |
+      This book was built with <a href="https://quarto.org/">Quarto</a>.
+  repo-url: https://github.com/abusjahn/RStatsbook/
   chapters:
     - index.qmd
     - intro.qmd
+    - R101.qmd
+    - import.qmd
+    - variableclassification.qmd
+    - visualize.qmd
+    - describe.qmd
+    - test2groups.qmd
     - lm.qmd
     - summary.qmd
     - references.qmd
@@ -15,12 +27,13 @@ book:
 bibliography: references.bib
 
 format:
-  # html:
-  #   theme: cosmo
+  html:
+    theme: cosmo
   pdf:
     documentclass: scrreprt
   # word:
   #   template:
 
 editor: visual
+highlight-style: github
 

@@ -1,9 +1,21 @@
 # Importing data
 
+```{r}
+pacman::p_load(tidyverse, wrappedtools, readxl)
+```
+
 ## Import from text files (.txt, .csv)
 
 ## Import from Excel
 ### Tidy Excel files
+```{r}
+rawdata <- read_excel('data/Medtest_e.xlsx')
+rawdata <- rename(rawdata,
+                  `Size (cm)`=size,
+                  `Weight (kg)`=weight) |> 
+  select(-Sex_m)
+saveRDS(rawdata,file = "data/rawdata.rds")
+```
 
 ### Dirty Excel files
 

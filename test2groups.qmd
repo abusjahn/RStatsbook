@@ -5,7 +5,7 @@ pacman::p_load(plotrix,tidyverse, wrappedtools,
                coin,ggsignif, patchwork, ggbeeswarm)
                #conflicted)
 # conflict_prefer("filter", "dplyr")
-load('data/testdata.RData')
+load('data/bookdata1.RData')
 
 ```
 

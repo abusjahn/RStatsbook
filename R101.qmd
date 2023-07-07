@@ -4,7 +4,9 @@
 
 At the beginning of (almost) every script we define packages to be used. This could be done by either
 
--   checking if packages needed are installed and otherwise do so
+-   checking if packages needed are installed and otherwise do so, followed by function `library(packagename)`
+
+OR
 
 -   simplifying this using function p_load() from package pacman; if you want to create fool-prof scripts, check for pacman and install if needed.
 
@@ -14,7 +16,8 @@ if(!require(pacman,quietly = TRUE)){
 }
 pacman::p_load(
   tidyverse, # metapackage 
-  wrappedtools # my own tools package
+  wrappedtools, # my own tools package
+  randomNames # used to create pseudo names
   )
 
 ```
@@ -31,7 +34,9 @@ pacman::p_load(
 10%%3 #modulo
 ```
 
-## Variable names
+## Variables
+
+### Variable names
 
 Naming things is harder than you may expect. Try to be verbose and consistent in language and style. Commonly used are snake_case_style and CamelCaseStyle.
 
@@ -63,7 +68,7 @@ here_are_filtered_data <- "test" #snake_case
 `Gewicht [kg]` <- 67
 ```
 
-##  Basic classes of data
+### Basic classes of data
 
 R is 'guessing' the suitable type of data from input. This should be checked after e.g. importing data! If elements of different classes are found, the more inclusive is used. There are functions to change / force a type if needed.
 
@@ -73,7 +78,7 @@ The **`typeof()`** function returns the basic data type of an object, which dete
 
 The **`str()`** function shows class and examples of an object.
 
-### Guessed classes
+#### Guessed classes
 
 ```{r}
 float_num <- 123.456
@@ -122,7 +127,7 @@ class(test2)
 
 ```
 
-### Forcing / casting classes
+#### Forcing / casting classes
 
 Casting functions usually start with as\_ , when creating variables filled with NA, use casting functions or specific variants of NA to force type!
 
@@ -141,7 +146,7 @@ class(NA_Date_)
 
 ### Indexing variables
 
-The most general kind of indexing is by position, starting with 1. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can be variable instead of hard coded numbers.
+The most general kind of indexing is by position, starting with 1. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can be a variable instead of hard coded numbers.
 
 ```{r}
 (numbers1<-c(5,3,6,8,2,1))
@@ -159,57 +164,89 @@ tail(x=numbers1,n = 1)
 head(x = numbers1, n = 3)
 ```
 
+### Usage of variables
+
+Variables are like placeholders for their content, so that you don't have to remember where you left things. Operations on variables are operations on their content. Changing the content of a variable does not automatically save those changes back to the variable, this needs to be done explicitly!
+
 ```{r}
- #outer() creates immediate output
-numbers1+numbers2 #not stored anywhere
-c(2,4,6,8)+1 # R (usually) recycles  arguments!
+numbers1+100 # not stored anywhere, just printed
+numbers1+numbers2 # why does this even work?
+```
+
+When combining variables of different length, the short one is recycled, so the numbers2 is added to the first 3 elements of numbers2, then is reused and added to the remaining 3 elements. If the length of the longer is not a multiple of the shorter, there will be a warning.
+
+```{r}
+c(2,4,6,8)+1 
 c(2,4,6,8)+c(1,2)
 c(2,4,6,8)+c(1,2,3)
-test_na<-is.na(test_n)
-str(test_na)   #Structure of a variable
-as.numeric(test_na)
-cat(a <- 6)
-print(a <- 6)
+```
 
-### functions -----
-# FunctionName(parameter1=x1,parameter2=x2,x3,...)
-c('my','name')
-mean(x = c(3,5,7,NA),na.rm=TRUE)
-mean(na.rm=T,x=c(3,5,7,NA))
+## Functions
+
+Functions have the same naming rules as variables, but the name is always followed by opening/closing round brackets, within those brackets function parameters/arguments can be specified to provide input or control behavior:
+
+FunctionName(parameter1=x1,parameter2=x2,x3,...)
+
+Most functions have named arguments, those argument names may be omitted as long as parameter values are supplied in the defined order. Arguments may have predefined default values, see help! Some functions like `c()` use unnamed arguments.
+
+```{r}
+c('my','name') # unnamed
 ?mean
-mean(c(3,5,7,NA),na.rm=T)
-sd(x = c(3,5,7,NA),na.rm = T)
-median(x = 1:100,na.rm = T)
-# will become more and more complex in future lessons
+mean(x = c(3,5,7,NA)) #using default parameters
+mean(x = c(3,5,7,NA),na.rm = TRUE) #overriding default parameter
+mean(na.rm = TRUE, x=c(3,5,7,NA)) # changed order of arguments
+mean(c(3,5,7,NA), na.rm = TRUE) # name of 1st argument omitted
+sd(c(3,5,7,NA), na.rm = TRUE) # same logic as mean, partially the same arguments
+median(1:100, TRUE) # does influence the readability of a function, careful!
+
+```
+
+Functions often just solve one problem or task, so often we need combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions:
+
+```{r}
 # functions may be nested:
-floor(as.numeric(as.Date(Sys.Date())-
-                   as.Date('1985/12/10'))/
-        365.25)
+floor(
+  as.numeric(
+    Sys.Date() -
+      as.Date('1985/12/10'))/
+    365.25)
 # or (usually better) piped:
-results <- mtcars |>
-  dplyr::mutate(am=factor(am))  |>
-  dplyr::filter(vs==1) |>
+mtcars |>
+  mutate(am=factor(am))  |>
+  filter(vs==1) |>
   group_by(am) |>
-  summarize(across(c(wt, mpg, qsec, disp),
-                   mean))  |>
-  pivot_longer(cols = -am,names_to = 'Measure')  |>
+  summarize(across(.cols = c(wt, mpg, qsec, disp),
+                   .fns = mean))  |>
+  pivot_longer(cols = -am, names_to = 'Measure')  |>
   pivot_wider(id_cols = Measure, names_from = am,
               values_from = value)
+```
 
+If a sequence of functions is used often, combining them into a new function is advisable, e.g. this combination of descriptive and test statistics:
+
+```{r}
 # can be combined into higher order functions:
 compare2numvars(data = mtcars,
                 dep_vars = c('mpg','wt','qsec'),
                 indep_var = 'am',
                 add_n = TRUE,
                 gaussian = TRUE)
+```
 
-### More complex data types, created by functions -----
-# Matrix: 2 dimensions, 1 data type
+## More complex data types, created by functions
+
+### Matrix
+
+A matrix is a 2-dimensional data structure, where all elements are of the same class.
+
+#### Creation
+
+```{r}
 my1.Matrix<-
   matrix(data=1:12,
-         # nrow=4,
+         # nrow=4, # this is not needed, as it can be derived from data
          ncol=3,
-         byrow=T,
+         byrow=T, # date are put into row 1 first
          dimnames=list(paste0('row',1:4),
                        paste0('col',1:3)))
 print(my1.Matrix)
@@ -217,59 +254,165 @@ data <- 1:100
 nrow <- 20
 matrix(data=data,
        nrow=nrow,
-       byrow=T,
+       byrow=F, # data are put into column 1 first
        dimnames=list(paste0('row',1:nrow),
                      paste0('col',1:(length(data)/nrow))))
-
-my1.Matrix[2,3]   #Index:[row,column]
-my1.Matrix[2,]
-my1.Matrix[,2]
-my1.Matrix[c(1,3),-2]
-my1.Matrix[1,1]<-NA
 mdat <- matrix(c(1,2,3, 11,12,13),
-               nrow = 2, ncol=3) #byrow=TRUE,
+               nrow = 2, ncol=3) #byrow=FALSE, not specified but default
 mdat
+```
 
-# Data frame: 2 dimensions, various data types (1 per columns)
+#### Indexing
+
+Addressing a matrix is done with \[row_index, column_index\]
+
+```{r}
+my1.Matrix[2,3] # Index:[row,column]
+my1.Matrix[2,] # all columns
+my1.Matrix[,2] # all rows
+my1.Matrix[c(1,3),-2] # exclude column 2
+my1.Matrix[1,1]<-NA # Index can be used for writing as well
+```
+
+### Data frame
+
+A data frame has 2 dimensions, it can handle various data types (1 per columns). This structure is rather superseded by tibbles (see below).
+
+#### Creation
+
+Data frames are defined by creating and filling columns, functions can be used (and piped) to create content.
+
+```{r}
 patientN<-15
-#options(stringsAsFactors =F)
 (myTable<-data.frame(
   patientCode=paste0('pat',1:patientN),
-  Var1=1,
+  Var1=1, # gets recycled
   Var2=NA_Date_))
 str(myTable)
-set.seed(501)
+set.seed(101)
 myTable<-data.frame(
   patientCode=paste0('pat',1:patientN),
   Age=runif(n=patientN,min=18,max=65)  |>  floor(),
   Sex=factor(rep(x=NA,times=patientN),
              levels=c('m','f')),
   sysRR=round(rnorm(n=patientN,mean=140,sd=10)))
-
 head(myTable)
+```
 
+#### Indexing
 
+Beside the numeric index, columns can be addressed by name. This can be done by either dfname\$colname (for the content of a single column) or dfname\[,"colname"\] for 1 or more columns.
 
-myTable[,1]
-myTable$patientCode
-myTable[,"patientCode"]
+```{r}
+myTable[1:5,1]
+myTable$patientCode[1:5]
+myTable[1:5,"patientCode"] # returns vector of values for a single column, df otherwise
+myTable["patientCode"] # returns df
 spalten<-c('Sex',"Age")
-myTable[,spalten]
-myTable[,c('patientCode','Age')]
+myTable[1:5,spalten]
+myTable[1:5,c('patientCode','Age')]
+myTable[,1]<-paste0('Code',1:patientN) 
+```
 
-myTable$Sex[]<-sample(x=c('m','f',NA),
-                      size=patientN,
-                      prob = c(.4,.4,.2),
-                      replace=T)
-str(myTable)
+### Tibble
 
+Tibbles are a modern and efficient data structure that extend data frames, providing enhanced features and performance for data manipulation and analysis.
 
-myTable[,1]<-paste0('Code',1:patientN)
+#### Creation
 
-str(myTable)
-myTable[c(1,3,4),c(1,4)]
+```{r}
+patientN <- 200
+rawdata <- tibble(
+  PatID=paste('P',1:patientN), # as in  data.frame
+  Sex=sample(x = c('male','female'),  # random generator
+             size = patientN,replace = T,
+             prob = c(.7,.3)),
+  Ethnicity=sample(1:6,patientN,T,c(.01,.01,.05,.03,.75,.15)), # random assignments
+  `Given name`=randomNames(n = patientN,
+                           gender = Sex, # this is a reference to column Sex
+                           ethnicity = Ethnicity,
+                           which.names = 'first'),
+  `Family name`=randomNames(n = patientN,
+                            ethnicity = Ethnicity,
+                            which.names = 'last'),
+  Treatment=sample(c('Placebo','Verum'),patientN,T),
+  `sysRR (mmHg)`=round(rnorm(n=patientN,mean=140,sd=10))-
+    (Treatment=='Verum')*15,
+  diaRR=round(rnorm(n=patientN,mean=80,sd=10))-
+    (Treatment=='Verum')*10,
+  HR=round(rnorm(n=patientN,mean=90,sd=7)))
+rawdata
+colnames(rawdata)
+cn() # shortcut from wrappedtools
+# example of data management for a tibble, recoding ethnicity:
+rawdata <- rawdata  |>
+  mutate(Ethnicity=factor(
+    Ethnicity,levels = 1:6,
+    labels=	c(
+      'American Indian or Native Alaskan',
+      'Asian or Pacific Islander',
+      'Black (not Hispanic)',
+      'Hispanic',
+      'White (not Hispanic)',
+      'Middle-Eastern, Arabic')))
+# quick visual inspection
+ggplot(rawdata,aes(x = Treatment,y = `sysRR (mmHg)`))+
+  geom_boxplot()
+```
 
-#lists
+#### Indexing
+
+The same rules as for the data frame, but more consistent behavior.
+
+```{r}
+rawdata[1:5,1:2]
+rawdata[,6]
+rawdata[6]
+rawdata[[6]]
+rawdata$`Family name`
+```
+
+Differences in addressing data frames and tibbles:
+
+-   tibble and \[ always returns tibble
+
+-   tibble and \[\[ always returns vector
+
+-   data.frame and \[ may return data.frame (if \>1 column) or vector
+
+-   data.frame and \[\[ always returns vector
+
+```{r}
+rawdata_df <- as.data.frame(rawdata)
+rawdata[2] #returns Tibble with 1 column
+rawdata[[2]] #returns vector
+rawdata[,2] #returns Tibble with 1 column
+rawdata[,2:3] #returns tibble with 2 columns
+rawdata_df[2] #returns DF with 1 column
+rawdata_df[[2]] #returns vector
+rawdata_df[,2] #returns vector
+rawdata_df[,2:3] #returns DF with 2 columns
+```
+
+There are specific functions for picking columns or rows, especially useful in pipes.
+
+```{r}
+rawdata %>% select(PatID:Ethnicity,`sysRR (mmHg)`:HR)
+rawdata %>% select(PatID:Ethnicity,`sysRR (mmHg)`:HR) %>% slice(1:5)
+rawdata %>% select(contains('RR',ignore.case = F))
+rawdata %>% select(ends_with('r'))
+rawdata %>% select(-contains('name'))
+rawdata %>% select(`sysRR (mmHg)`)
+rawdata %>% select(contains('r'),-contains('rr'))
+rawdata %>% pull(`sysRR (mmHg)`)
+
+```
+
+### List
+
+While
+
+```{r}
 shopping<-list(beverages=c('beer','water',
                            'gin(not Gordons!!)','tonic'),
                snacks=c('chips','pretzels'),
@@ -293,72 +436,11 @@ t_out$p.value
 
 #package rlist
 
+```
+
+```{r}
+
 # tibble ####
-pacman::p_load(wrappedtools, randomNames)
-patientN <- 200
-rawdata <- tibble(
-  PatID=paste('P',1:patientN), #wie bei data.frame
-  Sex=sample(x = c('male','female'),
-             size = patientN,replace = T,
-             prob = c(.7,.3)),
-  Ethnicity=sample(1:6,patientN,T,c(.01,.01,.05,.03,.75,.15)),
-  `Given name`=randomNames(n = patientN,
-                           gender = Sex,
-                           ethnicity = Ethnicity,
-                           which.names = 'first'),
-  `Family name`=randomNames(n = patientN,
-                            ethnicity = Ethnicity,
-                            which.names = 'last'),
-  Treatment=sample(c('Placebo','Verum'),patientN,T),
-  `sysRR (mmHg)`=round(rnorm(n=patientN,mean=140,sd=10))-
-    (Treatment=='Verum')*15,
-  diaRR=round(rnorm(n=patientN,mean=80,sd=10))-
-    (Treatment=='Verum')*10,
-  HR=round(rnorm(n=patientN,mean=90,sd=7)))
-rawdata
-colnames(rawdata)
-cn()
-rawdata <- rawdata  |>
-  mutate(Ethnicity=factor(
-    Ethnicity,levels = 1:6,
-    labels=	c(
-      'American Indian or Native Alaskan',
-      'Asian or Pacific Islander',
-      'Black (not Hispanic)',
-      'Hispanic',
-      'White (not Hispanic)',
-      'Middle-Eastern, Arabic')))
-ggplot(rawdata,aes(x = Treatment,y = `sysRR (mmHg)`))+
-  geom_boxplot()
-rawdata[1:5,1:2]
-rawdata[,6]
-rawdata[6]
-rawdata[[6]]
-rawdata$`Family name`
-
-#tibble and [ always returns tibble
-#tibble and [[ always returns vector
-#data.frame and [ may return data.frame or vector
-#data.frame and [[ always returns vector
-rawdata_df <- as.data.frame(rawdata)
-rawdata[2] #returns Tibble with 1 column
-rawdata[[2]] #returns vector
-rawdata[,2] #returns Tibble with 1 column
-rawdata[,2:3] #returns tibble with 2 columns
-rawdata_df[2] #returns DF with 1 column
-rawdata_df[[2]] #returns vector
-rawdata_df[,2] #returns vector
-rawdata_df[,2:3] #returns DF with 2 columns
-
-rawdata %>% select(PatID:Ethnicity,`sysRR (mmHg)`:HR)
-rawdata %>% select(PatID:Ethnicity,`sysRR (mmHg)`:HR) %>% slice(1:5)
-rawdata %>% select(contains('RR',ignore.case = F))
-rawdata %>% select(ends_with('r'))
-rawdata %>% select(-contains('name'))
-rawdata %>% select(`sysRR (mmHg)`)
-rawdata %>% select(contains('r'),-contains('rr'))
-rawdata %>% pull(`sysRR (mmHg)`)
-
 testvars <- FindVars(varnames = c('Eth','Sex','R'))
 rawdata %>% select(testvars$index)
 normvars <- FindVars(varnames = c('R'))

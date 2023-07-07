@@ -1,15 +1,9 @@
 # Descriptive statistics
 
 ```{r}
-pacman::p_load(tidyverse,wrappedtools,readxl)
+pacman::p_load(tidyverse,wrappedtools)
 #dir('Data/')
-rawdata <- read_excel(path = 'data/Medtest_e.xlsx')
-rawdata <- rename(rawdata,
-                  `Size (cm)`=size,
-                  `Weight (kg)`=weight)
-rawdata <- select(rawdata,
-                  -Sex_m)
-save(rawdata,file = "data/testdata.RData")
+load('data/bookdata1.RData')
 
 ggplot(rawdata,aes(sysBP_V0, diaBP_V0))+
   geom_point()+

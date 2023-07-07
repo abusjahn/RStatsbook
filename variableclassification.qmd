@@ -5,8 +5,12 @@ pacman::p_load(wrappedtools)
 
 ```
 
+## Test for normal distribution
+
+## Picking column names and positions
+
 ```{r}
-load('data/testdata.RData')
+rawdata <- readRDS('data/rawdata.rds')
 quantvars <- ColSeeker(data = rawdata,
                        varclass = "numeric",
                        exclude = "code")
@@ -16,6 +20,6 @@ ordvars <- ColSeeker(namepattern = c("age","lab"))
 
 factvars <- ColSeeker(namepattern = c("sex","med","NYHA"),
                       returnclass = TRUE)
-save(rawdata,list = ls(pattern = "vars"),file = "data/testdata.RData")
+save(rawdata,list = ls(pattern = "vars"),file = "data/bookdata1.RData")
 
 ```

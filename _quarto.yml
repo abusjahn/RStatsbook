@@ -19,6 +19,7 @@ book:
     - variableclassification.qmd
     - visualize.qmd
     - describe.qmd
+    - flextable.qmd
     - test2groups.qmd
     - lm.qmd
     - summary.qmd
@@ -27,8 +28,8 @@ book:
 bibliography: references.bib
 
 format:
-  html:
-    theme: cosmo
+  # html:
+  #   theme: cosmo
   pdf:
     documentclass: scrreprt
   # word:

@@ -211,8 +211,11 @@ median(1:100, TRUE)
 
 ### Functions combined
 
-Functions often just solve one problem or task, so usually we need to combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions: <!-- \begin{figure}[h!] --> ![Piping functions](Graphs/piping_complete.jpg){fig-pos='h', alt="piping functions"} <!-- {alt="piping functions"}   --> <!-- \end{figure} -->
-
+Functions often just solve one problem or task, so usually we need to combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions:  
+  
+![Piping functions](Graphs/piping_complete.jpg){fig-pos='h'}  
+  
+  
 ```{r}
 # functions may be nested:
 floor(

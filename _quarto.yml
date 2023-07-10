@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "3.7.2023"
+  date: "10.7.2023"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -31,7 +31,14 @@ format:
   # html:
   #   theme: cosmo
   pdf:
+    latex-auto-install: true
     documentclass: scrreprt
+    papersize: a4
+    code-block-bg: ffffcf
+    # include-in-header:
+      # \usepackage{graphbox}
+      # \usepackage{wrapfig}
+      # \usepackage{float}
   # word:
   #   template:
 

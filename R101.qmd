@@ -16,6 +16,7 @@ if(!requireNamespace("pacman",quietly = TRUE)){
   install.packages('pacman')
 }
 pacman::p_load(
+  conflicted, # tests/solutions for name conflicts
   tidyverse, # metapackage 
   wrappedtools, # my own tools package
   randomNames # used to create pseudo names
@@ -107,7 +108,7 @@ int_num < float_num
 as.logical(c(0,1,5,-7.45678)) # c() combines values into a vector
 ```
 
-Factor: categorical variables with limited set of distinct values, internally stored as integers. Everything intended to group subjects or representing categories should be stored as factor.  
+Factor: categorical variables with limited set of distinct values, internally stored as integers. Everything intended to group subjects or representing categories should be stored as factor.\
 Package forcats provides nice tools for factors!
 
 ```{r}
@@ -211,11 +212,10 @@ median(1:100, TRUE)
 
 ### Functions combined
 
-Functions often just solve one problem or task, so usually we need to combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions:  
-  
-![Piping functions](Graphs/piping_complete.jpg){fig-pos='h'}  
-  
-  
+Functions often just solve one problem or task, so usually we need to combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions:
+
+![Piping functions](Graphs/piping_complete.jpg){fig-pos="h"}
+
 ```{r}
 # functions may be nested:
 floor(
@@ -495,8 +495,15 @@ t_out$p.value
 
 ### Loops
 
-Repetitive tasks like computation of descriptive statistics over many variables or repeated simulations of data can be declared inside of a loop. There are functions (like summarize(across(...))) that create those repetitions internally, but often doing this explicitly improves readability or helps solving various tasks like describing AND plotting data.\
-\#### for-loop In a for-loop, we can define the number of runs in advance, e.g. by the number of variables to describe. There are 2 ways/styles, how to define this number: 1. by creating an index variable with an integer vector 1,2,3, ... #runs/variables 2. by creating an index containing e.g. colnames
+Repetitive tasks like computation of descriptive statistics over many variables or repeated simulations of data can be declared inside of a loop. There are functions (like summarize(across(...))) that create those repetitions internally, but often doing this explicitly improves readability or helps solving various tasks like describing AND plotting data.
+
+####  for-loop 
+
+In a for-loop, we can define the number of runs in advance, e.g. by the number of variables to describe. There are 2 ways/styles, how to define this number:
+
+1.  by creating an index variable with an integer vector 1,2,3, ... number of runs/variables
+
+2.  by creating an index containing e.g. colnames
 
 ```{r}
 # integer index
@@ -544,7 +551,7 @@ while(test<10){
 
 #### if else
 
-We can run code if conditon(s) are true:
+We can run code if condition(s) are true:
 
 ```{r}
 sex<-'male'

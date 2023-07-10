@@ -1,7 +1,7 @@
 # Importing data
 
 ```{r}
-pacman::p_load(tidyverse, wrappedtools, readxl)
+pacman::p_load(conflicted,tidyverse, wrappedtools, readxl)
 ```
 
 ## Import from text files (.txt, .csv)

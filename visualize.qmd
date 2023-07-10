@@ -1,27 +1,66 @@
 # Visualize data with ggplot
 
+While there are various packages providing visualizations, here we are focusing on ggplot2 (grammar of graphics) as a very flexible and versatile approach with many extensions implemented in additional packages. See e.g. [https://exts.ggplot2.tidyverse.org/](https://exts.ggplot2.tidyverse.org/){target="_blank"}.
+
 ```{r}
-pacman::p_load(tidyverse,#plotrix,
+pacman::p_load(conflicted, tidyverse,
                grid,gridExtra,car,
                ggsci,ggsignif, ggthemes, ggridges,
-               gganimate,ggforce,
-               # survival, survminer,
-               ggdendro, ggbeeswarm,
-               rpart,rpart.plot,
-               gapminder,
-               wrappedtools)
+               # gganimate,
+               ggforce,
+               ggbeeswarm,
+               wrappedtools,
+               emojifont)
+conflicts_prefer(dplyr::filter) # solves name conflict 
+```
 
-#sample data
+## Example data
+
+The typical examples use either diamonds from `ggplot2` or mtcars from `datasets`. There are help files for both.
+
+```{r}
 head(diamonds)
 head(mtcars)
+```
 
+## Basic structure of a ggplot call
+
+To create a figure, we at least use 2 function calls:
+
+1.  ggplot(data = my_data, mapping = aes(x=..., y=..., color=..., shape=... )) to define data and inside aes() some global defaults for aesthetic mappings, this (sort of) creates the canvas to draw on
+
+2.  geom_xxx() to define the geometry to be used to show the data, e.g. bar, boxplot, point
+
+When mapping data to aesthetics, the class of data matters: Numerical data are interpreted as continuous, so a color heatmap is mapped rather than discrete colors, grouping of data requires factors / characters.
+
+Minimal example:
+
+```{r}
 ggplot(data=diamonds,mapping = aes(x=clarity))+
   geom_bar()
+```
 
-#define aesthetics
+geom_bar() inherits the global aestetic x (*build a x-axis based on values in column clarity*) and does not need a y-axis definition, as it uses some in-build statistics ("count") and defines y.
+
+We can add additional aesthetic parameters like fill-color. This automatically creates sub-groups for counting:
+
+```{r}
 ggplot(data=diamonds,aes(x=clarity,fill=cut))+
   geom_bar()
+```
 
+This graph represents this count table:
+
+```{r}
+diamonds |>
+  group_by(clarity,cut) |> 
+  count() |> 
+  pivot_wider(names_from = clarity,values_from=n)
+```
+
+Aesthetic parameters can represent data / have some meaning (as cut quality), but they can be defined to reflect your taste rather than data. In that case, you define them outside of `aes()`. Careful, as this may lead to confusion:
+
+```{r}
 #aesthetics outside aes
 ggplot(data=diamonds,aes(x=clarity))+
   geom_bar(fill='gold')
@@ -30,81 +69,121 @@ ggplot(data=diamonds,aes(x=clarity))+
   geom_bar(aes(fill='gold')) #should be outside aes!
 
 ggplot(data=diamonds,aes(x=clarity))+
-  geom_bar(aes(fill=cut))
-#fill/color
+  geom_bar(aes(fill=cut)) # may be defined locally as well globally
+```
+
+## fill vs. color
+
+Some elements (as e.g. the bar or boxplot) know 2 color elements:
+
+-   inner color, defined by `fill`
+
+-   outer frame color, defined by `color`
+
+Other elements (as e.g. the line) only have a single color definition, specified by color. And for some elements (as e.g. dots), it depends. See help for points for examples.
+
+```{r}
 ggplot(data=diamonds,aes(x=clarity,color=cut))+
   geom_bar()
 ggplot(data=mtcars,aes(factor(cyl),fill=factor(cyl)))+
   geom_bar(color='black')
 ggplot(data=mtcars,aes(factor(cyl),color=factor(cyl)))+
   geom_bar()
+```
 
-help(points)
+## Color systems
 
-#other color systems
+ggplot2 comes with various color definitions, many external packages extend that. Manual definition of colors is possible as well. Redefining the mapping between data and aesthetics can be done with scale\_... functions
+
+For the demonstration, I store a plot into a variable, this includes all data and plot definitions, nothing like jpg!
+
+```{r}
 (plottemp <- ggplot(data=diamonds,aes(x=clarity,fill=cut))+
     geom_bar())
-plottemp + scale_fill_brewer(palette='Set2') #in-built
+plottemp + scale_fill_brewer(palette='Set2') #in-built "scale" for fill
 plottemp + scale_fill_grey(name = "cut of\ndiamonds")
 plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
+  scale_y_continuous(expand = expansion(mult = c(0,.5)))+ # rescaling y
   theme_bw()+
-  theme(panel.grid.minor.x=element_blank(),
-        panel.grid.major.x = element_blank())#+
-# scale_y_continuous(expand = expansion(mult = c(0,.5)))
+  theme(panel.grid.major.x = element_blank())
 
-# ggsci ####
+```
+
+### External color definitions from ggsci
+
+```{r}
 plottemp+scale_fill_lancet()
 plottemp+scale_fill_jama()
 plottemp+scale_fill_npg()
 printplot <- plottemp+scale_fill_startrek()
 
-#save ggplots
-# ggsave(filename = 'Graphs/ggtestplot.png',
-#        plot = printplot,
-#        width=20,height=20,
-#        units='cm',dpi=150)
-# alternative:
-# png(filename = 'Graphs/ggtestplot2.png',
-#     width = 20,height = 20,units = 'cm',res = 150)
-# plottemp
-# dev.off()
-# scatterplot
+```
 
-#other geoms
+## Exporting ggplots
+
+There are two distinct ways, using ggsave() or more generally creating an external graphic device with e.g. png() / tiff() / pdf():
+
+```{r}
+#| eval: false
+ggsave(filename = 'Graphs/ggtestplot.png',
+       plot = printplot,
+       width=20,height=20,
+       units='cm',dpi=150)
+# alternative:
+png(filename = 'Graphs/ggtestplot2.png',
+    width = 20,height = 20,units = 'cm',res = 150)
+plottemp
+dev.off()
+```
+
+## Other geoms
+
+Common forms of plots are barplots, boxplots, scatterplots (possibly with regression line), and density-plots. For plotting dots for groups, there are various options to avoid overplotting of repeated data, with the beeswarm as my preference.
+
+```{r}
 ggplot(data=mtcars,aes(x = wt,y = mpg))+
   geom_point()
+ggplot(data=mtcars,aes(x = wt,y = mpg))+
+  geom_point()+
+  geom_smooth()
+ggplot(data=mtcars,aes(x = wt,y = mpg))+
+  geom_point()+
+  geom_smooth(method='lm')
 
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot() #default 1.5 IQR
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
-  geom_boxplot(coef=3)
+  geom_boxplot(coef=3) # this extends range of expected values
 ggplot(mtcars,aes(x = factor(gear),y = wt,
                   fill=factor(cyl)))+
-  geom_boxplot(coef=3)
+  geom_boxplot(coef=3) # group by cyl, as it is mapped to fill
 
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot(coef=3)+
-  geom_point(size=2)
+  geom_point(size=2) # may contain overlapping points
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot(coef=3)+
   geom_point(position = position_jitter(width = .1))
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot(coef=3)+
-  geom_dotplot(alpha=.7,
+  geom_dotplot(alpha=.7, # group similar(ish) data on a line
                binaxis = 'y',stackdir = 'center',
-               stackratio = .9,dotsize = .6)
+               stackratio = .9,dotsize = .6)  
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot(coef=3)+
   ggbeeswarm::geom_beeswarm(cex = 2,size=3,alpha=.25)
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
-  geom_boxplot(outlier.alpha = 0)+
+  geom_boxplot(outlier.alpha = 0)+ # to avoid plotting outliers twice
   geom_beeswarm(cex = 2,size=3,alpha=.25)
 
 
-#aesthetics again (finetuning)
+```
+
+## Combining and finetuning aesthetics
+
+```{r}
 ggplot(data=mtcars,aes(wt, mpg,color=qsec))+
   geom_point(size=4) #outside aes!
-
 ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
   geom_point()
 ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
@@ -137,19 +216,24 @@ ggplot(data=mtcars,
        aes(wt, mpg,size=qsec, shape=factor(cyl)))+
   geom_point()
 
-# ggplot(data=mtcars,aes(carb, mpg,color=qsec, size=wt))+
-#   geom_point(shape='\u2642')
+ggplot(data=mtcars,aes(carb, mpg,color=qsec, size=wt))+
+  geom_text(family="EmojiOne",label='\U1F697')
 
-#location, location,position
+```
 
+## Positioning elements
+
+The position arguments allows stacking, dodging, jittering and exact positioning of elements. Positioning is an essential part of storytelling, the same data can be presented with different focus.
+
+```{r}
 p<-ggplot(data=diamonds,aes(clarity,fill=cut))
-p+geom_bar(position="stack")
+p+geom_bar(position="stack") # default for bar
 p+geom_bar(position="dodge")
-p+geom_bar(position=position_dodge(width = .4))
-p+geom_bar(position="fill")
+p+geom_bar(position=position_dodge(width = 0.7), alpha=.75)
+p+geom_bar(position="fill") #y-axis labeling needs tuning
 p+geom_bar(position="fill")+
-  scale_y_continuous('Frequency (%)',
-                     breaks=seq(0,1,.2),
+  scale_y_continuous(name = 'Frequency (%)',
+                     breaks=seq(0,1,.2), #steps
                      labels=seq(0,100,20))
 p+geom_bar(position="fill")+
   scale_y_continuous('Frequency',
@@ -157,8 +241,8 @@ p+geom_bar(position="fill")+
                      labels=scales::percent)+
   theme(axis.title.y = element_text(angle = 0,
                                     vjust = .5))+
-  geom_hline(yintercept = .5, linetype=2)
-p+geom_bar(position="identity")
+  geom_hline(yintercept = .5, linetype=2) # e.g. for reference lines
+p+geom_bar(position="identity") # bad idea!
 p+geom_bar(position="identity",alpha=.5)
 ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
   geom_freqpoly(stat='count',position="identity",lwd=1.5)+
@@ -167,63 +251,124 @@ ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
                                 'darkblue',
                                 rgb(253,79,54,maxColorValue = 255),
                                 '#00798d'))
+```
 
-#layer/order / computed geoms
+## Order of layers
+
+When combining various geoms, the order is important, as elements are not transparent by default.
+
+```{r}
 ggplot(data=mtcars,aes(wt, mpg))+
   geom_point(size=4)+
-  geom_smooth(size=3)+
-  geom_smooth(data=mtcars %>% filter(wt>3),
-              method='lm',size=3, color='red')
+  geom_smooth(size=3)+ # line overlaps points
+  geom_smooth(data=mtcars %>% filter(wt>3), #picks a sub-sample
+              method='lm',linewidth=3, color='red')
 
 
 ggplot(data=mtcars,aes(wt, mpg))+
-  geom_smooth(size=3)+
+  geom_smooth(linewidth=3)+
   geom_point(size=4)
 ggplot(data=mtcars,aes(wt, mpg))+
-  geom_smooth(size=3,color='red')+
-  geom_smooth(method='lm',size=3)+
+  geom_smooth(linewidth=3,color='red')+
+  geom_smooth(method='lm',linewidth=3)+
   geom_point(size=4)
 ggplot(data=mtcars,aes(wt, mpg,
                        color=factor(cyl)))+
   geom_point(size=4)+
-  geom_smooth(method='lm',size=1)
+  geom_smooth(method='lm',linewidth=1)
 ggplot(data=mtcars,aes(wt, mpg,
                        color=factor(cyl),
                        shape=factor(am)))+
   geom_point(size=2)+
-  geom_smooth(method='lm',size=1,se=F)
+  geom_smooth(method='lm',linewidth=1,se=F)
 
+```
+
+## Local aesthetics for layers
+
+```{r}
 #? lm for all?
 ggplot(data=mtcars,aes(wt, mpg))+
   geom_smooth(size=1,color='black',fill='yellow')+
   geom_point(size=3,aes(color=factor(cyl),shape=factor(am))) #aes for geom only
+ggplot(data=mtcars,aes(wt, mpg,color=factor(cyl)))+
+  geom_smooth(size=1,color='black',fill='yellow')+ # global color overwritten
+  geom_point(size=3, aes(shape=factor(am))) 
 
-# facet_wrap / facet_grid
+```
+
+## Faceting (splitting) plots
+
+Visualizing many groups can lead to confusing / too-busy plots, splitting is often an alternative. Visualizing many variables at the same time can be achieved with facets as well (after pivot_longer).
+
+### facet_grid
+
+Grids are specified by defining variables for rows and/or columns, empty combinations still are shown.
+
+Labeling of facets often requires name and content to be informative.
+
+Margins (taking all elements together) can be shown for rows and/or columns.
+
+```{r}
+#| warning: false
 (p.tmp <- ggplot(mtcars, aes(mpg, wt)) +
     geom_point())
+p.tmp + facet_grid(rows = vars(gear),
+                   cols = vars(cyl))
+cat("facet labeling improved:\n")
+p.tmp + facet_grid(rows = vars(gear),
+                   cols = vars(cyl),
+                   labeller=label_both,margins='gear')
+# options(warn=-1) 
+p.tmp + geom_smooth()+
+  facet_grid(rows = vars(gear),
+                   cols = vars(cyl), 
+             labeller=label_both, margins=TRUE)
+# options(warn=0)
+
+```
+
+### facet_wrap
+
+When showing many facets, wrapping around after some is useful, less systematic than grid.
+
+```{r}
 p.tmp + facet_wrap(facets = vars(cyl))
 p.tmp + facet_wrap(facets = vars(cyl), ncol=2)
-#p.tmp + facet_wrap(~cyl, ncol=2)
-p.tmp + facet_grid(rows = vars(gear),
-                   cols = vars(`Number of Cylinders`=
-                                 cyl),
-                   labeller=label_both,margins='gear')
-options(warn=-1)
-p.tmp + geom_smooth()+
-  facet_grid(gear~cyl, labeller=label_both,margins=T)
-options(warn=0)
 
-p.tmp + facet_wrap(~cyl+gear,labeller=label_both) # empty combination is dropped
+# empty combination is dropped
+p.tmp + facet_wrap(facets=vars(cyl,gear),labeller=label_both) 
 
-# controlling scales in facets (default: scales="fixed")
+#combining variables
+mtcars |> 
+  pivot_longer(cols = c(wt, mpg, hp, disp, qsec)) |> 
+  ggplot(aes(x=factor(am), y=value))+
+  geom_beeswarm(alpha=.5, cex=2)+
+  facet_wrap(facets = vars(name), scales='free')
+
+```
+
+### Controlling scales in facets (default: scales="fixed")
+
+```{r}
 p.tmp + facet_grid(gear~cyl, scales="fixed")
 p.tmp + facet_grid(gear~cyl, scales="free")
 p.tmp + facet_grid(gear~cyl, scales="free_x")
 p.tmp + facet_grid(gear~cyl, scales="free_y")
+```
 
-# summaries ####
+```{}
+```
+
+## Showing summaries
+
+While plotting underlying rawdata is pretty informative, adding summary statistics guides the viewer. Error bars help to evaluate differences visible, but need to be labelled!!
+
+Functions for summary statistics (mean_se, mean_cl_normal, mean_cl_boot etc.) are build on top of Hmisc functions. So this package is needed but not automatically installed with ggplot2.
+
+```{r}
 (plottemp <- ggplot(mtcars,aes(factor(gear),mpg))+
-   geom_point())
+   geom_point(alpha=.5))
 plottemp+stat_summary(color='red')
 plottemp+stat_summary(geom = 'point', shape=17,size=5,
                       fun = 'mean',color='red')
@@ -237,6 +382,13 @@ plottemp+stat_summary(fun.data='median_hilow',color='red')+
   ylab('mpg median \u00b1 95%')
 # geom_pointrange()
 
+```
+
+## Indicating significances
+
+Package ggsign makes it easier to add significance brackets (no more photoshopping), it either computes p-values or takes them from your testing (and this is what you should always be doing!).
+
+```{r}
 # ggsign ####
 p <- round(wilcox.test(mtcars$mpg~mtcars$am)$p.value,5)
 (plottemp <- ggplot(mtcars,aes(as.factor(am),mpg))+
@@ -254,8 +406,14 @@ plottemp + geom_signif(
   comparisons=list(1:2))+
   scale_y_continuous(expand = expansion(mult=c(0.05,.2)))
 
+```
+
+## Theme definitions / changes
+
+Themes define everything not-data-related in your figures, like margins, fonts, background color etc. There are many predefined themes, and all are customizable. You can change a theme for all plots to come (theme_update()) or just a single plot ( +theme())
+
+```{r}
 old <- theme_set(theme_wsj())
-# theme_set(theme_wsj())
 ggplot(data=diamonds,aes(x=clarity,fill=cut))+
   geom_bar()
 theme_update(legend.position="bottom",
@@ -270,7 +428,7 @@ theme_update(legend.position="bottom",
              panel.grid.minor = element_line(colour='white'),
              panel.grid.major = element_line(
                linetype=1,
-               color='violet',size = 2),
+               color='violet',linewidth = 2),
              legend.text = element_text(size = 8))
 ggplot(data=diamonds,aes(x=clarity,fill=cut))+
   geom_bar()

@@ -1,7 +1,5 @@
 # Introduction
 
-This booklet is meant as companion to my R / statistics seminars. It is NOT a complete guide to either R or statistical data analysis.
-
 There are plenty of books available, check out e.g.
 
 [R for Data Science](https://r4ds.hadley.nz/ "R for Data Science"){target="_blank"}

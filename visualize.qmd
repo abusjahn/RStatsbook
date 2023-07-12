@@ -357,7 +357,7 @@ p.tmp + facet_grid(gear~cyl, scales="free_x")
 p.tmp + facet_grid(gear~cyl, scales="free_y")
 ```
 
-```{}
+```         
 ```
 
 ## Showing summaries

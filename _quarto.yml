@@ -34,7 +34,7 @@ format:
     latex-auto-install: true
     documentclass: scrreprt
     papersize: a4
-    code-block-bg: ffffcf
+    code-block-bg: ffffdf
     # include-in-header:
       # \usepackage{graphbox}
       # \usepackage{wrapfig}

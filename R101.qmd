@@ -270,7 +270,20 @@ compare2numvars(data = mtcars,
 
 ```{r}
 #FunctionName<-function(parameters...){definition}
-markSign<-function(SignIn) {
+division <- function(x,y){
+  x/y
+}
+(Sys.Date()-as.Date("1958/12/10")) |> 
+  as.numeric() |> 
+  division(y = 365.25) |> 
+  floor()
+
+Mymean<-function(werte)
+{
+  return(base::mean(werte,na.rm=T))
+}
+
+mark_sign<-function(SignIn) {
   SignIn <- as.numeric(SignIn)
   if(is.na(SignIn)){
     SignOut<-"wrong input, stupido!"
@@ -285,14 +298,28 @@ markSign<-function(SignIn) {
   return(SignOut)
 }
 
-markSign(SignIn=0.035)
-markSign(SignIn="0.35")
-markSign(SignIn = "p=3,5%")   #wrong parameter
-
-Mymean<-function(werte)
-{
-  return(base::mean(werte,na.rm=T))
+mark_sign(SignIn=0.035)
+mark_sign(SignIn="0.35")
+mark_sign(SignIn = "p=3,5%")   #wrong input
+```
+different implementation
+```{r}
+markSign0 <- function(SignIn, plabel = c("n.s.", "+", "*", "**", "***")) {
+  SignIn <- suppressWarnings(
+    as.numeric(SignIn))
+  SignOut <- cut(SignIn,
+                 breaks = c(-Inf, .001, .01, .05, .1, 1),
+                 labels = rev(plabel)
+  )
+  return(SignOut)
 }
+
+markSign0(SignIn=0.035)
+markSign0(SignIn="0.35")
+markSign0(SignIn = "p=3,5%")   #wrong input
+
+
+
 # source("myfunctions.R")
 ```
 

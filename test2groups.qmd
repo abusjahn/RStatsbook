@@ -5,7 +5,7 @@ pacman::p_load(plotrix,tidyverse, wrappedtools,
                coin,ggsignif, patchwork, ggbeeswarm)
                #conflicted)
 # conflict_prefer("filter", "dplyr")
-load('data/bookdata1.RData')
+load("data/bookdata1.RData")
 
 ```
 
@@ -13,7 +13,7 @@ load('data/bookdata1.RData')
 
 ##### Test for normal distribution -----
 ks.test(x = rawdata$`Size (cm)`,
-        'pnorm',
+        "pnorm",
         mean(rawdata$`Size (cm)`,na.rm=T),
         sd(rawdata$`Size (cm)`,na.rm=T),
         exact=F)
@@ -24,25 +24,25 @@ shapiro.test(rawdata$`Size (cm)`)
 ggplot(rawdata,aes(x = `Size (cm)`,fill=sex))+
   geom_density(alpha=.5)
 ggplot(rawdata,aes(x = `Size (cm)`))+
-  geom_line(stat='density')
+  geom_line(stat="density")
 
 (ksout<-ksnormal(x = rawdata$`Size (cm)`))
 # test, if log-normal (->then transform)
 if (ksnormal(rawdata$`Size (cm)`)<=.05 & 
     ksnormal(log(rawdata$`Size (cm)`))>.05) {
-  print('lognormal')
+  print("lognormal")
   # create new log-transformed variable or just transform...
 } else {
-  print('not lognormal')
+  print("not lognormal")
 }
 
 
 ##### quantitative measures with Gaussian distribution -----
 ggplot(rawdata,aes(x=sex,y=`Size (cm)`))+
   geom_beeswarm(size=3)+
-  stat_summary(color='red',size=1.2,alpha=.7, 
-               fun.data='mean_se',fun.args=list(mult=2))+
-  ylab('size (mean \u00B1 2*SEM)')
+  stat_summary(color="red",size=1.2,alpha=.7, 
+               fun.data="mean_se",fun.args=list(mult=2))+
+  ylab("size (mean \u00B1 2*SEM)")
 by(data = rawdata$`Size (cm)`,INDICES = rawdata$sex,
    FUN = meanse)
 
@@ -53,8 +53,8 @@ rawdata %>% group_by(sex) %>%
   summarize(Mean=mean(`Size (cm)`,na.rm=T)) %>% 
   ungroup()
 
-t.test(x = rawdata$`Size (cm)`[which(rawdata$sex=='f')],
-       y = rawdata$`Size (cm)`[which(rawdata$sex=='m')])
+t.test(x = rawdata$`Size (cm)`[which(rawdata$sex=="f")],
+       y = rawdata$`Size (cm)`[which(rawdata$sex=="m")])
 (tOut<-t.test(rawdata$`Size (cm)`~rawdata$sex))
 tOut$p.value
 
@@ -66,7 +66,7 @@ tOut$p.value
     t.test(rawdata$`Size (cm)`~rawdata$sex,
            var.equal=var.test(
              rawdata$`Size (cm)`~rawdata$sex)$p.value>.05))
-t_var_test(data = rawdata,formula = '`Size (cm)`~sex')
+t_var_test(data = rawdata,formula = "`Size (cm)`~sex")
 
 
 print(c(mean(rawdata$sysBP_V0,na.rm=T),
@@ -74,11 +74,11 @@ print(c(mean(rawdata$sysBP_V0,na.rm=T),
 
 t.test(rawdata$sysBP_V0,
        rawdata$sysBP_V2,
-       alternative='greater', # x>y
+       alternative="greater", # x>y
        paired=T)  #pairwise t-test, within subject
 t.test(rawdata$sysBP_V0,
        rawdata$sysBP_V2,
-       # alternative='greater', # x>y
+       # alternative="greater", # x>y
        paired=T)$p.value/2  #pairwise t-test, within subject
 
 t.test(rawdata$`Size (cm)`,mu = 173)
@@ -135,20 +135,20 @@ tabletestOut$p.value
 
 
 
-groupvars <- ColSeeker(namepattern = c('sex','test'))
+groupvars <- ColSeeker(namepattern = c("sex","test"))
 
 
 ##### report -----
 # report_qv %<>% 
 #   mutate(
 #     Variable=factor(Variable, levels=quantvars$names),
-#     female='', male='',`p sexdiff`="") %>% 
+#     female="", male="",`p sexdiff`="") %>% 
 #   arrange(Variable)
 # for (var_i in 1:quantvars$count) {
-#   report_qv[var_i, c('female','male')] <- 
+#   report_qv[var_i, c("female","male")] <- 
 #     meansd(rawdata[[quantvars$index[var_i]]],
 #            groupvar = rawdata %>% pull(groupvars$names[2]),#$sex,
-#            add_n = T,rangesep = '  ',
+#            add_n = T,rangesep = "  ",
 #            range = T) %>% 
 #     as.list()
 #   evOut<-var.test((rawdata %>% pull(quantvars$index[var_i]))~
@@ -174,25 +174,25 @@ for(group_i in seq_len(groupvars$count)){
 # report_ov %<>% 
 #   mutate(
 #     Variable=factor(Variable, levels=ordvars$names),
-#     female='', male='',`p sexdiff`="") %>% 
+#     female="", male="",`p sexdiff`="") %>% 
 #   arrange(Variable)
 # for (var_i in seq_len(ordvars$count)) {
-#   report_ov[var_i,c('female','male')] <- 
+#   report_ov[var_i,c("female","male")] <- 
 #     # by(rawdata[[ordvars$names[var_i]]],
 #     #    rawdata$sex,quantile,probs=c(.25,.75),na.rm=T)
 #     median_quart(rawdata[[ordvars$index[var_i]]],
 #                  groupvar = rawdata$sex,
-#                  add_n = T,rangesep = '  ',
+#                  add_n = T,rangesep = "  ",
 #                  range = T) %>% 
 #     as.list()
 #   wOut<-wilcox.test((rawdata %>% pull(ordvars$index[var_i]))~
 #                       rawdata$sex,exact=F)
 #   report_ov$`p sexdiff`[var_i] <- formatP(wOut$p.value)
 #   plottmp <- 
-#     rawdata %>% ggplot(aes_string('sex',ordvars$bticked[var_i]))+
+#     rawdata %>% ggplot(aes_string("sex",ordvars$bticked[var_i]))+
 #     geom_boxplot()+
 #     geom_signif(comparisons = list(c(1,2)),
-#                 annotations = paste0('p ',
+#                 annotations = paste0("p ",
 #                                      formatP(wOut$p.value,
 #                                              pretext = T)))+
 #     scale_y_continuous(expand = expansion(mult = c(.1,.15)))
@@ -203,19 +203,19 @@ compare2numvars(data = rawdata,dep_vars = ordvars$names,
                 indep_var = "sex",gaussian = F)
 
 # report_cat
-groupvar <- 'sex'
+groupvar <- "sex"
 # report_cat %<>% 
 #   mutate(
 #     Variable=factor(Variable, levels=factvars$names),
-#     female='', male='',`p sexdiff`="") %>% 
+#     female="", male="",`p sexdiff`="") %>% 
 #   arrange(Variable)
 # 
 # for(var_i in seq_along(factvars$names)){
 #   # if(factvars$names[var_i]!=groupvar){
-#     report_cat[var_i,c('female','male')] <- 
+#     report_cat[var_i,c("female","male")] <- 
 #       cat_desc_stats(rawdata[[factvars$index[var_i]]],
 #                      groupvar = rawdata$sex,
-#                      singleline = T,separator = ' / ',
+#                      singleline = T,separator = " / ",
 #                      return_level = F) %>%
 #       as.list()
 #     test_out <- fisher.test(rawdata[[factvars$index[var_i]]],
@@ -228,17 +228,17 @@ groupvar <- 'sex'
 #       geom_signif(
 #         aes(y=max(table(sex))+2),
 #         comparisons = list(c(1,2)),
-#         annotations = paste0('p ',
+#         annotations = paste0("p ",
 #                              formatP(test_out$p.value,
 #                                      pretext = T)))+
 #       scale_y_continuous(expand = expansion(mult = c(.1,.15)))
 #     p2 <- ggplot(rawdata,aes_string(groupvar,
 #                                     fill=factvars$bticked[var_i]))+
-#       geom_bar(position='fill')+
+#       geom_bar(position="fill")+
 #       geom_signif(
 #         aes(y=1.05),
 #         comparisons = list(c(1,2)),
-#         annotations = paste0('p ',
+#         annotations = paste0("p ",
 #                              formatP(test_out$p.value,
 #                                      pretext = T)))+
 #       scale_y_continuous(expand = expansion(mult = c(.1,.15)),
@@ -247,22 +247,22 @@ groupvar <- 'sex'
 #                    filter(!is.na(!!sym(factvars$names[var_i]))),
 #                  aes_string(groupvar,
 #                             fill=factvars$bticked[var_i]))+
-#       geom_bar(position='fill')+
+#       geom_bar(position="fill")+
 #       geom_signif(
 #         aes(y=1.05),
 #         comparisons = list(c(1,2)),
-#         annotations = paste0('p ',
+#         annotations = paste0("p ",
 #                              formatP(test_out$p.value,
 #                                      pretext = T)))+
 #       scale_y_continuous(expand = expansion(mult = c(.1,.15)),
 #                          labels = scales::percent)
 #     print(p1/(p2+p3))
 #     print(p1/(p2+p3)+plot_layout(guides = "collect") & 
-#             theme(legend.position = 'bottom'))
+#             theme(legend.position = "bottom"))
 #   # }  
 # }
 
 compare2qualvars(rawdata,dep_vars = factvars$names,
-                 indep_var = groupvar,spacer = ' ')
+                 indep_var = groupvar,spacer = " ")
 
 ```

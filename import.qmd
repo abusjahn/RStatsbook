@@ -9,7 +9,7 @@ pacman::p_load(conflicted,tidyverse, wrappedtools, readxl)
 ## Import from Excel
 ### Tidy Excel files
 ```{r}
-rawdata <- read_excel('data/Medtest_e.xlsx')
+rawdata <- read_excel("data/Medtest_e.xlsx")
 rawdata <- rename(rawdata,
                   `Size (cm)`=size,
                   `Weight (kg)`=weight) |> 

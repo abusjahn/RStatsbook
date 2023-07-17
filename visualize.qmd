@@ -63,10 +63,10 @@ Aesthetic parameters can represent data / have some meaning (as cut quality), bu
 ```{r}
 #aesthetics outside aes
 ggplot(data=diamonds,aes(x=clarity))+
-  geom_bar(fill='gold')
+  geom_bar(fill="gold")
 
 ggplot(data=diamonds,aes(x=clarity))+
-  geom_bar(aes(fill='gold')) #should be outside aes!
+  geom_bar(aes(fill="gold")) #should be outside aes!
 
 ggplot(data=diamonds,aes(x=clarity))+
   geom_bar(aes(fill=cut)) # may be defined locally as well globally
@@ -86,7 +86,7 @@ Other elements (as e.g. the line) only have a single color definition, specified
 ggplot(data=diamonds,aes(x=clarity,color=cut))+
   geom_bar()
 ggplot(data=mtcars,aes(factor(cyl),fill=factor(cyl)))+
-  geom_bar(color='black')
+  geom_bar(color="black")
 ggplot(data=mtcars,aes(factor(cyl),color=factor(cyl)))+
   geom_bar()
 ```
@@ -100,7 +100,7 @@ For the demonstration, I store a plot into a variable, this includes all data an
 ```{r}
 (plottemp <- ggplot(data=diamonds,aes(x=clarity,fill=cut))+
     geom_bar())
-plottemp + scale_fill_brewer(palette='Set2') #in-built "scale" for fill
+plottemp + scale_fill_brewer(palette="Set2") #in-built "scale" for fill
 plottemp + scale_fill_grey(name = "cut of\ndiamonds")
 plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
   scale_y_continuous(expand = expansion(mult = c(0,.5)))+ # rescaling y
@@ -125,13 +125,13 @@ There are two distinct ways, using ggsave() or more generally creating an extern
 
 ```{r}
 #| eval: false
-ggsave(filename = 'Graphs/ggtestplot.png',
+ggsave(filename = "Graphs/ggtestplot.png",
        plot = printplot,
        width=20,height=20,
-       units='cm',dpi=150)
+       units="cm",dpi=150)
 # alternative:
-png(filename = 'Graphs/ggtestplot2.png',
-    width = 20,height = 20,units = 'cm',res = 150)
+png(filename = "Graphs/ggtestplot2.png",
+    width = 20,height = 20,units = "cm",res = 150)
 plottemp
 dev.off()
 ```
@@ -148,7 +148,7 @@ ggplot(data=mtcars,aes(x = wt,y = mpg))+
   geom_smooth()
 ggplot(data=mtcars,aes(x = wt,y = mpg))+
   geom_point()+
-  geom_smooth(method='lm')
+  geom_smooth(method="lm")
 
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot() #default 1.5 IQR
@@ -167,7 +167,7 @@ ggplot(mtcars,aes(x = factor(gear),y = wt))+
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot(coef=3)+
   geom_dotplot(alpha=.7, # group similar(ish) data on a line
-               binaxis = 'y',stackdir = 'center',
+               binaxis = "y",stackdir = "center",
                stackratio = .9,dotsize = .6)  
 ggplot(mtcars,aes(x = factor(gear),y = wt))+
   geom_boxplot(coef=3)+
@@ -187,11 +187,11 @@ ggplot(data=mtcars,aes(wt, mpg,color=qsec))+
 ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
   geom_point()
 ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
-  scale_color_gradient(low='darkred',high='blue')+
+  scale_color_gradient(low="darkred",high="blue")+
   geom_point()
 ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
-  scale_color_gradient2(low='red',high='darkblue',
-                        mid='white',
+  scale_color_gradient2(low="red",high="darkblue",
+                        mid="white",
                         limits=c(13,23),midpoint=18)+
   geom_point()+
   scale_x_continuous(breaks = seq(0,100,5),
@@ -217,7 +217,7 @@ ggplot(data=mtcars,
   geom_point()
 
 ggplot(data=mtcars,aes(carb, mpg,color=qsec, size=wt))+
-  geom_text(family="EmojiOne",label='\U1F697')
+  geom_text(family="EmojiOne",label="\U1F697")
 
 ```
 
@@ -232,11 +232,11 @@ p+geom_bar(position="dodge")
 p+geom_bar(position=position_dodge(width = 0.7), alpha=.75)
 p+geom_bar(position="fill") #y-axis labeling needs tuning
 p+geom_bar(position="fill")+
-  scale_y_continuous(name = 'Frequency (%)',
+  scale_y_continuous(name = "Frequency (%)",
                      breaks=seq(0,1,.2), #steps
                      labels=seq(0,100,20))
 p+geom_bar(position="fill")+
-  scale_y_continuous('Frequency',
+  scale_y_continuous("Frequency",
                      breaks=seq(0,1,.1),
                      labels=scales::percent)+
   theme(axis.title.y = element_text(angle = 0,
@@ -245,12 +245,12 @@ p+geom_bar(position="fill")+
 p+geom_bar(position="identity") # bad idea!
 p+geom_bar(position="identity",alpha=.5)
 ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
-  geom_freqpoly(stat='count',position="identity",lwd=1.5)+
-  geom_point(stat='count',size=5)+
-  scale_color_manual(values = c('green','lightblue',
-                                'darkblue',
+  geom_freqpoly(stat="count",position="identity",lwd=1.5)+
+  geom_point(stat="count",size=5)+
+  scale_color_manual(values = c("green","lightblue",
+                                "darkblue",
                                 rgb(253,79,54,maxColorValue = 255),
-                                '#00798d'))
+                                "#00798d"))
 ```
 
 ## Order of layers
@@ -262,25 +262,25 @@ ggplot(data=mtcars,aes(wt, mpg))+
   geom_point(size=4)+
   geom_smooth(size=3)+ # line overlaps points
   geom_smooth(data=mtcars %>% filter(wt>3), #picks a sub-sample
-              method='lm',linewidth=3, color='red')
+              method="lm",linewidth=3, color="red")
 
 
 ggplot(data=mtcars,aes(wt, mpg))+
   geom_smooth(linewidth=3)+
   geom_point(size=4)
 ggplot(data=mtcars,aes(wt, mpg))+
-  geom_smooth(linewidth=3,color='red')+
-  geom_smooth(method='lm',linewidth=3)+
+  geom_smooth(linewidth=3,color="red")+
+  geom_smooth(method="lm",linewidth=3)+
   geom_point(size=4)
 ggplot(data=mtcars,aes(wt, mpg,
                        color=factor(cyl)))+
   geom_point(size=4)+
-  geom_smooth(method='lm',linewidth=1)
+  geom_smooth(method="lm",linewidth=1)
 ggplot(data=mtcars,aes(wt, mpg,
                        color=factor(cyl),
                        shape=factor(am)))+
   geom_point(size=2)+
-  geom_smooth(method='lm',linewidth=1,se=F)
+  geom_smooth(method="lm",linewidth=1,se=F)
 
 ```
 
@@ -289,10 +289,10 @@ ggplot(data=mtcars,aes(wt, mpg,
 ```{r}
 #? lm for all?
 ggplot(data=mtcars,aes(wt, mpg))+
-  geom_smooth(size=1,color='black',fill='yellow')+
+  geom_smooth(size=1,color="black",fill="yellow")+
   geom_point(size=3,aes(color=factor(cyl),shape=factor(am))) #aes for geom only
 ggplot(data=mtcars,aes(wt, mpg,color=factor(cyl)))+
-  geom_smooth(size=1,color='black',fill='yellow')+ # global color overwritten
+  geom_smooth(size=1,color="black",fill="yellow")+ # global color overwritten
   geom_point(size=3, aes(shape=factor(am))) 
 
 ```
@@ -318,7 +318,7 @@ p.tmp + facet_grid(rows = vars(gear),
 cat("facet labeling improved:\n")
 p.tmp + facet_grid(rows = vars(gear),
                    cols = vars(cyl),
-                   labeller=label_both,margins='gear')
+                   labeller=label_both,margins="gear")
 # options(warn=-1) 
 p.tmp + geom_smooth()+
   facet_grid(rows = vars(gear),
@@ -344,7 +344,7 @@ mtcars |>
   pivot_longer(cols = c(wt, mpg, hp, disp, qsec)) |> 
   ggplot(aes(x=factor(am), y=value))+
   geom_beeswarm(alpha=.5, cex=2)+
-  facet_wrap(facets = vars(name), scales='free')
+  facet_wrap(facets = vars(name), scales="free")
 
 ```
 
@@ -369,17 +369,17 @@ Functions for summary statistics (mean_se, mean_cl_normal, mean_cl_boot etc.) ar
 ```{r}
 (plottemp <- ggplot(mtcars,aes(factor(gear),mpg))+
    geom_point(alpha=.5))
-plottemp+stat_summary(color='red')
-plottemp+stat_summary(geom = 'point', shape=17,size=5,
-                      fun = 'mean',color='red')
-plottemp+stat_summary(fun.data='mean_cl_boot',color='red')+
-  ylab('mpg (mean \u00b1 95% CI)')+
-  xlab('Gear')
-plottemp+stat_summary(fun.data='mean_cl_normal',color='red')+
-  ylab('mpg (mean \u00b1 95% CI)')+
-  xlab('Gear')
-plottemp+stat_summary(fun.data='median_hilow',color='red')+
-  ylab('mpg median \u00b1 95%')
+plottemp+stat_summary(color="red")
+plottemp+stat_summary(geom = "point", shape=17,size=5,
+                      fun = "mean",color="red")
+plottemp+stat_summary(fun.data="mean_cl_boot",color="red")+
+  ylab("mpg (mean \u00b1 95% CI)")+
+  xlab("Gear")
+plottemp+stat_summary(fun.data="mean_cl_normal",color="red")+
+  ylab("mpg (mean \u00b1 95% CI)")+
+  xlab("Gear")
+plottemp+stat_summary(fun.data="median_hilow",color="red")+
+  ylab("mpg median \u00b1 95%")
 # geom_pointrange()
 
 ```
@@ -398,7 +398,7 @@ plottemp+geom_signif(
   # aes(y=0),
   # textsize = rel(3), vjust = .0,
   #y_position=max(mtcars$mpg+3),
-  annotations=paste0('p = ', p),
+  annotations=paste0("p = ", p),
   # annotations=p,
   tip_length=.02)
 
@@ -421,14 +421,14 @@ theme_update(legend.position="bottom",
                                     size=12),
              axis.text.x=element_text(vjust=0.5,angle=45),
              axis.title=element_text(size=15),
-             plot.margin=unit(c(3,4,.5,.3),'lines'),    #N,E,S,W
+             plot.margin=unit(c(3,4,.5,.3),"lines"),    #N,E,S,W
              axis.title.y=element_text(vjust=0.4,angle=45),
-             legend.key.size=unit(2.5,'lines'),
-             panel.background=element_rect(fill='darkgrey'),
-             panel.grid.minor = element_line(colour='white'),
+             legend.key.size=unit(2.5, "lines"),
+             panel.background=element_rect(fill="darkgrey"),
+             panel.grid.minor = element_line(colour="white"),
              panel.grid.major = element_line(
                linetype=1,
-               color='violet',linewidth = 2),
+               color="violet",linewidth = 2),
              legend.text = element_text(size = 8))
 ggplot(data=diamonds,aes(x=clarity,fill=cut))+
   geom_bar()
@@ -440,7 +440,7 @@ ggplot(data=diamonds,aes(x=clarity,fill=cut))+
 # ggthemes ####
 plottemp+theme_economist()
 plottemp+theme_excel()+
-  theme(axis.title.x =  element_text(face='bold', hjust=0.95))
+  theme(axis.title.x =  element_text(face="bold", hjust=0.95))
 plottemp+theme_minimal()
 
 # https://github.com/thomasp85/patchwork

@@ -270,18 +270,19 @@ compare2numvars(data = mtcars,
 
 ```{r}
 #FunctionName<-function(parameters...){definition}
-division <- function(x,y){
+division <- function(x, y){
   x/y
 }
 (Sys.Date()-as.Date("1958/12/10")) |> 
   as.numeric() |> 
-  division(y = 365.25) |> 
+  division(y = 365.25, x=_) |> 
   floor()
 
-Mymean<-function(werte)
+Mymean<-function(values)
 {
-  return(base::mean(werte,na.rm=T))
+  return(base::mean(values, na.rm=TRUE))
 }
+
 
 mark_sign<-function(SignIn) {
   SignIn <- as.numeric(SignIn)
@@ -302,7 +303,9 @@ mark_sign(SignIn=0.035)
 mark_sign(SignIn="0.35")
 mark_sign(SignIn = "p=3,5%")   #wrong input
 ```
+
 different implementation
+
 ```{r}
 markSign0 <- function(SignIn, plabel = c("n.s.", "+", "*", "**", "***")) {
   SignIn <- suppressWarnings(

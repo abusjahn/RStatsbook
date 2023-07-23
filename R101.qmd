@@ -1,6 +1,6 @@
 # Syntax rules / basic things to know about R
 
-This is going to be the boring technical stuff...
+This is going to be the boring technical stuff... We'll get to the more interesting topics in the next chapters.
 
 ## Script preparation / basic setup
 

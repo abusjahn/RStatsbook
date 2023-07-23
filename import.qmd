@@ -7,17 +7,47 @@ pacman::p_load(conflicted,tidyverse, wrappedtools, readxl)
 ## Import from text files (.txt, .csv)
 
 ## Import from Excel
+
 ### Tidy Excel files
+
 ```{r}
-rawdata <- read_excel("data/Medtest_e.xlsx")
-rawdata <- rename(rawdata,
-                  `Size (cm)`=size,
-                  `Weight (kg)`=weight) |> 
-  select(-Sex_m)
+rawdata <- read_excel(path = "data/Medtest_e.xlsx") |> 
+  rename_with(.fn = ~str_replace_all(.x,pattern="_",replacement=" ")) |>
+  rename_with(.fn=str_to_title,!contains(c("BP","BMI","NY"))) |> 
+  rename(`Size (cm)`=Size, #newname=oldname
+         `Weight (kg)`=Weight) |> 
+  select(-`Sex M`)
 saveRDS(rawdata,file = "data/rawdata.rds")
 ```
 
-### Dirty Excel files
+### Excel file with units row
+
+1.  Import names section and data section separately
+
+2.  Loop over all columns
+
+    1.  test for existence of unit, if not NA
+
+    2.  paste 1st row, " \[", 2nd row, "\]"
+
+3.  Use 1st row as colnames for data
+
+```{r}
+cn_temp <- read_excel(path = "data/Medtest_e.xlsx",
+                      range = "A1:Y2",col_names = FALSE,
+                      sheet = 2)
+for(col_i in colnames(cn_temp)){
+  if(!is.na(cn_temp |> slice(2) |> pull(col_i))){
+    cn_temp[1,col_i] <- 
+      paste0(cn_temp[1,col_i], " [", cn_temp[2,col_i], "]")
+  }
+}
+
+rawdata <- read_excel(path = "data/Medtest_e.xlsx",
+                      skip = 2, col_names = FALSE,
+                      sheet = 2)
+colnames(rawdata) <- cn_temp[1,]
+```
 
 ## Import from SPSS
 

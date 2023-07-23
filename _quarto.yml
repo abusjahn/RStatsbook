@@ -16,6 +16,7 @@ book:
     - intro.qmd
     - R101.qmd
     - import.qmd
+    - pivot.qmd
     - variableclassification.qmd
     - visualize.qmd
     - describe.qmd

@@ -1,0 +1,73 @@
+# Changing structure wide \<--\> long
+
+When working with repeated measures (e.g. follow-ups or changes over shorter periods of time) there are two typical formats:
+
+1.  wide data:
+
+    | ID  | Var1Time1 | Var1Time2 | Var2Time1 | Var2Time2 |
+    |-----|-----------|-----------|-----------|-----------|
+    | P1  |           |           |           |           |
+    | P2  |           |           |           |           |
+    | P3  |           |           |           |           |
+
+2.  long data
+
+    | ID  | Time | Var1 | Var2 |
+    |-----|------|------|------|
+    | P1  | 1    |      |      |
+    | P1  | 2    |      |      |
+    | P2  | 1    |      |      |
+    | P2  | 2    |      |      |
+    | P3  | 1    |      |      |
+    | P3  | 2    |      |      |
+
+While long data can be seen as the tidier version and is necessary for many statistical procedures, the wide format makes computation of differences and procedures as the t-test for dependent samples easier. Package tidyr provides the functions pivot_wider and pivot_longer for conversations between those forms. Another use-case is the plotting of several variables into ggplot facets, which can be achieved by combining those variables into a single column. Summarizing several variables and grouped data may result in a wide table with groups as rows and variables as columns, contrary to the common opposite form, another use-case.
+
+There are many examples and explanations in the vignette:
+
+[https://tidyr.tidyverse.org/articles/pivot.html](https://tidyr.tidyverse.org/articles/pivot.html){target="_blank"}
+
+```{r}
+pacman::p_load(conflicted,tidyverse, wrappedtools)
+```
+
+Example 1: single repeated measure
+
+```{r}
+n <- 3
+wide_data <- tibble(ID = paste("P",1:n),
+                    Var1 = LETTERS[1:n],
+                    Var2Time1 = rnorm(n = n, mean = 100, sd = 15),
+                    Var2Time2 = Var2Time1 + rnorm(n,10,5))
+wide_data
+long_data <- pivot_longer(
+  data = wide_data,
+  cols = contains("Time")
+)
+long_data
+```
+
+Example 2: several repeated measures
+
+```{r}
+wide_data <- tibble(ID = paste("P",1:n),
+                    Var1Time1 = rnorm(n = n, mean = 100, sd = 15),
+                    Var1Time2 = Var1Time1 + rnorm(n,10,5),
+                    Var2Time1 = rnorm(n = n, mean = 10, sd = 2),
+                    Var2Time2 = Var2Time1 + rnorm(n,0,1),
+                    Var3 = LETTERS[1:n])
+wide_data
+#intermediate:
+very_long_data <- pivot_longer(
+  data = wide_data,
+  cols = contains("Time"),
+  names_to = c("Variable", "Time"),
+  names_pattern = "(Var\\d)(Time[12])",
+  values_to = "Value"
+)
+very_long_data
+long_data <- pivot_wider(very_long_data,
+                         names_from = Variable,
+                         values_from = Value)
+long_data
+```

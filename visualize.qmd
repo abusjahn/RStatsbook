@@ -498,7 +498,7 @@ plottemp+theme_bw()
 
 ```
 
-Combining figures with patchwork
+## Combining figures with patchwork
 
 More details on [github](https://github.com/thomasp85/patchwork){target="_blank"}
 

@@ -1,25 +1,133 @@
 # Grouping of variables by type / distribution / use
 
 ```{r}
-pacman::p_load(wrappedtools)
+pacman::p_load(conflicted,wrappedtools,tidyverse)
+conflicts_prefer(dplyr::filter)
+rawdata <- readRDS('data/rawdata.rds')
+```
+
+## Test for Normal distribution
+
+### Testing a single variable
+
+Before computing some test-statistics, a graphical exploration should be done by e.g. density plots. If severe group difference can be expected (case/control, sex ...), exploration and analyses should be done in subgroups.
+
+```{r}
+rawdata |> filter(Sex=="m") |> 
+  pull(`Size (cm)`) |> 
+  ksnormal()
+rawdata |> 
+  group_by(Sex) |>
+  summarize(p_KS = ksnormal(`Size (cm)`),
+            `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
+```
+
+There are a number of tests for Normal distribution, all testing the Null hypothesis of data coming from a population with Normal distribution. So small p-values lead to rejection of the Null and indicate deviation from normality. Kolmogorov-Smirnov-test (for larger sample sizes) and Shapiro-Wilk-test (for smaller samples) will be used as examples.
+
+```{r}
+ks.test(x = rawdata$`Size (cm)`,
+        "pnorm",
+        mean=mean(rawdata$`Size (cm)`, na.rm = TRUE),
+        sd=sd(rawdata$`Size (cm)`, na.rm = TRUE))
+
+ksnormal(rawdata$`Size (cm)`)
+shapiro.test(rawdata$`Size (cm)`)
+
+ggplot(rawdata,aes(x = `Size (cm)`))+
+  geom_density()
+ggplot(rawdata,aes(x = `Size (cm)`,fill=Sex))+
+  geom_density(alpha=.4)
+
 
 ```
 
-## Test for normal distribution
+### Testing several variables 
+
+To explore larger data sets, it may be useful to test all numerical variables for normality, this can be done in a loop or with the across-function. As a start for the loop-solution we can get the names and positions for all (or selected) numerical variables with the ColSeeker-function from wrappedtools.
+
+```{r}
+numvars <- ColSeeker(varclass = "numeric")
+```
+
+Loops can be created with either a numeric counter-like index or content-based index.
+
+Loop Version 1:
+
+```{r}
+## result table v1, pre-filled
+resulttable1 <- tibble(
+  Variables=numvars$names,
+  pKS=NA_real_,
+  pSh=NA_real_
+)
+## loop version 1
+for(var_i in seq_len(numvars$count)){
+  resulttable1$pKS[var_i] <-
+    ksnormal(rawdata[[numvars$names[var_i]]])
+  resulttable1$pSh[var_i] <- 
+  shapiro.test(rawdata |> 
+                 pull(numvars$names[var_i]))$p.value
+}
+head(resulttable1)
+```
+
+Loop Version 2:
+
+```{r}
+## result table v2, just structure
+resulttable2 <- tibble(Variables=NA_character_,
+                       pKS=NA_character_,
+                       pSh=NA_character_,
+                       .rows = 0)
+for(var_i in numvars$names){
+resulttable2 <- 
+  add_row(resulttable2,
+          Variables=var_i,
+          pKS=ksnormal(rawdata[[var_i]]) |> 
+            formatP(), # added rounding/formatting
+          pSh=shapiro.test(rawdata |> 
+                 pull(var_i))$p.value |> 
+            formatP())
+}
+head(resulttable2)
+```
+
+across() - Version:
+
+```{r}
+resulttable3 <- 
+  summarize(rawdata,
+            across(where(is.numeric),
+                   .fns = list(
+                     # n=~na.omit(.x) |> length() |> as.character(),
+                     pKS=~ksnormal(.x) |> 
+                       formatP(mark = TRUE),
+                     pSh=~shapiro.test(.x) |> 
+                       pluck("p.value") |> 
+                       formatP(mark = TRUE)))) |> 
+  pivot_longer(everything(),
+               names_to=c("Variable","test"),
+               names_sep = "_") |> 
+  pivot_wider(names_from=test, values_from=value)
+head(resulttable3)
+```
 
 ## Picking column names and positions
 
+Based on data inspection, testing, and background knowledge, variables can be sorted into scale levels:
+
 ```{r}
-rawdata <- readRDS('data/rawdata.rds')
-quantvars <- ColSeeker(data = rawdata,
-                       varclass = "numeric",
-                       exclude = "code")
-gaussvars <- ColSeeker(namepattern = c("si","we","BMI","BP","mri"))
+gaussvars <- ColSeeker(namepattern = c("si","we","BMI","BP","mri"),
+                       casesensitive = FALSE)
 
-ordvars <- ColSeeker(namepattern = c("age","lab"))
+ordvars <- ColSeeker(namepattern = c("Age","Lab"))
 
-factvars <- ColSeeker(namepattern = c("sex","med","NYHA"),
+factvars <- ColSeeker(namepattern = c("Sex","med","NYHA"),
                       returnclass = TRUE)
+
+rawdata <- mutate(rawdata,
+                  across(all_of(factvars$names),
+                         factor))
 save(rawdata,list = ls(pattern = "vars"),file = "data/bookdata1.RData")
 
 ```

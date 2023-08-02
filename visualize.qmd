@@ -518,7 +518,7 @@ p3 <- ggplot(mtcars) +
 
 (p1 | p2) / 
   (p3  + guides(color = "none")) +
-  plot_annotation(tag_levels = "a") +
+  plot_annotation(tag_levels = "I") +
   plot_layout(guides = "collect")
   
 ```

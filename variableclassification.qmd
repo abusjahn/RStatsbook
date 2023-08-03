@@ -10,18 +10,8 @@ rawdata <- readRDS('data/rawdata.rds')
 
 ### Testing a single variable
 
-Before computing some test-statistics, a graphical exploration should be done by e.g. density plots. If severe group difference can be expected (case/control, sex ...), exploration and analyses should be done in subgroups.
-
-```{r}
-rawdata |> filter(Sex=="m") |> 
-  pull(`Size (cm)`) |> 
-  ksnormal()
-rawdata |> 
-  group_by(Sex) |>
-  summarize(p_KS = ksnormal(`Size (cm)`),
-            `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
-```
-
+Before computing some test-statistics, a graphical exploration should be done by e.g. density plots.   
+  
 There are a number of tests for Normal distribution, all testing the Null hypothesis of data coming from a population with Normal distribution. So small p-values lead to rejection of the Null and indicate deviation from normality. Kolmogorov-Smirnov-test (for larger sample sizes) and Shapiro-Wilk-test (for smaller samples) will be used as examples.
 
 ```{r}
@@ -37,8 +27,17 @@ ggplot(rawdata,aes(x = `Size (cm)`))+
   geom_density()
 ggplot(rawdata,aes(x = `Size (cm)`,fill=Sex))+
   geom_density(alpha=.4)
+```
+If severe group difference can be expected (case/control, sex ...), exploration and analyses should be done in subgroups.
 
-
+```{r}
+rawdata |> filter(Sex=="m") |> 
+  pull(`Size (cm)`) |> 
+  ksnormal()
+rawdata |> 
+  group_by(Sex) |>
+  summarize(p_KS = ksnormal(`Size (cm)`),
+            `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
 ```
 
 ### Testing several variables 
@@ -47,6 +46,9 @@ To explore larger data sets, it may be useful to test all numerical variables fo
 
 ```{r}
 numvars <- ColSeeker(varclass = "numeric")
+numvars$index
+head(numvars$names)
+numvars$count
 ```
 
 Loops can be created with either a numeric counter-like index or content-based index.

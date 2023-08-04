@@ -78,18 +78,19 @@ Loop Version 2:
 ```{r}
 ## result table v2, just structure
 resulttable2 <- tibble(Variables=NA_character_,
-                       pKS=NA_character_,
-                       pSh=NA_character_,
+                       pKS_Placebo=NA_character_,
+                       pKS_Verum=NA_character_,
                        .rows = 0)
 for(var_i in numvars$names){
-resulttable2 <- 
-  add_row(resulttable2,
-          Variables=var_i,
-          pKS=ksnormal(rawdata[[var_i]]) |> 
-            formatP(), # added rounding/formatting
-          pSh=shapiro.test(rawdata |> 
-                 pull(var_i))$p.value |> 
-            formatP())
+  ks_tmp <- by(rawdata[[var_i]], 
+               INDICES=rawdata$Testmedication,
+               FUN=ksnormal)
+  resulttable2 <-add_row(resulttable2,   
+                         Variables=var_i,
+                         pKS_Placebo=ks_tmp[[1]] |> 
+                           formatP(), # added rounding/formatting
+                         pKS_Verum=ks_tmp[[2]] |> 
+                           formatP())
 }
 head(resulttable2)
 ```
@@ -98,19 +99,25 @@ across() - Version:
 
 ```{r}
 resulttable3 <- 
-  summarize(rawdata,
-            across(where(is.numeric),
+  rawdata |> 
+  group_by(Testmedication) |>
+  summarize(across(all_of(numvars$names[-(2:4)]),
                    .fns = list(
                      # n=~na.omit(.x) |> length() |> as.character(),
+                     Mean=~mean(.x, na.rm=TRUE) |> 
+                       roundR(5),
+                     Median=~median(.x, na.rm=TRUE) |> 
+                       roundR(5),
                      pKS=~ksnormal(.x) |> 
                        formatP(mark = TRUE),
                      pSh=~shapiro.test(.x) |> 
                        pluck("p.value") |> 
                        formatP(mark = TRUE)))) |> 
-  pivot_longer(everything(),
+  pivot_longer(-Testmedication,
                names_to=c("Variable","test"),
                names_sep = "_") |> 
-  pivot_wider(names_from=test, values_from=value)
+  pivot_wider(names_from=test, values_from=value) |> 
+arrange(Variable)
 head(resulttable3)
 ```
 
@@ -119,8 +126,9 @@ head(resulttable3)
 Based on data inspection, testing, and background knowledge, variables can be sorted into scale levels:
 
 ```{r}
-gaussvars <- ColSeeker(namepattern = c("si","we","BMI","BP","mri"),
-                       casesensitive = FALSE)
+gaussvars <- ColSeeker(
+  namepattern = c("si","we","BMI","BP","mri"),
+  casesensitive = FALSE)
 
 ordvars <- ColSeeker(namepattern = c("Age","Lab"))
 
@@ -129,7 +137,8 @@ factvars <- ColSeeker(namepattern = c("Sex","med","NYHA"),
 
 rawdata <- mutate(rawdata,
                   across(all_of(factvars$names),
-                         factor))
-save(rawdata,list = ls(pattern = "vars"),file = "data/bookdata1.RData")
+                         ~factor(.x)))
+save(rawdata,list = ls(pattern = "vars"),
+     file = "data/bookdata1.RData")
 
 ```

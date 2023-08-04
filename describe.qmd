@@ -1,11 +1,11 @@
 # Descriptive statistics
 
 ```{r}
-pacman::p_load(tidyverse,wrappedtools)
+pacman::p_load(conflicted,tidyverse,wrappedtools)
 #dir("Data/")
 load("data/bookdata1.RData")
 
-ggplot(rawdata,aes(sysBP_V0, diaBP_V0))+
+ggplot(rawdata,aes(`sysBP V0`, `diaBP V0`))+
   geom_point()+
   geom_smooth(se=F)+
   geom_smooth(method="lm",color="red", 
@@ -18,47 +18,32 @@ min(rawdata$`Size (cm)`)
 round(mean_size,digits = 2)
 roundR(mean_size,level = 2)
 meansd(rawdata$`Size (cm)`, roundDig = 4,range = T,add_n = T)
-meansd(rawdata$sysBP_V0, roundDig = 4,range = T,
+meansd(rawdata$`sysBP V0`, roundDig = 4,range = T,
        add_n = T,.german = T)
 
 median(rawdata$`Size (cm)`)
 quantile(rawdata$`Size (cm)`,probs = c(.25,.75))
 median_quart(rawdata$`Size (cm)`)
 
-table(rawdata$sex, useNA = "a")
-sex_count <- table(rawdata$sex, useNA = "ifany")
-table(rawdata$NYHA_V2,useNA = "always")
-table(rawdata$NYHA_V2,useNA = "i")
-randomize <- table(rawdata$sex, rawdata$testmedication)
+table(rawdata$Sex, useNA = "a")
+sex_count <- table(rawdata$Sex, useNA = "ifany")
+table(rawdata$`NYHA V2`,useNA = "always")
+table(rawdata$`NYHA V2`,useNA = "i")
+randomize <- table(rawdata$Sex, rawdata$Testmedication)
 prop.table(sex_count)
 prop.table(randomize,margin = 2)*100
-cat_desc_stats(rawdata$NYHA_V2)
-cat_desc_stats(rawdata$sex, singleline = T)
+cat_desc_stats(rawdata$`NYHA V2`)
+cat_desc_stats(rawdata$Sex, singleline = T)
 
 rawdata |> 
-  group_by(sex,testmedication) |> 
+  group_by(Sex,Testmedication) |> 
   summarise(WeightSummary=meansd(`Weight (kg)`))
 
 
 
 compare2numvars(rawdata,
                 dep_vars = c( "Size (cm)","Weight (kg)",
-                              "sysBP_V0","diaBP_V0"),
-                indep_var = "sex",
+                              "sysBP V0","diaBP V0"),
+                indep_var = "Sex",
                 gaussian = F)
-
-ggplot(rawdata,aes(`Size (cm)`))+
-  geom_density()
-ggplot(rawdata,aes(`Size (cm)`, fill=sex))+
-  geom_density(alpha=.4)
-
-ks.test(rawdata$`Size (cm)`,
-        pnorm) #WRONG!!!!!
-ks.test(rawdata$`Size (cm)`,
-        pnorm,
-        mean=mean(rawdata$`Size (cm)`),
-        sd=sd(rawdata$`Size (cm)`))
-ksnormal(rawdata$`Size (cm)`)
-shapiro.test(rawdata$`Size (cm)`)
-
 ```

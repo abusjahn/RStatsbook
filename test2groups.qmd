@@ -8,9 +8,9 @@ pacman::p_load(plotrix,tidyverse, wrappedtools,
 load("data/bookdata1.RData")
 
 ```
+## Quantitative measures with Gaussian distribution
 
 ```{r}
-##### quantitative measures with Gaussian distribution -----
 ggplot(rawdata,aes(x=Sex,y=`Size (cm)`))+
   geom_beeswarm(size=3)+
   stat_summary(color="red",size=1.2,alpha=.7, 
@@ -49,9 +49,23 @@ t.test(rawdata$`sysBP V0`,
 
 t.test(rawdata$`Size (cm)`,mu = 173)
 
-##### ordinal data -----
+groupvars <- ColSeeker(namepattern = c("Sex","Test"))
+
+compare2numvars(data = rawdata,dep_vars = gaussvars$names,
+                indep_var = "Sex",gaussian = T)
+compare2numvars(data = rawdata,dep_vars = gaussvars$names,
+                indep_var = "Testmedication",gaussian = T)
+for(group_i in seq_len(groupvars$count)){
+  resulttmp <- compare2numvars(data = rawdata,dep_vars = gaussvars$names,
+                  indep_var = groupvars$names[group_i],gaussian = T)
+  print(resulttmp)
+}
+```
+## Ordinal data
+
+```{r}
 ordvars$names
-ggplot(rawdata,aes(iron_lab))+
+ggplot(rawdata,aes(`Iron Lab`))+
   geom_density()
 by(data = rawdata[[ordvars$index[1]]], 
    INDICES = rawdata$Sex,FUN = median_quart)
@@ -71,7 +85,14 @@ wilcox.test(x=rawdata$`sysBP V0`,y=rawdata$`sysBP V2`,
             exact=FALSE,
             correct=TRUE,paired=TRUE)
 
-##### categorial data -----
+compare2numvars(data = rawdata,dep_vars = ordvars$names,
+                indep_var = "Sex",gaussian = F)
+```
+
+
+## Categorial data 
+
+```{r}
 factvars$names
 (crosstab<-table(rawdata$Sex,rawdata$Testmedication))
 chisq.test(crosstab,simulate.p.value=T,B=10^5)  #empirical p-value
@@ -95,28 +116,9 @@ if (min(tabletestOut$expected)<5) {
   tabletestOut<-fisher.test(crosstab1)
 }
 tabletestOut$p.value 
-
-
-
-groupvars <- ColSeeker(namepattern = c("Sex","Test"))
-
-compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                indep_var = "Sex",gaussian = T)
-compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                indep_var = "Testmedication",gaussian = T)
-for(group_i in seq_len(groupvars$count)){
-  resulttmp <- compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                  indep_var = groupvars$names[group_i],gaussian = T)
-  print(resulttmp)
-}
-
-compare2numvars(data = rawdata,dep_vars = ordvars$names,
-                indep_var = "Sex",gaussian = F)
-
 # report_cat
 groupvar <- "Sex"
 
-compare2qualvars(rawdata,dep_vars = factvars$names,
+compare2qualvars(rawdata,dep_vars = factvars$names[-2],
                  indep_var = groupvar,spacer = " ")
-
 ```

@@ -1,7 +1,8 @@
 # Descriptive statistics
 
 ```{r}
-pacman::p_load(conflicted,tidyverse,wrappedtools)
+pacman::p_load(conflicted,tidyverse,wrappedtools,
+               flextable)
 #dir("Data/")
 load("data/bookdata1.RData")
 
@@ -17,9 +18,11 @@ sd_size <- sd(rawdata$`Size (cm)`)
 min(rawdata$`Size (cm)`)
 round(mean_size,digits = 2)
 roundR(mean_size,level = 2)
-meansd(rawdata$`Size (cm)`, roundDig = 4,range = T,add_n = T)
-meansd(rawdata$`sysBP V0`, roundDig = 4,range = T,
-       add_n = T,.german = T)
+meansd(rawdata$`Size (cm)`, roundDig = 4,
+       range = TRUE,add_n = TRUE)
+meansd(rawdata$`sysBP V0`, roundDig = 4,
+       range = TRUE,
+       add_n = TRUE,.german = TRUE)
 
 median(rawdata$`Size (cm)`)
 quantile(rawdata$`Size (cm)`,probs = c(.25,.75))
@@ -29,11 +32,20 @@ table(rawdata$Sex, useNA = "a")
 sex_count <- table(rawdata$Sex, useNA = "ifany")
 table(rawdata$`NYHA V2`,useNA = "always")
 table(rawdata$`NYHA V2`,useNA = "i")
+table(rawdata$`NYHA V2`,useNA = "no")
 randomize <- table(rawdata$Sex, rawdata$Testmedication)
 prop.table(sex_count)
 prop.table(randomize,margin = 2)*100
 cat_desc_stats(rawdata$`NYHA V2`)
-cat_desc_stats(rawdata$Sex, singleline = T)
+cat_desc_stats(rawdata$Sex, singleline = TRUE)
+
+cat_desc_table(data = rawdata,
+               desc_vars = factvars$names) |> 
+  rename(`n (%)`=desc_all) |> 
+  flextable() |> 
+  align(~`n (%)`!=" ",j = 1,align = "right") |> 
+  width(j = c(1,2),width = c(3,4),unit = "cm")
+  
 
 rawdata |> 
   group_by(Sex,Testmedication) |> 
@@ -45,5 +57,5 @@ compare2numvars(rawdata,
                 dep_vars = c( "Size (cm)","Weight (kg)",
                               "sysBP V0","diaBP V0"),
                 indep_var = "Sex",
-                gaussian = F)
+                gaussian = FALSE)
 ```

@@ -1,6 +1,5 @@
 # Intro to lm
 
-
 In this chapter, linear models (including linear regression and ANOVA) will be introduced.\
 Output is not optimized for print, but rather for interactive use.
 
@@ -73,7 +72,7 @@ ggplot(rawdata,aes(x=Passage,y=Growth))+
 
 ### Linear regression
 
-We will analyse the relation between indepemdent variable (IV) Passage and dependent variable (DV) Growth.
+We will analyse the relation between independent variable (IV) Passage and dependent variable (DV) Growth.
 
 #### Graphical exploration
 

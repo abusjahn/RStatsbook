@@ -1,13 +1,15 @@
 # Simple test statistics
 
 ```{r}
-pacman::p_load(plotrix,tidyverse, wrappedtools,
-               coin,ggsignif, patchwork, ggbeeswarm)
+pacman::p_load(conflicted,plotrix,tidyverse, wrappedtools,
+               coin,ggsignif, patchwork, ggbeeswarm,
+               flextable)
                #conflicted)
 # conflict_prefer("filter", "dplyr")
 load("data/bookdata1.RData")
 
 ```
+
 ## Quantitative measures with Gaussian distribution
 
 ```{r}
@@ -32,7 +34,9 @@ tOut$p.value
     t.test(rawdata$`Size (cm)`~rawdata$Sex,
            var.equal=var.test(
              rawdata$`Size (cm)`~rawdata$Sex)$p.value>.05))
-t_var_test(data = rawdata,formula = "`Size (cm)`~Sex")
+t_var_test(data = rawdata,
+           formula = "`Size (cm)`~Sex",
+           cutoff = .1)
 
 
 print(c(mean(rawdata$`sysBP V0`,na.rm=T),
@@ -41,7 +45,7 @@ print(c(mean(rawdata$`sysBP V0`,na.rm=T),
 t.test(rawdata$`sysBP V0`,
        rawdata$`sysBP V2`,
        alternative="greater", # x>y
-       paired=T)  #pairwise t-test, within subject
+       paired=TRUE)  #pairwise t-test, within subject
 t.test(rawdata$`sysBP V0`,
        rawdata$`sysBP V2`,
        # alternative="greater", # x>y
@@ -52,15 +56,22 @@ t.test(rawdata$`Size (cm)`,mu = 173)
 groupvars <- ColSeeker(namepattern = c("Sex","Test"))
 
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                indep_var = "Sex",gaussian = T)
+                indep_var = "Sex",gaussian = T) |> 
+  flextable()
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                indep_var = "Testmedication",gaussian = T)
+                indep_var = "Testmedication",gaussian = T) |> 
+  flextable()
+
 for(group_i in seq_len(groupvars$count)){
   resulttmp <- compare2numvars(data = rawdata,dep_vars = gaussvars$names,
                   indep_var = groupvars$names[group_i],gaussian = T)
-  print(resulttmp)
+# print(resulttmp)
+  flextable(resulttmp) |>
+    flextable_to_rmd()
+  cat("&nbsp;\n\n")
 }
 ```
+
 ## Ordinal data
 
 ```{r}
@@ -86,11 +97,11 @@ wilcox.test(x=rawdata$`sysBP V0`,y=rawdata$`sysBP V2`,
             correct=TRUE,paired=TRUE)
 
 compare2numvars(data = rawdata,dep_vars = ordvars$names,
-                indep_var = "Sex",gaussian = F)
+                indep_var = "Sex",gaussian = F) |> 
+  flextable()
 ```
 
-
-## Categorial data 
+## Categorial data
 
 ```{r}
 factvars$names
@@ -100,6 +111,9 @@ chisq.test(crosstab,simulate.p.value=T,B=10^5)  #empirical p-value
 chisq.test(table(rawdata$Sex,rawdata$`NYHA V1`))  #based on table
 chisq.test(x=rawdata$Sex,y=rawdata$`NYHA V1`,
            simulate.p.value=T,B=10^5)  #based on rawdata
+fisher_out <- fisher.test(
+  table(rawdata$Sex,rawdata$`NYHA V1`))  
+fisher_out$p.value
 
 (crosstab1<-table(rawdata$Sex,
                   rawdata$`Weight (kg)`<=
@@ -112,13 +126,14 @@ tabletestOut$expected
 tabletestOut$observed
 tabletestOut$statistic
 # if minimum(expected<5) then Fishers exact test
-if (min(tabletestOut$expected)<5) {
+if(min(tabletestOut$expected)<5) {
   tabletestOut<-fisher.test(crosstab1)
 }
 tabletestOut$p.value 
 # report_cat
-groupvar <- "Sex"
+groupvar <- "Testmedication"
 
-compare2qualvars(rawdata,dep_vars = factvars$names[-2],
-                 indep_var = groupvar,spacer = " ")
+compare2qualvars(rawdata,dep_vars = factvars$names[-1],
+                 indep_var = groupvar,spacer = " ") |> 
+  flextable()
 ```

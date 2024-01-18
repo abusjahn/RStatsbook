@@ -111,7 +111,7 @@ plottemp + scale_fill_brewer(palette="Set2") #in-built "scale" for fill
 plottemp + scale_fill_grey(name = "cut of\ndiamonds")
 plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
   scale_y_continuous(expand = expansion(mult = c(0,.5)))+ # rescaling y
-  theme_bw()+
+  theme_bw(base_size = 20)+
   theme(panel.grid.major.x = element_blank())
 
 ```
@@ -122,7 +122,7 @@ plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
 plottemp+scale_fill_lancet()
 plottemp+scale_fill_jama()
 plottemp+scale_fill_npg()
-printplot <- plottemp+scale_fill_startrek()
+(printplot <- plottemp+scale_fill_startrek())
 ```
 
 ## Exporting ggplots
@@ -135,6 +135,14 @@ ggsave(filename = "Graphs/ggtestplot.png",
        plot = printplot,
        width=20,height=20,
        units="cm",dpi=150)
+ggsave(filename = "Graphs/ggtestplot.tiff",
+       plot = printplot,
+       width=20,height=20,
+       units="cm",dpi=600)
+ggsave(filename = "Graphs/ggtestplot_c.tiff",
+       plot = printplot,
+       width=20,height=20, compression="lzw",
+       units="cm",dpi=600)
 # alternative:
 png(filename = "Graphs/ggtestplot2.png",
     width = 20,height = 20,units = "cm",res = 150)
@@ -290,7 +298,7 @@ When combining various geoms, the order is important, as elements are not transp
 ggplot(data=mtcars,aes(wt, mpg))+
   geom_point(size=4)+
   geom_smooth(size=3)+ # line overlaps points
-  geom_smooth(data=mtcars %>% filter(wt>3), #picks a sub-sample
+  geom_smooth(data=mtcars |> filter(wt>3), #picks a sub-sample
               method="lm",linewidth=3, color="red")
 
 
@@ -323,7 +331,6 @@ ggplot(data=mtcars,aes(wt, mpg))+
 ggplot(data=mtcars,aes(wt, mpg,color=factor(cyl)))+
   geom_smooth(size=1,color="black",fill="yellow")+ # global color overwritten
   geom_point(size=3, aes(shape=factor(am))) 
-
 ```
 
 ## Faceting (splitting) plots
@@ -351,7 +358,7 @@ p.tmp + facet_grid(rows = vars(gear),
 # options(warn=-1) 
 p.tmp + geom_smooth()+
   facet_grid(rows = vars(gear),
-                   cols = vars(cyl), 
+             cols = vars(cyl), 
              labeller=label_both, margins=TRUE)
 # options(warn=0)
 
@@ -386,9 +393,6 @@ p.tmp + facet_grid(gear~cyl, scales="free_x")
 p.tmp + facet_grid(gear~cyl, scales="free_y")
 ```
 
-```         
-```
-
 ## Showing summaries
 
 While plotting underlying rawdata is pretty informative, adding summary statistics guides the viewer. Error bars help to evaluate differences visible, but need to be labelled!!
@@ -406,9 +410,16 @@ plottemp+stat_summary(fun.data="mean_sdl",
 
 plottemp+stat_summary(geom = "point", shape=17,size=5,
                       fun = "mean",color="red")
+
+means <- mtcars |> 
+  group_by(gear) |> 
+  summarise(mean=round(mean(mpg),3),sd=sd(mpg))
 plottemp+stat_summary(fun.data="mean_cl_boot",
                       fun.args=list(B=10^4),
                       color="red")+
+  geom_label(data=means,
+             aes(factor(gear),mean,label=mean),
+             hjust=1.2)+
   ylab("mpg (mean \u00b1 95% CI)")+
   xlab("Gear")
 plottemp+stat_summary(fun.data="mean_cl_normal",color="red")+
@@ -432,15 +443,39 @@ p <- round(wilcox.test(mtcars$mpg~mtcars$am)$p.value,5)
 plottemp+geom_signif(
   comparisons=list(c(1,2)),
   # aes(y=0),
-  # textsize = rel(3), vjust = .0,
+  textsize = rel(10), vjust = .0,
   #y_position=max(mtcars$mpg+3),
-  annotations=paste0("p = ", p),
+  # annotations=paste0("p = ", p),
+  annotations=markSign(p),
   # annotations=p,
-  tip_length=.02)
+  tip_length=.02)+
+  scale_y_continuous(expand = expansion(mult=c(0.05,.2)))
 
 plottemp + geom_signif(
   comparisons=list(1:2))+
   scale_y_continuous(expand = expansion(mult=c(0.05,.2)))
+
+ggplot(diamonds,aes(clarity, price))+
+  stat_summary(fun.data=mean_sdl)+
+  geom_signif(comparisons=list(c(1,2),c(1,3),c(1,4),c(1,5),
+                               c(1,6),c(1,7),c(1,8)),
+              step_increase = 0.15)+
+  ggtitle("nominal p-values!!")
+ggplot(diamonds,aes(clarity, price))+
+  stat_summary(fun.data=mean_sdl)+
+  geom_signif(comparisons=list(c(1,2),c(2,3),c(3,4),c(4,5),
+                               c(5,6),c(6,7),c(7,8)),
+              step_increase = 0.15)+
+  ggtitle("nominal p-values!!")
+
+ggplot(diamonds,aes(clarity, price))+
+  stat_summary(fun.data=mean_sdl)+
+  geom_signif(comparisons=list(c(1,2),c(2,3),c(3,4),c(4,5),
+                               c(5,6),c(6,7),c(7,8)),
+              map_signif_level = TRUE,
+              extend_line = -.01)+
+  ggtitle("nominal p-values!!")+
+  scale_y_continuous(expand = expansion(mult=c(0.05,.1)))
 
 ```
 
@@ -518,7 +553,7 @@ p3 <- ggplot(mtcars) +
 
 (p1 | p2) / 
   (p3  + guides(color = "none")) +
-  plot_annotation(tag_levels = "I") +
+  plot_annotation(tag_levels = "A") +
   plot_layout(guides = "collect")
   
 ```

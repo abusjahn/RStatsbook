@@ -28,8 +28,8 @@ Data are read from an SPSS file. Numeric column Passage is mutated into a factor
 
 ```{r}
 rawdata<-foreign::read.spss(file=here('Data/Zellbeads.sav'),
-                            use.value.labels=T,to.data.frame=T) %>%
-  as_tibble() %>%
+                            use.value.labels=T,to.data.frame=T) |>
+  as_tibble() |>
   dplyr::select(-ZahlZellen) |> 
   rename(Growth=Wachstum,Treatment=Bedingung) |> 
   mutate(Passage_F=factor(Passage),
@@ -125,7 +125,7 @@ lm(growthAdj~Passage,data=rawdata) |> tidy()
 
 ### ANOVA
 
-In the linear regression, we had Passage as a continuous IV, estimating a global 'universal' effect supposed to be constant. Now we look at Passege_F and model a discrete IV, allowing for specific effects, and thereby comparing means between groups.
+In the linear regression, we had Passage as a continuous IV, estimating a global 'universal' effect supposed to be constant. Now we look at Passage_F and model a discrete IV, allowing for specific effects, and thereby comparing means between groups.
 
 #### Graphical exploration
 
@@ -214,8 +214,9 @@ lmOut_interaction<-lm(Growth~Passage*Treatment,data=rawdata)
 Anova(lmOut_interaction,type = 3)
 #
 lmOut_additive<-lm(Growth~Passage+Treatment,data=rawdata)
-Anova(lmOut_additive,type=2)
-
+Anova_out <- Anova(lmOut_additive,type=2)
+Anova_out$`Pr(>F)`
+tidy(Anova_out)
 # for comparison, here is the univariable model
 lmOut_uni<-lm(Growth~Treatment,data=rawdata)
 aOut<-Anova(lmOut_uni,type=3)
@@ -228,14 +229,17 @@ a_uni$`Pr(>F)`
 For multivariable models, pairwise.t.test() is not appropriate, Dunnet or Tukey tests (depending on hypothesis) are typical solutions.
 
 ```{r}
-summary(glht(model=lmOut_additive,linfct=mcp(Treatment='Dunnett')))
+glht_out <- 
+  summary(glht(model=lmOut_additive,
+               linfct=mcp(Treatment='Dunnett')))
+glht_out$test$pvalues
 summary(glht(model=lmOut_additive,linfct=mcp(Treatment='Tukey')))
 DescTools::DunnettTest(Growth~Passage_F,data=rawdata)
 pairwise.t.test(rawdata$Growth,rawdata$Treatment,p.adjust.method = 'n')
-mean(rawdata$Growth[which(rawdata$Passage==1 & 
-                            rawdata$Treatment=='Control')]) 
-aOut$'Pr(>F)' 
-aOut$`Sum Sq` 
+# mean(rawdata$Growth[which(rawdata$Passage==1 & 
+                            # rawdata$Treatment=='Control')]) 
+anova_out$'Pr(>F)' 
+#aOut$`Sum Sq` 
 summary(lmOut_additive) 
 (result<-tibble(predictor=rownames(aOut), 
                     p=formatP(aOut$'Pr(>F)',ndigits=5))) 

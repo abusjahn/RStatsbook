@@ -23,10 +23,13 @@ meansd(rawdata$`Size (cm)`, roundDig = 4,
 meansd(rawdata$`sysBP V0`, roundDig = 4,
        range = TRUE,
        add_n = TRUE,.german = TRUE)
+SEM(rawdata$`Size (cm)`)
+meanse(rawdata$`Size (cm)`, roundDig = 4)
 
 median(rawdata$`Size (cm)`)
 quantile(rawdata$`Size (cm)`,probs = c(.25,.75))
 median_quart(rawdata$`Size (cm)`)
+median_quart(rawdata$Age,range = T)
 
 table(rawdata$Sex, useNA = "a")
 sex_count <- table(rawdata$Sex, useNA = "ifany")
@@ -34,8 +37,10 @@ table(rawdata$`NYHA V2`,useNA = "always")
 table(rawdata$`NYHA V2`,useNA = "i")
 table(rawdata$`NYHA V2`,useNA = "no")
 randomize <- table(rawdata$Sex, rawdata$Testmedication)
+
 prop.table(sex_count)
 prop.table(randomize,margin = 2)*100
+
 cat_desc_stats(rawdata$`NYHA V2`)
 cat_desc_stats(rawdata$Sex, singleline = TRUE)
 
@@ -43,7 +48,7 @@ cat_desc_table(data = rawdata,
                desc_vars = factvars$names) |> 
   rename(`n (%)`=desc_all) |> 
   flextable() |> 
-  align(~`n (%)`!=" ",j = 1,align = "right") |> 
+  align(i = ~`n (%)`!=" ",j = 1,align = "right") |> 
   width(j = c(1,2),width = c(3,4),unit = "cm")
   
 

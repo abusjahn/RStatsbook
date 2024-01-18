@@ -13,7 +13,8 @@ pacman::p_load(conflicted,tidyverse, wrappedtools, readxl)
 ```{r}
 rawdata <- read_excel(path = "data/Medtest_e.xlsx") |> 
   rename_with(.fn = ~str_replace_all(.x,pattern="_",replacement=" ")) |>
-  rename_with(.fn=str_to_title,!contains(c("BP","BMI","NY"))) |> 
+  rename_with(.fn=str_to_title,
+              .cols = !contains(c("BP","BMI","NY"))) |> 
   rename(`Size (cm)`=Size, #newname=oldname
          `Weight (kg)`=Weight) |> 
   select(-`Sex M`)
@@ -28,7 +29,7 @@ saveRDS(rawdata,file = "data/rawdata.rds")
 
     1.  test for existence of unit, if not NA
 
-    2.  paste 1st row, " \[", 2nd row, "\]"
+    2.  paste 1st row, " \[", 2nd row,"\]"
 
 3.  Use 1st row as colnames for data
 

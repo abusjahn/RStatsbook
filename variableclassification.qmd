@@ -10,15 +10,17 @@ rawdata <- readRDS('data/rawdata.rds')
 
 ### Testing a single variable
 
-Before computing some test-statistics, a graphical exploration should be done by e.g. density plots.   
-  
+Before computing some test-statistics, a graphical exploration should be done by e.g. density plots.
+
 There are a number of tests for Normal distribution, all testing the Null hypothesis of data coming from a population with Normal distribution. So small p-values lead to rejection of the Null and indicate deviation from normality. Kolmogorov-Smirnov-test (for larger sample sizes) and Shapiro-Wilk-test (for smaller samples) will be used as examples.
 
 ```{r}
 ks.test(x = rawdata$`Size (cm)`,
         "pnorm",
-        mean=mean(rawdata$`Size (cm)`, na.rm = TRUE),
-        sd=sd(rawdata$`Size (cm)`, na.rm = TRUE))
+        mean=mean(rawdata$`Size (cm)`, 
+                  na.rm = TRUE),
+        sd=sd(rawdata$`Size (cm)`, 
+              na.rm = TRUE))
 
 ksnormal(rawdata$`Size (cm)`)
 shapiro.test(rawdata$`Size (cm)`)
@@ -28,6 +30,7 @@ ggplot(rawdata,aes(x = `Size (cm)`))+
 ggplot(rawdata,aes(x = `Size (cm)`,fill=Sex))+
   geom_density(alpha=.4)
 ```
+
 If severe group difference can be expected (case/control, sex ...), exploration and analyses should be done in subgroups.
 
 ```{r}
@@ -40,7 +43,7 @@ rawdata |>
             `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
 ```
 
-### Testing several variables 
+### Testing several variables
 
 To explore larger data sets, it may be useful to test all numerical variables for normality, this can be done in a loop or with the across-function. As a start for the loop-solution we can get the names and positions for all (or selected) numerical variables with the ColSeeker-function from wrappedtools.
 
@@ -67,8 +70,8 @@ for(var_i in seq_len(numvars$count)){
   resulttable1$pKS[var_i] <-
     ksnormal(rawdata[[numvars$names[var_i]]])
   resulttable1$pSh[var_i] <- 
-  shapiro.test(rawdata |> 
-                 pull(numvars$names[var_i]))$p.value
+    shapiro.test(rawdata |> 
+                   pull(numvars$names[var_i]))$p.value
 }
 head(resulttable1)
 ```
@@ -98,12 +101,40 @@ head(resulttable2)
 across() - Version:
 
 ```{r}
+resulttable1a <- 
+   rawdata |> 
+  summarize(across(all_of(numvars$names[-(2:4)]),
+                   .fns = list(
+                     pKS=~ksnormal(.x) |> 
+                       formatP(mark = TRUE),
+                     pSh=~shapiro.test(.x) |> 
+                       pluck("p.value") |> 
+                       formatP(mark = TRUE)))) |> 
+  pivot_longer(everything(),
+               names_to=c("Variable","test"),
+               names_sep = "_") |> 
+  pivot_wider(names_from=test, values_from=value)
+head(resulttable1a)
+head(resulttable1)
+
+ resulttable2a <- 
+   rawdata |> 
+   group_by(Testmedication) |>
+   summarize(across(all_of(numvars$names[-(2:4)]),
+                    .fns = ~ksnormal(.x) |> 
+                      formatP(mark = TRUE))) |> 
+   pivot_longer(-Testmedication,
+                names_to="Variable") |> 
+   pivot_wider(names_from=Testmedication,
+               values_from=value)
+ head(resulttable2a)
+ head(resulttable2)
+
 resulttable3 <- 
   rawdata |> 
   group_by(Testmedication) |>
   summarize(across(all_of(numvars$names[-(2:4)]),
                    .fns = list(
-                     # n=~na.omit(.x) |> length() |> as.character(),
                      Mean=~mean(.x, na.rm=TRUE) |> 
                        roundR(5),
                      Median=~median(.x, na.rm=TRUE) |> 
@@ -117,7 +148,7 @@ resulttable3 <-
                names_to=c("Variable","test"),
                names_sep = "_") |> 
   pivot_wider(names_from=test, values_from=value) |> 
-arrange(Variable)
+  arrange(Variable)
 head(resulttable3)
 ```
 

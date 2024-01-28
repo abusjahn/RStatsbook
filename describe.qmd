@@ -49,8 +49,8 @@ cat_desc_table(data = rawdata,
   rename(`n (%)`=desc_all) |> 
   flextable() |> 
   align(i = ~`n (%)`!=" ",j = 1,align = "right") |> 
-  width(j = c(1,2),width = c(3,4),unit = "cm")
-  
+  width(j = c(1,2),width = c(3,4),unit = "cm") |> 
+  flex2rmd() 
 
 rawdata |> 
   group_by(Sex,Testmedication) |> 

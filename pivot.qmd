@@ -62,7 +62,7 @@ very_long_data <- pivot_longer(
   data = wide_data,
   cols = contains("Time"),
   names_to = c("Variable", "Time"),
-  names_pattern = "(Var\\d)(Time[12])",
+  names_pattern = "(Var\\d+)(Time[12])",
   values_to = "Value"
 )
 very_long_data

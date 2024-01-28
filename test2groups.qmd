@@ -4,7 +4,7 @@
 pacman::p_load(conflicted,plotrix,tidyverse, wrappedtools,
                coin,ggsignif, patchwork, ggbeeswarm,
                flextable)
-               #conflicted)
+#conflicted)
 # conflict_prefer("filter", "dplyr")
 load("data/bookdata1.RData")
 
@@ -57,15 +57,17 @@ groupvars <- ColSeeker(namepattern = c("Sex","Test"))
 
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
                 indep_var = "Sex",gaussian = T) |> 
-  flextable()
+  flextable() |> 
+  flex2rmd()
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
                 indep_var = "Testmedication",gaussian = T) |> 
-  flextable()
+  flextable() |> 
+  flex2rmd()
 
 for(group_i in seq_len(groupvars$count)){
   resulttmp <- compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                  indep_var = groupvars$names[group_i],gaussian = T)
-# print(resulttmp)
+                               indep_var = groupvars$names[group_i],gaussian = T)
+  # print(resulttmp)
   flextable(resulttmp) |>
     flextable_to_rmd()
   cat("&nbsp;\n\n")
@@ -98,7 +100,8 @@ wilcox.test(x=rawdata$`sysBP V0`,y=rawdata$`sysBP V2`,
 
 compare2numvars(data = rawdata,dep_vars = ordvars$names,
                 indep_var = "Sex",gaussian = F) |> 
-  flextable()
+  flextable() |> 
+  flex2rmd()
 ```
 
 ## Categorial data
@@ -135,5 +138,6 @@ groupvar <- "Testmedication"
 
 compare2qualvars(rawdata,dep_vars = factvars$names[-1],
                  indep_var = groupvar,spacer = " ") |> 
-  flextable()
+  flextable() |> 
+  flex2rmd()
 ```

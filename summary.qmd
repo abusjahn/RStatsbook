@@ -1,7 +1,4 @@
 # Summary
 
-In summary, this book has no content whatsoever.
+In summary, this book is not yet done.
 
-```{r}
-1 + 1
-```

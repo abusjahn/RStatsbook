@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "10.7.2023"
+  date: "26.1.2024"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -23,8 +23,8 @@ book:
     - flextable.qmd
     - test2groups.qmd
     - lm.qmd
-    - summary.qmd
-    - references.qmd
+    # - summary.qmd
+    # - references.qmd
 
 bibliography: references.bib
 
@@ -33,7 +33,9 @@ format:
   #   theme: cosmo
   pdf:
     latex-auto-install: true
-    documentclass: scrreprt
+    # latex-auto-install-force: true
+    latex-auto-mk: true
+    documentclass: book #scrreprt
     papersize: a4
     code-block-bg: ffffdf
     # include-in-header:

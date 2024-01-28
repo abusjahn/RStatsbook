@@ -35,7 +35,7 @@ format:
     latex-auto-install: true
     # latex-auto-install-force: true
     latex-auto-mk: true
-    documentclass: book #scrreprt
+    documentclass:  scrreprt #book
     papersize: a4
     code-block-bg: ffffdf
     # include-in-header:

@@ -1,7 +1,8 @@
 # Importing data
 
 ```{r}
-pacman::p_load(conflicted,tidyverse, wrappedtools, readxl)
+pacman::p_load(conflicted,tidyverse, wrappedtools, 
+               readxl, readODS, foreign, haven)
 ```
 
 ## Import from text files (.txt, .csv)
@@ -20,6 +21,10 @@ rawdata <- read_excel(path = "data/Medtest_e.xlsx") |>
   select(-`Sex M`)
 saveRDS(rawdata,file = "data/rawdata.rds")
 ```
+
+### ODS files
+
+Package readODS provides similar functionality for OpenOffice/LibreOffice files.
 
 ### Excel file with units row
 
@@ -50,6 +55,32 @@ rawdata <- read_excel(path = "data/Medtest_e.xlsx",
 colnames(rawdata) <- cn_temp[1,]
 ```
 
-## Import from SPSS
+## Import from SPSS/SAS
 
-## Import from SAS
+Import from SPSS generic files is implemented in various packages:
+
+-   foreign::read.spss is a more base approach,
+
+    -   on the positive side it has an option to read in value labels
+
+    -   on the other hand it returns lists or data frames, so casting into tibble is advised
+
+-   haven::read_sav comes from tidyverse
+
+    -    variable- and value-labels are imported into attributes
+
+    -   as_factor uses value labels
+
+```{r}
+import1 <- read.spss(file = "data/Zellbeads.sav",
+                     to.data.frame = TRUE,
+                     use.value.labels = TRUE)
+str(import1)
+
+import2 <- read_sav(file = "data/Zellbeads.sav")
+str(import2$Bedingung)
+attr(import2$Bedingung,"labels")
+import2 <- mutate(import2,
+                  Bedingung=as_factor(Bedingung))
+str(import2$Bedingung)
+```

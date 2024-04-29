@@ -185,7 +185,7 @@ formatP(p.adjust(pt_out$p.value[,1],method='fdr'))
 
 ### LM with continuous AND categorical IV
 
-Traditionally you may thing of *regression* **OR** *ANOVA*, but they are no different and can be combined. This is called a general linear model. Multivariable models may contain interactions between independent variables V IV1\*IV2.
+Traditionally you may think of *regression* **OR** *ANOVA*, but they are no different and can be combined. This is called a general linear model. Multivariable models may contain interactions between independent variables V IV1\*IV2.
 
 #### Graphical exploration
 
@@ -233,8 +233,10 @@ glht_out <-
   summary(glht(model=lmOut_additive,
                linfct=mcp(Treatment='Dunnett')))
 glht_out$test$pvalues
-summary(glht(model=lmOut_additive,linfct=mcp(Treatment='Tukey')))
+summary(glht(model=lmOut_additive,
+             linfct=mcp(Treatment='Tukey')))
 DescTools::DunnettTest(Growth~Passage_F,data=rawdata)
+DescTools::DunnettTest(Growth~Treatment,data=rawdata)
 pairwise.t.test(rawdata$Growth,rawdata$Treatment,p.adjust.method = 'n')
 # mean(rawdata$Growth[which(rawdata$Passage==1 & 
                             # rawdata$Treatment=='Control')]) 

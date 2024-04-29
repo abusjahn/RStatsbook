@@ -85,7 +85,7 @@ resulttable2 <- tibble(Variables=NA_character_,
                        pKS_Verum=NA_character_,
                        .rows = 0)
 for(var_i in numvars$names){
-  ks_tmp <- by(rawdata[[var_i]], 
+  ks_tmp <- by(data = rawdata[[var_i]], 
                INDICES=rawdata$Testmedication,
                FUN=ksnormal)
   resulttable2 <-add_row(resulttable2,   

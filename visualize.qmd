@@ -280,7 +280,7 @@ p+geom_bar(position="fill")+
                                     vjust = .5))+
   geom_hline(yintercept = .5, linetype=2) # e.g. for reference lines
 p+geom_bar(position="identity") # bad idea!
-p+geom_bar(position="identity",alpha=.5)
+p+geom_bar(position="identity",alpha=.5) # even worse!!
 ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
   geom_freqpoly(stat="count",position="identity",lwd=1.5)+
   geom_point(stat="count",size=5)+
@@ -428,6 +428,9 @@ plottemp+stat_summary(fun.data="mean_cl_normal",color="red")+
 plottemp+stat_summary(fun.data="median_hilow",color="red")+
   ylab("mpg median \u00b1 95%")
 # geom_pointrange()
+plottemp+stat_summary(fun.data="median_cl_boot_gg",color="red")+
+  ylab("mpg (median \u00b1 95% CI)")+
+  xlab("Gear")
 
 ```
 
@@ -481,7 +484,7 @@ ggplot(diamonds,aes(clarity, price))+
 
 ## Theme definitions / changes
 
-Themes define everything not-data-related in your figures, like margins, fonts, background color etc. There are many predefined themes, and all are customizable. You can change a theme for all plots to come (theme_update()) or just a single plot ( +theme())
+Themes define everything not-data-related in your figures, like margins, fonts, background color etc. There are many predefined themes, and all can be customized. You can change a theme for all plots to come (theme_update()) or just a single plot ( +theme())
 
 ```{r}
 old <- theme_set(theme_wsj())
@@ -522,14 +525,9 @@ plottemp+theme_void()
 plottemp+theme_base()
 plottemp+theme_bw()
 
-# https://github.com/thomasp85/patchwork
-
-
-
 # https://www.data-imaginist.com/2019/a-flurry-of-facets/
 
 # https://github.com/thomasp85/gganimate
-
 
 ```
 
@@ -557,3 +555,7 @@ p3 <- ggplot(mtcars) +
   plot_layout(guides = "collect")
   
 ```
+
+[more facets...](https://www.data-imaginist.com/2019/a-flurry-of-facets/)
+
+[animations...](https://github.com/thomasp85/gganimate)

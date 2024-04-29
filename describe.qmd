@@ -1,18 +1,28 @@
 # Descriptive statistics
 
+Descriptive statistics are used to summarize and organize data in a manner that is meaningful and useful. They provide simple summaries about the sample and the measures, such as mean, median, standard deviation, or frequencies. Furthermore, they allow for the presentation of quantitative descriptions in a manageable form, aiding in understanding the data distribution and central tendency. For group comparisons, they will inform about direction and magnitude of differences.
+
+## Reading in data
+
 ```{r}
 pacman::p_load(conflicted,tidyverse,wrappedtools,
                flextable)
 #dir("Data/")
 load("data/bookdata1.RData")
+```
+## Graphical exploration should start before descriptive statistics
 
+```{r}  
 ggplot(rawdata,aes(`sysBP V0`, `diaBP V0`))+
   geom_point()+
   geom_smooth(se=F)+
   geom_smooth(method="lm",color="red", 
               fill="gold", alpha=.15) 
+```
+## Gaussian variables
+### Simple function calls
 
-# descriptives ####
+```{r}  
 mean_size <- mean(rawdata$`Size (cm)`)
 sd_size <- sd(rawdata$`Size (cm)`)
 min(rawdata$`Size (cm)`)
@@ -53,14 +63,33 @@ cat_desc_table(data = rawdata,
   flex2rmd() 
 
 rawdata |> 
-  group_by(Sex,Testmedication) |> 
-  summarise(WeightSummary=meansd(`Weight (kg)`))
+  group_by(Testmedication,Sex) |> 
+  summarise(WeightSummary=meansd(`Weight (kg)`),
+            .groups="drop")
 
-
+rawdata |> 
+  group_by(Sex) |> 
+  summarize(across(gaussvars$names,
+                   .fns=~meansd(.x,range=T))) |> 
+  pivot_longer(cols=-Sex,
+               names_to="Variable") |> 
+  pivot_wider(names_from=Sex)
+rawdata |> 
+  group_by(Sex) |> 
+  summarize(across(gaussvars$names,
+                   .fns=list(Mean=~mean(.x,na.rm=TRUE),
+                             SD=~sd(.x,na.rm=TRUE)))) |> 
+  pivot_longer(cols=-Sex,
+               names_to=c("Variable","stat"),
+               names_sep="_")|> 
+  pivot_wider(names_from=c(stat,Sex),
+              # names_sep=" ",
+              names_glue="{stat} ({Sex})",
+              values_from=value)
 
 compare2numvars(rawdata,
                 dep_vars = c( "Size (cm)","Weight (kg)",
                               "sysBP V0","diaBP V0"),
                 indep_var = "Sex",
-                gaussian = FALSE)
+                gaussian = TRUE)
 ```

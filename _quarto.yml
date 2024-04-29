@@ -23,6 +23,8 @@ book:
     - flextable.qmd
     - test2groups.qmd
     - lm.qmd
+    # - glm.qmd
+    # - lmm-qmd
     # - summary.qmd
     # - references.qmd
 

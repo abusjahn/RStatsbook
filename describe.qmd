@@ -7,40 +7,76 @@ Descriptive statistics are used to summarize and organize data in a manner that 
 ```{r}
 pacman::p_load(conflicted,tidyverse,wrappedtools,
                flextable)
-#dir("Data/")
+set_flextable_defaults(font.size = 9, 
+                       padding.bottom = 1, 
+                       padding.top = 3,
+                       padding.left = 3,
+                       padding.right = 4
+)#dir("Data/")
 load("data/bookdata1.RData")
 ```
+
 ## Graphical exploration should start before descriptive statistics
 
-```{r}  
+```{r}
 ggplot(rawdata,aes(`sysBP V0`, `diaBP V0`))+
   geom_point()+
   geom_smooth(se=F)+
   geom_smooth(method="lm",color="red", 
               fill="gold", alpha=.15) 
 ```
+
 ## Gaussian variables
+
 ### Simple function calls
 
-```{r}  
-mean_size <- mean(rawdata$`Size (cm)`)
-sd_size <- sd(rawdata$`Size (cm)`)
+```{r}
+(mean_size <- mean(rawdata$`Size (cm)`))
+(sd_size <- sd(rawdata$`Size (cm)`))
 min(rawdata$`Size (cm)`)
+SEM(rawdata$`Size (cm)`)
+```
+
+### Combined reporting
+
+For publishable tables you should round the numbers to a reasonable number of digits. Function `roundR()` is more flexible than base `round()`, as it determines the number of digits necessary to obtain the desired precision. The `level` argument allows for rounding to a specific number of non-zero digits. The `.german` argument changes the decimal point to a comma.
+
+```{r}
 round(mean_size,digits = 2)
 roundR(mean_size,level = 2)
+```
+
+Usually mean and sd are reported together, function `meansd()` computes, rounds, and pastes the statistics in one go, arguments allow for flexible reporting:
+
+```{r}
 meansd(rawdata$`Size (cm)`, roundDig = 4,
        range = TRUE,add_n = TRUE)
 meansd(rawdata$`sysBP V0`, roundDig = 4,
        range = TRUE,
        add_n = TRUE,.german = TRUE)
-SEM(rawdata$`Size (cm)`)
 meanse(rawdata$`Size (cm)`, roundDig = 4)
+```
 
+\newpage
+
+## Ordinal variables
+
+```{r}
 median(rawdata$`Size (cm)`)
 quantile(rawdata$`Size (cm)`,probs = c(.25,.75))
 median_quart(rawdata$`Size (cm)`)
 median_quart(rawdata$Age,range = T)
+```
 
+Median and quartiles are sometimes the better choice even when assuming a Normal distribution, if there are outliers.
+
+![](Graphs/MeanMedian.jpg){fig-align="center"}
+
+\newpage
+
+## Categorical variables
+
+```{r}
 table(rawdata$Sex, useNA = "a")
 sex_count <- table(rawdata$Sex, useNA = "ifany")
 table(rawdata$`NYHA V2`,useNA = "always")
@@ -51,21 +87,35 @@ randomize <- table(rawdata$Sex, rawdata$Testmedication)
 prop.table(sex_count)
 prop.table(randomize,margin = 2)*100
 
-cat_desc_stats(rawdata$`NYHA V2`)
+cat_desc_stats(rawdata$`NYHA V2`) 
 cat_desc_stats(rawdata$Sex, singleline = TRUE)
 
-cat_desc_table(data = rawdata,
+rawdata |> 
+  mutate(Testmedication=factor(Testmedication,
+                               levels=0:1,
+                               labels=c("Placebo",
+                                        "Verum"))) |> 
+cat_desc_table(
                desc_vars = factvars$names) |> 
   rename(`n (%)`=desc_all) |> 
   flextable() |> 
   align(i = ~`n (%)`!=" ",j = 1,align = "right") |> 
   width(j = c(1,2),width = c(3,4),unit = "cm") |> 
-  flex2rmd() 
+  bg(~`n (%)`==" ",bg='lightgrey')
+# cat("&nbsp;\n\n")
+```
 
+## Summarize data
+
+When creating tables with descriptive statistics, you usually report on more than just 1 variable in more than just 1 subgroup, and there may be more than 1 statistics to report. `Summarize()`, often in combination with `across()`, makes that task easier:
+
+```{r}
 rawdata |> 
   group_by(Testmedication,Sex) |> 
-  summarise(WeightSummary=meansd(`Weight (kg)`),
-            .groups="drop")
+  summarise(WeightSummary=meansd(`Weight (kg)`,add_n = TRUE),
+            .groups="drop") |> 
+  flextable()
+# cat("<br>\n\n")
 
 rawdata |> 
   group_by(Sex) |> 
@@ -73,23 +123,35 @@ rawdata |>
                    .fns=~meansd(.x,range=T))) |> 
   pivot_longer(cols=-Sex,
                names_to="Variable") |> 
-  pivot_wider(names_from=Sex)
+  pivot_wider(names_from=Sex) |> 
+  flextable()
+# cat("<br>\n\n")
 rawdata |> 
   group_by(Sex) |> 
   summarize(across(gaussvars$names,
-                   .fns=list(Mean=~mean(.x,na.rm=TRUE),
-                             SD=~sd(.x,na.rm=TRUE)))) |> 
+                   .fns=list(
+                     n=~n(),
+                     Mean=~mean(.x,na.rm=TRUE),
+                     Median=~median(.x,na.rm=TRUE),
+                     SD=~sd(.x,na.rm=TRUE)))) |> 
   pivot_longer(cols=-Sex,
                names_to=c("Variable","stat"),
                names_sep="_")|> 
   pivot_wider(names_from=c(stat,Sex),
               # names_sep=" ",
               names_glue="{stat} ({Sex})",
-              values_from=value)
+              values_from=value) |> 
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit") 
+
+# cat("<br>\n\n")
 
 compare2numvars(rawdata,
                 dep_vars = c( "Size (cm)","Weight (kg)",
                               "sysBP V0","diaBP V0"),
                 indep_var = "Sex",
-                gaussian = TRUE)
+                gaussian = TRUE) |> 
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit")
+cat("<br>\n\n")
 ```

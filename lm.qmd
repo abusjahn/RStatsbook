@@ -260,5 +260,6 @@ broom::tidy(aOut)
 
 # from package performance
 check_model(lmOut_additive)
-
+check_model(lmOut_interaction)
+dev.off()
 ```

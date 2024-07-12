@@ -14,6 +14,8 @@ Before computing some test-statistics, a graphical exploration should be done by
 
 There are a number of tests for Normal distribution, all testing the Null hypothesis of data coming from a population with Normal distribution. So small p-values lead to rejection of the Null and indicate deviation from normality. Kolmogorov-Smirnov-test (for larger sample sizes) and Shapiro-Wilk-test (for smaller samples) will be used as examples.
 
+Other tests would be Liliefors, Anderson-Darling, and the Cramer-von Mises test.
+
 ```{r}
 ks.test(x = rawdata$`Size (cm)`,
         "pnorm",
@@ -103,7 +105,7 @@ across() - Version:
 ```{r}
 resulttable1a <- 
    rawdata |> 
-  summarize(across(all_of(numvars$names[-(2:4)]),
+  summarize(across(.cols=all_of(numvars$names[-(1:4)]),
                    .fns = list(
                      pKS=~ksnormal(.x) |> 
                        formatP(mark = TRUE),
@@ -111,7 +113,7 @@ resulttable1a <-
                        pluck("p.value") |> 
                        formatP(mark = TRUE)))) |> 
   pivot_longer(everything(),
-               names_to=c("Variable","test"),
+               names_to=c("Variable","test"), #.variable
                names_sep = "_") |> 
   pivot_wider(names_from=test, values_from=value)
 head(resulttable1a)
@@ -119,8 +121,14 @@ head(resulttable1)
 
  resulttable2a <- 
    rawdata |> 
+   mutate(Testmedication=factor(Testmedication,
+                                levels=c(0,1),
+                                labels=c('Placebo','Verum'))) |>
+   # mutate(Testmedication=case_match(Testmedication,
+   #                                  0~"Placebo",
+   #                                  1~"Verum")) |> 
    group_by(Testmedication) |>
-   summarize(across(all_of(numvars$names[-(2:4)]),
+   summarize(across(all_of(numvars$names[-(1:4)]),
                     .fns = ~ksnormal(.x) |> 
                       formatP(mark = TRUE))) |> 
    pivot_longer(-Testmedication,
@@ -133,7 +141,7 @@ head(resulttable1)
 resulttable3 <- 
   rawdata |> 
   group_by(Testmedication) |>
-  summarize(across(all_of(numvars$names[-(2:4)]),
+  summarize(across(all_of(numvars$names[-(1:4)]),
                    .fns = list(
                      Mean=~mean(.x, na.rm=TRUE) |> 
                        roundR(5),
@@ -145,11 +153,13 @@ resulttable3 <-
                        pluck("p.value") |> 
                        formatP(mark = TRUE)))) |> 
   pivot_longer(-Testmedication,
-               names_to=c("Variable","test"),
+               names_to=c("Variable","test"), #Variable,.value
                names_sep = "_") |> 
   pivot_wider(names_from=test, values_from=value) |> 
   arrange(Variable)
 head(resulttable3)
+
+rm(numvars)
 ```
 
 ## Picking column names and positions

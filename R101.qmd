@@ -179,7 +179,7 @@ class(NA_Date_) # from package lubridate
 *The most general kind of indexing is by position, starting with 1. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can (and usually will) be a variable instead of hard coded numbers.*
 
 ```{r}
-(numbers1<-c(5,3,6,8,2,1))
+(numbers1 <- c(5,3,6,8,2,1))
 numbers1[1]
 numbers1[1:3]
 numbers1[-c(1,3)]
@@ -235,7 +235,7 @@ sd(c(3,5,7,NA), na.rm = TRUE)
 median(1:100, TRUE) 
 # omitting arguments influences readability of a function, careful!
 t <- c(1:10,100)
-quantile(t,probs = c(.2,.8))
+quantile(x = t,probs = c(.2,.8))
 # putting text elements together
 paste("some text", 1:3)
 paste0("some text", 1:3)
@@ -688,12 +688,12 @@ print(ifelse(test = sex=="male",
              yes = "is male",
              no = "is female"))
 
-p <- .012
+p <- .12
 paste0("That is ",
        ifelse(test = p<=.05,yes = "",no = "not "),
        "significant")
 
-if(p>=.05){
+if(p>.05){
   sign_out <- "not "
 } else {
   sign_out <- ""

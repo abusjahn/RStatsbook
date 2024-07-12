@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "26.1.2024"
+  date: "2024/07/11"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -15,14 +15,17 @@ book:
     - index.qmd
     - intro.qmd
     - R101.qmd
+    - regex.qmd
     - import.qmd
     - pivot.qmd
     - variableclassification.qmd
     - visualize.qmd
     - describe.qmd
-    - flextable.qmd
+    - summarize.qmd
+    # - flextable.qmd
     - test2groups.qmd
     - lm.qmd
+    - lm_interaction.qmd
     # - glm.qmd
     # - lmm-qmd
     # - summary.qmd
@@ -50,3 +53,6 @@ format:
 editor: visual
 highlight-style: github
 
+# execute:
+#   output: asis
+  

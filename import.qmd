@@ -7,6 +7,12 @@ pacman::p_load(conflicted,tidyverse, wrappedtools,
 
 ## Import from text files (.txt, .csv)
 
+There are base functions like read.csv() and tidyverse-based updated ones like read_csv(). Different versions like read_csv2() or read_delim() have different settings for deliminators, number formats etc.
+
+```{r}
+rawdata <- read_csv2("data/Medtest_e.csv")
+```
+
 ## Import from Excel
 
 ### Tidy Excel files
@@ -67,7 +73,7 @@ Import from SPSS generic files is implemented in various packages:
 
 -   haven::read_sav comes from tidyverse
 
-    -    variable- and value-labels are imported into attributes
+    -   variable- and value-labels are imported into attributes
 
     -   as_factor uses value labels
 

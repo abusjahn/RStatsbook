@@ -246,7 +246,7 @@ ggplot(diamonds,aes(carat,price,color=clarity))+
     breaks=logrange_15,
     minor_breaks=logrange_123456789)+
   scale_y_log10(
-    breaks=logrange_123456789,
+    breaks=logrange_12357,
     minor_breaks=logrange_123456789)
 # use different aesthetic mappings
 ggplot(data=mtcars,
@@ -254,7 +254,8 @@ ggplot(data=mtcars,
   geom_point()
 
 ggplot(data=mtcars,aes(carb, mpg,color=qsec, size=wt))+
-  geom_text(family="EmojiOne",label="\U1F697")
+  geom_text(family="EmojiOne",label="\U1F697")+
+  scale_size_continuous(range = c(5,10))
 
 ```
 
@@ -377,7 +378,7 @@ p.tmp + facet_wrap(facets=vars(cyl,gear),labeller=label_both)
 
 #combining variables
 mtcars |> 
-  pivot_longer(cols = c(wt, mpg, hp, disp, qsec)) |> 
+  pivot_longer(cols = c(wt, mpg, hp, disp, qsec)) |> #view()
   ggplot(aes(x=factor(am), y=value))+
   geom_beeswarm(alpha=.5, cex=2)+
   facet_wrap(facets = vars(name), scales="free")
@@ -387,10 +388,14 @@ mtcars |>
 ### Controlling scales in facets (default: scales="fixed")
 
 ```{r}
-p.tmp + facet_grid(gear~cyl, scales="fixed")
-p.tmp + facet_grid(gear~cyl, scales="free")
-p.tmp + facet_grid(gear~cyl, scales="free_x")
-p.tmp + facet_grid(gear~cyl, scales="free_y")
+p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+                   labeller=label_both, scales="fixed")
+p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+                   labeller=label_both, scales="free")
+p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+                   labeller=label_both, scales="free_x")
+p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+                   labeller=label_both, scales="free_y")
 ```
 
 ## Showing summaries
@@ -408,8 +413,12 @@ plottemp+stat_summary(fun.data="mean_sdl",
                       color="red")+
   ylab("mpg (mean \u00b1 SD)")
 
-plottemp+stat_summary(geom = "point", shape=17,size=5,
-                      fun = "mean",color="red")
+ ggplot(mtcars,aes(factor(gear),mpg))+
+   stat_summary(geom = "point", shape="-",
+                size=50, 
+                fun = "mean",color="red")+
+   geom_beeswarm(alpha=.5)
+   
 
 means <- mtcars |> 
   group_by(gear) |> 
@@ -440,7 +449,9 @@ Package ggsign makes it easier to add significance brackets (no more photoshoppi
 
 ```{r}
 # ggsign ####
-p <- round(wilcox.test(mtcars$mpg~mtcars$am)$p.value,5)
+p <- round(
+  wilcox.test(mtcars$mpg~mtcars$am)$p.value,
+  5)
 (plottemp <- ggplot(mtcars,aes(as.factor(am),mpg))+
     geom_boxplot())
 plottemp+geom_signif(
@@ -449,10 +460,10 @@ plottemp+geom_signif(
   textsize = rel(10), vjust = .0,
   #y_position=max(mtcars$mpg+3),
   # annotations=paste0("p = ", p),
-  annotations=markSign(p),
-  # annotations=p,
+  # annotations=markSign(p),
+  annotations=p,
   tip_length=.02)+
-  scale_y_continuous(expand = expansion(mult=c(0.05,.2)))
+  scale_y_continuous(expand = expansion(mult=c(0.05,.1)))
 
 plottemp + geom_signif(
   comparisons=list(1:2))+

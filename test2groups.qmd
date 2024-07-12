@@ -18,22 +18,27 @@ ggplot(rawdata,aes(x=Sex,y=`Size (cm)`))+
   stat_summary(color="red",size=1.2,alpha=.7, 
                fun.data="mean_se",fun.args=list(mult=2))+
   ylab("size (mean \u00B1 2*SEM)")
-by(data = rawdata$`Size (cm)`,INDICES = rawdata$Sex,
-   FUN = meanse)
+
+rawdata |> 
+  group_by(Sex) |> 
+summarize(MeanSE=meanse(`Size (cm)`))
 
 t.test(x = rawdata$`Size (cm)`[which(rawdata$Sex=="f")],
        y = rawdata$`Size (cm)`[which(rawdata$Sex=="m")])
-(tOut<-t.test(rawdata$`Size (cm)`~rawdata$Sex))
+tOut<-t.test(rawdata$`Size (cm)`~rawdata$Sex)
 tOut$p.value
 
 # equal variances assumption?
-(vartestOut<-var.test(rawdata$`Size (cm)`~rawdata$Sex))
-(tOut<-t.test(rawdata$`Size (cm)`~rawdata$Sex,
-              var.equal = vartestOut$p.value>.05))
-(tOut<-
-    t.test(rawdata$`Size (cm)`~rawdata$Sex,
-           var.equal=var.test(
-             rawdata$`Size (cm)`~rawdata$Sex)$p.value>.05))
+vartestOut<-var.test(rawdata$`Size (cm)`~rawdata$Sex)
+vartestOut
+# manual entry
+t.test(rawdata$`Size (cm)`~rawdata$Sex,
+              var.equal = vartestOut$p.value>.05)
+# picked from test
+t.test(rawdata$`Size (cm)`~rawdata$Sex,
+       var.equal=var.test(
+         rawdata$`Size (cm)`~rawdata$Sex)$p.value>.05)
+#combined function
 t_var_test(data = rawdata,
            formula = "`Size (cm)`~Sex",
            cutoff = .1)
@@ -58,38 +63,49 @@ groupvars <- ColSeeker(namepattern = c("Sex","Test"))
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
                 indep_var = "Sex",gaussian = T) |> 
   flextable() |> 
-  flex2rmd()
+  set_table_properties(width=1, layout="autofit")
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
                 indep_var = "Testmedication",gaussian = T) |> 
   flextable() |> 
-  flex2rmd()
+  set_table_properties(width=1, layout="autofit")
 
+
+```
+
+```{r}
+#| output: asis
 for(group_i in seq_len(groupvars$count)){
-  resulttmp <- compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                               indep_var = groupvars$names[group_i],gaussian = T)
+  resulttmp <- 
+    compare2numvars(data = rawdata,
+                    dep_vars = gaussvars$names,
+                    indep_var = groupvars$names[group_i],gaussian = T)
   # print(resulttmp)
-  flextable(resulttmp) |>
-    flextable_to_rmd()
-  cat("&nbsp;\n\n")
+  flextable(resulttmp)  |> 
+  set_table_properties(width=1, layout="autofit") |>
+  flex2rmd() #|> print()
+  cat("<br>\n\n")
+  cat("\\newpage\n\n")
 }
 ```
+
 
 ## Ordinal data
 
 ```{r}
 ordvars$names
-ggplot(rawdata,aes(`Iron Lab`))+
+ggplot(rawdata,aes(`Ptt Lab`))+
   geom_density()
 by(data = rawdata[[ordvars$index[1]]], 
    INDICES = rawdata$Sex,FUN = median_quart)
 
 ggplot(rawdata,aes(Sex,`Ptt Lab`))+
-  geom_boxplot()
+  geom_boxplot()+
+  geom_beeswarm(alpha=.5)
 (uOut<-wilcox.test(
-  rawdata[[ordvars$index[1]]]~rawdata$Sex,exact=F))
+  rawdata[[ordvars$names[3]]]~rawdata$Sex,exact=F))
 uOut$p.value
 #  coin::wilcox_test
-(uOut2<-wilcox_test(`Ptt Lab`~as.factor(Sex),
+(uOut2<-wilcox_test(`Ptt Lab`~Sex,
                     data=rawdata))
 pvalue(uOut2) #no list-object, but methods to extract infos like p
 wilcox.test(`Ptt Lab`~Sex,exact=F,correct=F,
@@ -98,10 +114,11 @@ wilcox.test(x=rawdata$`sysBP V0`,y=rawdata$`sysBP V2`,
             exact=FALSE,
             correct=TRUE,paired=TRUE)
 
-compare2numvars(data = rawdata,dep_vars = ordvars$names,
+compare2numvars(data = rawdata,dep_vars = ordvars$names,n = F,
+                range = T,add_n = T,
                 indep_var = "Sex",gaussian = F) |> 
   flextable() |> 
-  flex2rmd()
+  set_table_properties(width=1, layout="autofit")
 ```
 
 ## Categorial data
@@ -138,6 +155,5 @@ groupvar <- "Testmedication"
 
 compare2qualvars(rawdata,dep_vars = factvars$names[-1],
                  indep_var = groupvar,spacer = " ") |> 
-  flextable() |> 
-  flex2rmd()
+  flextable()
 ```

@@ -26,7 +26,7 @@ book:
     - test2groups.qmd
     - lm.qmd
     - lm_interaction.qmd
-    # - glm.qmd
+    - glm.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

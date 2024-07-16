@@ -14,7 +14,8 @@ Before computing some test-statistics, a graphical exploration should be done by
 
 There are a number of tests for Normal distribution, all testing the Null hypothesis of data coming from a population with Normal distribution. So small p-values lead to rejection of the Null and indicate deviation from normality. Kolmogorov-Smirnov-test (for larger sample sizes) and Shapiro-Wilk-test (for smaller samples) will be used as examples.
 
-Other tests would be Liliefors, Anderson-Darling, and the Cramer-von Mises test.
+Other tests would be e.g. Anderson-Darling, and the Cramer-von Mises test,
+see package `nortest`.
 
 ```{r}
 ks.test(x = rawdata$`Size (cm)`,

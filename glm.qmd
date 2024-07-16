@@ -1,0 +1,235 @@
+# Logistic regression
+Generalized linear models will be introduced using logistic regression as an example. The data set infert contains information were the outcome follows a binomial distribution.
+
+```{r}
+pacman::p_load(car, wrappedtools, tidyverse, ggbeeswarm, 
+               rpart, rpart.plot, pROC ) 
+rawdata <- infert |> 
+  as_tibble()  |>
+  select(-contains("stratum"))
+head(rawdata)
+```
+## Data preparation
+
+Before the analysis, the data set is cleaned and prepared for the analysis. The age variable is transformed into pentayears, and the parity variable is lumped into two categories. Education is reversed and transformed into a factor. 
+```{r data_cleaning}
+rawdata$age-rawdata$age%%5
+rawdata$age/5
+table(rawdata$parity) 
+rawdata <- rawdata |> 
+  mutate(
+    case=factor(case), 
+    induced_f=factor(induced, 
+                     levels = c('0','1','2'), 
+                     labels = (c('none','one','two or more'))),
+    spontaneous_f=factor(spontaneous), 
+    `age [pentayears]`=age/5, 
+    education=forcats::fct_rev(education), 
+    parity_grp=forcats::fct_lump(as.character(parity),
+                                 n = 2, other_level = '>2') |>
+      fct_rev()) 
+```
+\newpage
+## Build model
+
+The model is built using glm() and the output is extracted and transformed. The model is tested using Anova() and summary(). The results are then prepared for plotting.
+ 
+```{r}
+logreg_out <-glm(case~`age [pentayears]`+education+parity_grp+ induced_f+spontaneous_f, 
+                 family=binomial(), data=rawdata) 
+logreg_out 
+
+#extract/transform model parameters 
+(ORs <- exp(logreg_out$coefficients)) 
+(CIs <- exp(confint(logreg_out))) 
+
+#test model 
+(Anova_out <- Anova(logreg_out,type = 2) |> 
+    broom::tidy() |> 
+    mutate(p.value=formatP(p.value,ndigits = 5))) 
+## test each OR 
+(sum_out <- summary(logreg_out))
+
+```
+ 
+
+## Create structure for ggplot
+```{r}
+OR_plotdata <- tibble(
+  Predictor=names(ORs)[-1] |>
+    # make names nicer
+    str_replace('_',' ') |>
+    str_replace_all(c(
+      '(grp)(.)'='\\1: \\2',
+      '(f)(.)'='\\1: \\2',
+      '(n)(\\d)'='\\1: \\2')) |>
+    str_to_title(),
+  OR=ORs[-1],
+  CI_low=CIs[-1,1],
+  CI_high=CIs[-1,2],
+  p=sum_out$coefficients[-1,4],
+  Significance=markSign(p),
+  Label=paste(Predictor,Significance))
+```
+
+## create forest plot 
+```{r}
+baseplot <- 
+  ggplot(OR_plotdata, aes(x = Label,y=OR))+
+  geom_pointrange(aes(ymin=CI_low, ymax=CI_high))+ 
+  geom_hline(yintercept = 1,linewidth=.2,linetype=2)+ 
+  coord_flip() 
+baseplot 
+baseplot+ 
+  scale_y_log10(breaks=logrange_15, 
+                 minor_breaks=logrange_123456789 )+ 
+  geom_text(aes(label=Significance), vjust=1.5,color='red')+ 
+  ggtitle('OddsRatios shown on log-scale')+ 
+  xlab(NULL)
+```
+
+## Create predictions
+
+```{r}
+rawdata$pGLM <- 
+  predict(logreg_out, type = 'response') #predict probability
+# run ROC for cutoff
+roc_out <- roc(response=rawdata$case,
+               predictor=rawdata$pGLM) 
+youden <- pROC::coords(roc_out,x='best',
+                       best.method='youden') 
+youden 
+ggroc(roc_out,legacy.axes = T)+ 
+  geom_abline(slope = 1,intercept = 0)+ 
+  geom_point(x=1-youden$specificity,
+             y=youden$sensitivity, color='red', size=2 ) 
+# plot predictions 
+rawdata |> 
+  mutate(`prediction quality`=
+           case_when(case=="1" &
+                       pGLM<youden$threshold ~ 
+                       "false negative",
+                     case=="0" & 
+                       pGLM>=youden$threshold 
+                     ~ "false positive", 
+                     .default = 'correct' )) |>
+  ggplot(aes(case,pGLM))+ 
+  geom_boxplot(outlier.alpha = 0)+ 
+  scale_y_continuous(breaks=seq(0,1,.1))+ 
+  geom_beeswarm(alpha=.75, 
+                aes(color=`prediction quality`))+ 
+  scale_color_manual(values=c("seagreen","firebrick","magenta"))+ 
+  geom_hline(yintercept = c(.35, youden$threshold,.5),
+             color='red',
+             linetype=2:4)+
+  annotate(geom = "label",
+           x = 1,y=youden$threshold, 
+           label=paste("Youden-cutoff:",
+                       roundR(youden$threshold)),
+           hjust=1.2,vjust=0.25)+
+  theme(legend.position="bottom")
+```
+
+
+```{r}
+ORhuman <- 
+  paste0(map_chr(ORs,roundR),' (', 
+         apply(CIs,MARGIN = 1, 
+               FUN=function(x){ 
+                 paste(roundR(x),collapse=' / ')}), ')') 
+ORreport <- tibble(Predictor=rownames(CIs)[-1], 
+                   OR=ORs[-1], 
+                   low=CIs[-1,1], 
+                   high=CIs[-1,2], 
+                   `OR (CI95)`=NA) 
+ORrounded <- apply(ORreport[,2:4],MARGIN = 1,roundR) 
+ORreport$`OR (CI95)` <-
+  paste0(ORrounded[1,],' (',ORrounded[2,],'/',
+         ORrounded[3,],')')
+```
+
+## Regression tree as alternative to glm
+```{r}
+cn() 
+predvars <- ColSeeker(namepattern = 
+                        c("penta","edu","_grp","_f"))
+rtformula <- paste("case~",
+                   paste(predvars$bticked,collapse = "+"))
+regtree_out<-rpart(rtformula, 
+                   minsplit=5,cp=.001, 
+                   data=rawdata) 
+rpart.plot(regtree_out,type = 2,tweak=2.0, varlen=4,faclen=5,leaf.round=0)
+
+importance <- 
+  as_tibble(regtree_out$variable.importance,
+            rownames='Predictor')  |>
+  dplyr::rename('Importance'=2)  |>  
+  mutate(Predictor=fct_reorder(.f = Predictor, 
+                               .x = Importance,
+                               .fun = min))  |> 
+  arrange(desc(Importance)) 
+importance |>
+  ggplot(aes(Predictor,Importance))+ 
+  geom_col()+ 
+  coord_flip()
+```
+```{r}
+rawdata$pRT <- predict(regtree_out)[,2]
+
+#pROC 
+roc_out <- roc(response=rawdata$case,
+  predictor=rawdata$pRT ) 
+youden <- pROC::coords(roc_out,x='best',
+                       best.method='youden') 
+youden 
+ggroc(roc_out,legacy.axes = T)+ 
+  geom_abline(slope = 1,intercept = 0)+ 
+  geom_point(x=1-youden$specificity,
+             y=youden$sensitivity, color='red', size=2 )
+
+ggplot(rawdata,aes(x=case,y=pRT))+ 
+  geom_boxplot(coef=3)+ 
+  scale_y_continuous(breaks = seq(from = 0,to = 1,by = .1))+ 
+  geom_hline(yintercept = c(.5,youden$threshold), 
+             color=c('red',"blue"), linetype=2)+ 
+  ggbeeswarm::geom_beeswarm() 
+ggplot(rawdata,aes(pGLM,pRT, color=case,shape=case))+ 
+  geom_point(size=2)+ 
+  scale_color_manual(values = c('darkgreen','red'))+ 
+  scale_shape_manual(values = c(0,6))+ 
+  stat_summary(fun.data=mean_cl_boot) 
+ggplot(rawdata,aes(x=case,y=pRT))+ 
+  geom_violin()+ 
+  scale_y_continuous(breaks = seq(from = 0,to = 1,by = .1))+ 
+  geom_hline(yintercept = .5,color='red')
+```
+## Jackknife
+```{r}
+rawdata$pRT_JK <- NA_real_
+rawdata$pGLM_JK <- NA_real_ 
+for(pat_i in 1: nrow(rawdata)){ 
+  tempdata <- rawdata[-pat_i,]
+  regtree_out_tmp<-rpart(rtformula, 
+                         minsplit=5,
+                         cp=.001, data=tempdata) 
+  rawdata$pRT_JK[pat_i] <- 
+    predict(regtree_out_tmp,
+            newdata = rawdata[pat_i,])[,2]
+
+  glm_out_tmp<-glm(rtformula,
+                   family = binomial(), data=tempdata) 
+  rawdata$pGLM_JK[pat_i] <- 
+    predict(glm_out_tmp,newdata = rawdata[pat_i,],
+             type="response") 
+  } 
+ggplot(rawdata,aes(case,pRT_JK))+ 
+  geom_boxplot() 
+rawdata |> 
+  dplyr::select(case,pGLM,pGLM_JK, pRT_JK, pRT) |>
+  pivot_longer(cols = c(pGLM,pGLM_JK, pRT_JK,pRT), 
+               names_to = 'Analysis', 
+               values_to = 'pAffected') |>
+  ggplot(aes(case,pAffected,fill=Analysis))+ 
+  geom_boxplot() 
+```
+

@@ -1,0 +1,225 @@
+# Summarize / across 
+
+```{r}
+pacman::p_load(conflicted,tidyverse,wrappedtools,
+               flextable)
+```
+
+1 variable / 1 function / no groups
+
+```{r}
+summarize(.data = mtcars,
+          MeanSD=meansd(mpg)) |> 
+  flextable()
+```
+
+1 variable / 1 function / subgroups
+
+```{r}
+mtcars |> 
+  group_by(am) |> 
+summarize(MeanSD=meansd(mpg),
+          .groups = 'drop') |> 
+  flextable()
+# groups in columns
+mtcars |> 
+  group_by(am) |> 
+summarize(MeanSD=meansd(mpg),
+          .groups = 'drop') |>
+  pivot_wider(names_from = am,
+              values_from = MeanSD,
+              names_glue = "am: {am}\n{.value}") |>
+  flextable()
+```
+
+1 variable / 2 functions / no groups
+
+```{r}
+summarize(.data = mtcars,
+          `MeanSD mpg`=meansd(mpg),
+          `MedianQuartiles mpg`=median_quart(mpg)) |> 
+  flextable()
+```
+
+1 variable / 2 functions / subgroups
+
+```{r}
+mtcars |> 
+  group_by(am) |> 
+summarize(`MeanSD mpg`=meansd(mpg),
+          `MedianQuartiles mpg`=median_quart(mpg),
+          .groups = 'drop') |> 
+  flextable()
+
+# groups in columns
+mtcars |> 
+  group_by(am) |> 
+summarize(`MeanSD mpg`=meansd(mpg),
+          `MedianQuartiles mpg`=median_quart(mpg),
+          .groups = 'drop') |> 
+  pivot_longer(
+    cols = starts_with("M"),
+    names_to = "Statistics",
+    values_to = "estimate") |>
+  pivot_wider(names_from = am,
+              values_from = estimate,
+              names_glue = "am: {am}") |>
+  flextable()
+```
+
+2 variables / 1 function / no groups
+
+```{r}
+# no function arguments
+mtcars |> 
+  summarize(across(c(mpg,disp),
+                   .fns=meansd)) |> 
+  flextable()
+# with function arguments
+mtcars |> 
+  summarize(across(c(mpg,disp),
+                   .fns=~meansd(.x,add_n = TRUE))) |> 
+  flextable()
+
+# Variables in rows
+mtcars |> 
+  summarize(across(c(mpg,disp),
+                   .fns=~meansd(.x,add_n = TRUE))) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = "Variable",
+    values_to = "MeanSD") |>
+  flextable() |> 
+  set_table_properties(width=.7, layout="autofit")
+```
+
+2 variables / 1 function / subgroups
+
+```{r}
+mtcars |> 
+  group_by(am) |> 
+  summarize(across(c(mpg,disp),
+                   ~meansd(.x,add_n = TRUE)),
+            .groups = 'drop') |> 
+  flextable()
+
+# Variables in rows
+mtcars |> 
+  group_by(am) |> 
+  summarize(across(c(mpg,disp),
+                   ~meansd(.x,add_n = TRUE)),
+            .groups = 'drop') |> 
+  pivot_longer(
+    cols = -am,
+    names_to = "Variable",
+    values_to = "MeanSD") |>
+  pivot_wider(names_from = am,
+              values_from = MeanSD,
+              names_prefix = "am: ") |>
+  flextable() |> 
+  set_table_properties(width=.7, layout="autofit")
+```
+
+2 variables / 2 function / no groups
+
+```{r}
+# with/without function arguments
+mtcars |> 
+  summarize(across(
+    c(mpg,disp),
+    .fns=list(
+      MeanSD=~meansd(.x,
+                     add_n = TRUE),
+      MedianQuart=median_quart))) |> 
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit")
+
+# Variables in rows
+mtcars |> 
+  summarize(across(
+    c(mpg,disp),
+    .fns=list(
+      MeanSD=~meansd(.x,
+                     add_n = TRUE),
+      MedianQuart=median_quart))) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = c("Variable",".value"),
+    names_sep="_",
+    values_to = "MeanSD") |>
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit")
+```
+
+2 variables / 2 function / subgroups
+
+```{r}
+# with/without function arguments
+mtcars |> 
+  group_by(am) |> 
+  summarize(across(
+    c(mpg,disp),
+    .fns=list(
+      MeanSD=~meansd(.x,
+                     add_n = TRUE),
+      MedianQuart=median_quart)),
+    .groups="drop") |> 
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit")
+
+# Variables in rows, groups in columns
+mtcars |> 
+  group_by(am) |> 
+  summarize(across(
+    c(mpg,disp),
+    .fns=list(
+      MeanSD=~meansd(.x,
+                     add_n = TRUE),
+      MedianQuart=median_quart)),
+    .groups="drop") |> 
+  pivot_longer(
+    cols = -am,
+    names_to = c("Variable",".value"),
+    names_sep="_",
+    values_to = "MeanSD") |>
+  pivot_wider(names_from = am,
+              values_from = starts_with("M"),
+              names_glue = "am: {am}_{.value}",
+              names_vary="slowest") |>
+  flextable() |> 
+  separate_header(split="[:_]") |>
+  set_table_properties(width=1, layout="autofit")
+
+# pivoting to have variables in rows V2
+
+# with/without function arguments
+result_long <- 
+  mtcars |> 
+  group_by(am) |> 
+  summarize(across(
+    c(mpg,disp),
+    .fns=list(
+      MeanSD=~meansd(.x,
+                     add_n = TRUE),
+      MedianQuart=median_quart))) |> 
+  pivot_longer(cols = -c(am),
+               names_to = c('Variable','.value'),
+               names_sep="_",
+               values_to = 'Value')
+result_long |> 
+  flextable() |> 
+  merge_v(j=1) |> 
+  set_table_properties(width=1, layout="autofit")
+
+result <- 
+  result_long |> 
+  pivot_wider(names_from=am,
+              names_prefix="am:",
+              names_sep=" ",
+              values_from=c(MeanSD, MedianQuart))
+result |> 
+  flextable() |> 
+  separate_header(split="[ ]") |> 
+  set_table_properties(width=1, layout="autofit")
+```
+

@@ -20,10 +20,38 @@ Basic functions like `grep()` or `gsub()` are difficult to use in pipelines and 
 
 -   **\\D**: Matches any non-digit character.
 
-An example for their use in renaming variables:
+### Some basic examples:
 
 ```{r}
 pacman::p_load(tidyverse)
+starttext <- "Did grandma eat all the pizza?"
+str_detect(string = starttext, pattern = "pizza")
+str_detect(string = starttext, pattern = "pasta")
+str_detect(string = starttext, pattern = "p.+a\\?$")
+str_detect(string = starttext, pattern = "grand[mp]")
+str_replace(string=starttext, 
+            pattern = "ma", 
+            replacement = "pa")
+str_replace(string=starttext, 
+            pattern = " all ", 
+            replacement = " half ")
+str_replace(string=starttext, 
+            pattern = "^(\\w+) (\\w*) (.*)", 
+            replacement = "\\2 \\1 \\3") |> 
+  str_to_sentence()
+str_replace(string=starttext, 
+            pattern = "^(\\w+) (\\w*) (.*)\\?", 
+            replacement = "\\2 \\1 \\3!") |> 
+  str_to_sentence()
+str_replace_all(string=starttext,
+                pattern = c("ma"="pa",
+                            "all"="half",
+                            "izz"="ast"))
+```
+
+### An example for their use in renaming variables:
+
+```{r}
 temptibble <- tibble(
   cup_weigh=seq(10,20,.5),
   CAPSIZE_cm=5,
@@ -56,7 +84,4 @@ testset3 <- c("1980_12_30","13.04.2005", "2005/04/25","24121990")
 
 testset4 <- c("pw2000","That1sb3tt3r","M@kesSense?","NoDigits@this1")
 # test pwd strength, rules: Upper, lower, special char, number, min 8 char long
-
-
-
 ```

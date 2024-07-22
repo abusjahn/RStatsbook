@@ -96,6 +96,7 @@ str(float_num)
 int_num <- 123L # L specifies integer, guessing requires more values
 class(int_num)
 typeof(int_num)
+str(int_num)
 integer(length = 3)
 result<-9^(1/2)
 result
@@ -125,10 +126,11 @@ factor_var <- factor(c("m","m","f","m","f","f","?"))
 factor_var
 class(factor_var)
 typeof(factor_var) # that is why factors can be called enumerated type
+levels(factor_var)
 # factor definition can reorder, rename, and drop levels:
 factor_var2 <- factor(c("m","m","f","m","f","f","?"),
-                     levels=c("m","f"),
-                     labels=c("male","female"))
+                     levels = c("m","f"),
+                     labels = c("male","female"))
 factor_var2
 ```
 
@@ -168,15 +170,11 @@ class((test_NA2))
 class(NA_integer_)
 class(NA_character_)
 class(NA_Date_) # from package lubridate
-# test_NA_factor <- 
-#   factor(rep(NA,10),
-#          levels=c("WT","Mutation1", "Mutation2"))
-# class(test_NA_factor)
 ```
 
 ### *Indexing variables*
 
-*The most general kind of indexing is by position, starting with 1. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can (and usually will) be a variable instead of hard coded numbers.*
+*The most general kind of indexing is by position, starting with **1**. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can (and usually will) be a variable instead of hard coded numbers.*
 
 ```{r}
 (numbers1 <- c(5,3,6,8,2,1))
@@ -191,7 +189,7 @@ numbers1[numbers2]
 *To get first or last entries, head() and tail() can be used. By default 6 entries are returned.*
 
 ```{r}
-tail(x=numbers1, n = 1)
+tail(x = numbers1, n = 1)
 head(x = numbers1, n = 3)
 nth(x = numbers1,n=-2) # 2nd to last
 ```
@@ -288,7 +286,7 @@ compare2numvars(data = mtcars,
 
 ```{r}
 #FunctionName<-function(parameters...){definition}
-division <- function(x, y){
+division <- function(y, x){
   return(x/y)
 }
 (Sys.Date()-as.Date("1958/12/10")) |> 
@@ -399,7 +397,7 @@ patientN<-15
 (myTable<-data.frame(
   patientCode=paste0("pat",1:patientN),
   Var1 = 1, # gets recycled
-  Var2 = NA_Date_)) |> head()
+  Var2 = NA_Date_)) |> head() 
 str(myTable)
 set.seed(101)
 myTable<-data.frame(
@@ -436,6 +434,7 @@ myTable[,1]<-paste0("Code", 1:patientN)
 
 ```{r}
 patientN <- 25
+set.seed(3105)
 rawdata <- tibble(
   PatID=paste("P",1:patientN), # as in  data.frame
   Sex=sample(x = c("male","female"),  # random generator
@@ -599,7 +598,7 @@ for(season_i in 1:3) {
   cat(paste("GoL Season",season_i,"\n"))
   for(episode_i in 1:5) {
     cat(paste0("   GoL S.",season_i,
-                 " Episode ",episode_i,"\n"))
+               " Episode ",episode_i,"\n"))
   }
   cat("\n")
 }
@@ -684,11 +683,12 @@ any(all(sex=="female",age<=12),
 *We can get text conditionally:*
 
 ```{r}
+test <- "female"
 print(ifelse(test = sex=="male",
              yes = "is male",
              no = "is female"))
 
-p <- .12
+p <- .012
 paste0("That is ",
        ifelse(test = p<=.05,yes = "",no = "not "),
        "significant")

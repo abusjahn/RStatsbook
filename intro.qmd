@@ -10,4 +10,6 @@ There are plenty of books available, check out e.g.
 
 [ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/){target="_blank"}
 
+[The big book of R](https://www.bigbookofr.com/){target="_blank"}
+
 Chapters will follow my usual schedule, starting from R basics, introducing ggplot, data import, data preparation and cleaning, descriptive statistics, simple test statistics, then progression to linear models (regression/ANOVA), generalized linear models with logistic regression as example, linear mixed effect models, and machine learning.

@@ -14,8 +14,7 @@ Before computing some test-statistics, a graphical exploration should be done by
 
 There are a number of tests for Normal distribution, all testing the Null hypothesis of data coming from a population with Normal distribution. So small p-values lead to rejection of the Null and indicate deviation from normality. Kolmogorov-Smirnov-test (for larger sample sizes) and Shapiro-Wilk-test (for smaller samples) will be used as examples.
 
-Other tests would be e.g. Anderson-Darling, and the Cramer-von Mises test,
-see package `nortest`.
+Other tests would be e.g. Anderson-Darling, and the Cramer-von Mises test, see package `nortest`.
 
 ```{r}
 ks.test(x = rawdata$`Size (cm)`,
@@ -29,7 +28,7 @@ ksnormal(rawdata$`Size (cm)`)
 shapiro.test(rawdata$`Size (cm)`)
 
 ggplot(rawdata,aes(x = `Size (cm)`))+
-  geom_density()
+  geom_density(fill="pink")
 ggplot(rawdata,aes(x = `Size (cm)`,fill=Sex))+
   geom_density(alpha=.4)
 ```
@@ -42,7 +41,7 @@ rawdata |> filter(Sex=="m") |>
   ksnormal()
 rawdata |> 
   group_by(Sex) |>
-  summarize(p_KS = ksnormal(`Size (cm)`),
+  summarize(p_KS = ksnormal(`Size (cm)`,lillie = FALSE),
             `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
 ```
 
@@ -51,7 +50,9 @@ rawdata |>
 To explore larger data sets, it may be useful to test all numerical variables for normality, this can be done in a loop or with the across-function. As a start for the loop-solution we can get the names and positions for all (or selected) numerical variables with the ColSeeker-function from wrappedtools.
 
 ```{r}
-numvars <- ColSeeker(varclass = "numeric")
+numvars <- 
+  ColSeeker(data = rawdata,  # can be omitted, as it is the default 
+            varclass = "numeric")
 numvars$index
 head(numvars$names)
 numvars$count
@@ -77,22 +78,26 @@ for(var_i in seq_len(numvars$count)){
                    pull(numvars$names[var_i]))$p.value
 }
 head(resulttable1)
+resulttable1 |> 
+  mutate(pKS=formatP(pKS,ndigits=5),
+         pSh=formatP(pSh,mark = T))
 ```
 
 Loop Version 2:
 
 ```{r}
 ## result table v2, just structure
-resulttable2 <- tibble(Variables=NA_character_,
+resulttable2 <- tibble(Measures=NA_character_,
                        pKS_Placebo=NA_character_,
                        pKS_Verum=NA_character_,
                        .rows = 0)
 for(var_i in numvars$names){
   ks_tmp <- by(data = rawdata[[var_i]], 
                INDICES=rawdata$Testmedication,
-               FUN=ksnormal)
+               FUN=ksnormal,
+               lillie=FALSE)
   resulttable2 <-add_row(resulttable2,   
-                         Variables=var_i,
+                         Measures=var_i,
                          pKS_Placebo=ks_tmp[[1]] |> 
                            formatP(), # added rounding/formatting
                          pKS_Verum=ks_tmp[[2]] |> 
@@ -133,7 +138,7 @@ head(resulttable1)
                     .fns = ~ksnormal(.x) |> 
                       formatP(mark = TRUE))) |> 
    pivot_longer(-Testmedication,
-                names_to="Variable") |> 
+                names_to="Measure") |> 
    pivot_wider(names_from=Testmedication,
                values_from=value)
  head(resulttable2a)
@@ -169,12 +174,15 @@ Based on data inspection, testing, and background knowledge, variables can be so
 
 ```{r}
 gaussvars <- ColSeeker(
+  data = rawdata,   # can be omitted, as it is the default
   namepattern = c("si","we","BMI","BP","mri"),
   casesensitive = FALSE)
 
-ordvars <- ColSeeker(namepattern = c("Age","Lab"))
+ordvars <- ColSeeker(data = rawdata, 
+                     namepattern = c("Age","Lab"))
 
-factvars <- ColSeeker(namepattern = c("Sex","med","NYHA"),
+factvars <- ColSeeker(data = rawdata,
+                      namepattern = c("Sex","med","NYHA"),
                       returnclass = TRUE)
 
 rawdata <- mutate(rawdata,

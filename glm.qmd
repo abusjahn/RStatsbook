@@ -1,4 +1,5 @@
 # Logistic regression
+
 Generalized linear models will be introduced using logistic regression as an example. The data set infert contains information were the outcome follows a binomial distribution.
 
 ```{r}
@@ -9,9 +10,11 @@ rawdata <- infert |>
   select(-contains("stratum"))
 head(rawdata)
 ```
+
 ## Data preparation
 
-Before the analysis, the data set is cleaned and prepared for the analysis. The age variable is transformed into pentayears, and the parity variable is lumped into two categories. Education is reversed and transformed into a factor. 
+Before the analysis, the data set is cleaned and prepared for the analysis. The age variable is transformed into pentayears, and the parity variable is lumped into two categories. Education is reversed and transformed into a factor.
+
 ```{r data_cleaning}
 rawdata$age-rawdata$age%%5
 rawdata$age/5
@@ -29,11 +32,13 @@ rawdata <- rawdata |>
                                  n = 2, other_level = '>2') |>
       fct_rev()) 
 ```
+
 \newpage
+
 ## Build model
 
 The model is built using glm() and the output is extracted and transformed. The model is tested using Anova() and summary(). The results are then prepared for plotting.
- 
+
 ```{r}
 logreg_out <-glm(case~`age [pentayears]`+education+parity_grp+ induced_f+spontaneous_f, 
                  family=binomial(), data=rawdata) 
@@ -51,9 +56,9 @@ logreg_out
 (sum_out <- summary(logreg_out))
 
 ```
- 
 
 ## Create structure for ggplot
+
 ```{r}
 OR_plotdata <- tibble(
   Predictor=names(ORs)[-1] |>
@@ -72,7 +77,8 @@ OR_plotdata <- tibble(
   Label=paste(Predictor,Significance))
 ```
 
-## create forest plot 
+## create forest plot
+
 ```{r}
 baseplot <- 
   ggplot(OR_plotdata, aes(x = Label,y=OR))+
@@ -130,7 +136,6 @@ rawdata |>
   theme(legend.position="bottom")
 ```
 
-
 ```{r}
 ORhuman <- 
   paste0(map_chr(ORs,roundR),' (', 
@@ -149,6 +154,7 @@ ORreport$`OR (CI95)` <-
 ```
 
 ## Regression tree as alternative to glm
+
 ```{r}
 cn() 
 predvars <- ColSeeker(namepattern = 
@@ -173,19 +179,24 @@ importance |>
   geom_col()+ 
   coord_flip()
 ```
+
 ```{r}
 rawdata$pRT <- predict(regtree_out)[,2]
 
 #pROC 
-roc_out <- roc(response=rawdata$case,
+roc_out_rt <- roc(response=rawdata$case,
   predictor=rawdata$pRT ) 
-youden <- pROC::coords(roc_out,x='best',
+youden <- pROC::coords(roc_out_rt,x='best',
                        best.method='youden') 
 youden 
-ggroc(roc_out,legacy.axes = T)+ 
+ggroc(roc_out_rt,legacy.axes = T)+ 
   geom_abline(slope = 1,intercept = 0)+ 
   geom_point(x=1-youden$specificity,
              y=youden$sensitivity, color='red', size=2 )
+
+ggroc(list(roc_out_rt,roc_out),legacy.axes = T)+ 
+  geom_abline(slope = 1,intercept = 0)
+
 
 ggplot(rawdata,aes(x=case,y=pRT))+ 
   geom_boxplot(coef=3)+ 
@@ -203,7 +214,9 @@ ggplot(rawdata,aes(x=case,y=pRT))+
   scale_y_continuous(breaks = seq(from = 0,to = 1,by = .1))+ 
   geom_hline(yintercept = .5,color='red')
 ```
+
 ## Jackknife
+
 ```{r}
 rawdata$pRT_JK <- NA_real_
 rawdata$pGLM_JK <- NA_real_ 
@@ -232,4 +245,3 @@ rawdata |>
   ggplot(aes(case,pAffected,fill=Analysis))+ 
   geom_boxplot() 
 ```
-

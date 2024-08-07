@@ -1,4 +1,4 @@
-# Summarize / across 
+# Summarize / across
 
 ```{r}
 pacman::p_load(conflicted,tidyverse,wrappedtools,
@@ -18,7 +18,7 @@ summarize(.data = mtcars,
 ```{r}
 mtcars |> 
   group_by(am) |> 
-summarize(MeanSD=meansd(mpg),
+  summarize(MeanSD=meansd(mpg),
           .groups = 'drop') |> 
   flextable()
 # groups in columns
@@ -72,12 +72,12 @@ summarize(`MeanSD mpg`=meansd(mpg),
 ```{r}
 # no function arguments
 mtcars |> 
-  summarize(across(c(mpg,disp),
+  summarize(across(.cols = c(mpg,disp),
                    .fns=meansd)) |> 
   flextable()
 # with function arguments
 mtcars |> 
-  summarize(across(c(mpg,disp),
+  summarize(across(.cols=c(mpg,disp),
                    .fns=~meansd(.x,add_n = TRUE))) |> 
   flextable()
 
@@ -130,7 +130,8 @@ mtcars |>
     .fns=list(
       MeanSD=~meansd(.x,
                      add_n = TRUE),
-      MedianQuart=median_quart))) |> 
+      MedianQuart=median_quart),
+    .names = "{.col}: {.fn}")) |> 
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
 
@@ -145,8 +146,7 @@ mtcars |>
   pivot_longer(
     cols = everything(),
     names_to = c("Variable",".value"),
-    names_sep="_",
-    values_to = "MeanSD") |>
+    names_sep="_") |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
 ```
@@ -180,8 +180,7 @@ mtcars |>
   pivot_longer(
     cols = -am,
     names_to = c("Variable",".value"),
-    names_sep="_",
-    values_to = "MeanSD") |>
+    names_sep="_") |>
   pivot_wider(names_from = am,
               values_from = starts_with("M"),
               names_glue = "am: {am}_{.value}",
@@ -222,4 +221,3 @@ result |>
   separate_header(split="[ ]") |> 
   set_table_properties(width=1, layout="autofit")
 ```
-

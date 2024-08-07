@@ -21,7 +21,8 @@ ggplot(rawdata,aes(x=Sex,y=`Size (cm)`))+
 
 rawdata |> 
   group_by(Sex) |> 
-summarize(MeanSE=meanse(`Size (cm)`))
+summarize(MeanSE=meanse(`Size (cm)`),
+          SD=sd(`Size (cm)`))
 
 t.test(x = rawdata$`Size (cm)`[which(rawdata$Sex=="f")],
        y = rawdata$`Size (cm)`[which(rawdata$Sex=="m")])
@@ -61,11 +62,13 @@ t.test(rawdata$`Size (cm)`,mu = 173)
 groupvars <- ColSeeker(namepattern = c("Sex","Test"))
 
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                indep_var = "Sex",gaussian = T) |> 
+                indep_var = "Sex",gaussian = T,
+                round_desc = 3,add_n = T, mark=T) |> 
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
-                indep_var = "Testmedication",gaussian = T) |> 
+                indep_var = "Testmedication",gaussian = T,
+                round_desc = 4) |> 
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
 
@@ -87,7 +90,6 @@ for(group_i in seq_len(groupvars$count)){
   cat("\\newpage\n\n")
 }
 ```
-
 
 ## Ordinal data
 
@@ -155,5 +157,6 @@ groupvar <- "Testmedication"
 
 compare2qualvars(rawdata,dep_vars = factvars$names[-1],
                  indep_var = groupvar,spacer = " ") |> 
-  flextable()
+  flextable() |> 
+  align(~p==" ",j = 1,align = "center")
 ```

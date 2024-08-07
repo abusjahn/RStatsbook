@@ -215,10 +215,12 @@ ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
                         mid="white",
                         limits=c(13,23),midpoint=18)+
   geom_point()+
-  scale_x_continuous(breaks = seq(0,100,5),
-                     minor_breaks=seq(0,100,1),
+  scale_x_continuous(breaks = seq(-10^3,10^3,5),
+                     minor_breaks=seq(-10^3,10^3,1),
                      limits = c(0,10))+
-  scale_y_log10(minor_breaks=seq(0,100,1))
+  scale_y_log10(
+    breaks=seq(0,100,5),
+    minor_breaks=seq(0,100,1))
 
 
 ggplot(data=mtcars,aes(wt, log10(mpg),color=qsec, size=carb))+
@@ -253,7 +255,7 @@ ggplot(data=mtcars,
        aes(wt, mpg,size=qsec, shape=factor(cyl)))+
   geom_point()
 
-ggplot(data=mtcars,aes(carb, mpg,color=qsec, size=wt))+
+ggplot(data=mtcars,aes(wt, mpg, size=qsec))+
   geom_text(family="EmojiOne",label="\U1F697")+
   scale_size_continuous(range = c(5,10))
 
@@ -275,8 +277,9 @@ p+geom_bar(position="fill")+
                      labels=seq(0,100,20))
 p+geom_bar(position="fill")+
   scale_y_continuous("Frequency",
-                     breaks=seq(0,1,.1),
-                     labels=scales::percent)+
+                     breaks=seq(0,1,.2),
+                     labels=scales::percent,
+                     expand=expansion(mult = c(0,0)))+
   theme(axis.title.y = element_text(angle = 0,
                                     vjust = .5))+
   geom_hline(yintercept = .5, linetype=2) # e.g. for reference lines
@@ -287,7 +290,8 @@ ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
   geom_point(stat="count",size=5)+
   scale_color_manual(values = c("green","lightblue",
                                 "darkblue",
-                                rgb(253,79,54,maxColorValue = 255),
+                                rgb(253,79,54,
+                                    maxColorValue = 255),
                                 "#00798d"))
 ```
 
@@ -298,7 +302,7 @@ When combining various geoms, the order is important, as elements are not transp
 ```{r}
 ggplot(data=mtcars,aes(wt, mpg))+
   geom_point(size=4)+
-  geom_smooth(size=3)+ # line overlaps points
+  geom_smooth(linewidth=3)+ # line overlaps points
   geom_smooth(data=mtcars |> filter(wt>3), #picks a sub-sample
               method="lm",linewidth=3, color="red")
 
@@ -357,7 +361,7 @@ p.tmp + facet_grid(rows = vars(gear),
                    cols = vars(cyl),
                    labeller=label_both,margins="gear")
 # options(warn=-1) 
-p.tmp + geom_smooth()+
+p.tmp + geom_smooth(method="lm")+
   facet_grid(rows = vars(gear),
              cols = vars(cyl), 
              labeller=label_both, margins=TRUE)
@@ -460,8 +464,8 @@ plottemp+geom_signif(
   textsize = rel(10), vjust = .0,
   #y_position=max(mtcars$mpg+3),
   # annotations=paste0("p = ", p),
-  # annotations=markSign(p),
-  annotations=p,
+  annotations=markSign(p),
+  # annotations=p,
   tip_length=.02)+
   scale_y_continuous(expand = expansion(mult=c(0.05,.1)))
 
@@ -570,3 +574,8 @@ p3 <- ggplot(mtcars) +
 [more facets...](https://www.data-imaginist.com/2019/a-flurry-of-facets/)
 
 [animations...](https://github.com/thomasp85/gganimate)
+
+```{r}
+GGally::ggpairs(mtcars)
+```
+

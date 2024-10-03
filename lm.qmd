@@ -27,7 +27,7 @@ base_dir <- here::here()
 Data are read from an SPSS file. Numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA. The call to here() expands the path to a file from the project directory to the full system path.
 
 ```{r}
-rawdata<-foreign::read.spss(file=here('Data/Zellbeads.sav'),
+rawdata<-foreign::read.spss(file=here('data/Zellbeads.sav'),
                             use.value.labels=T,to.data.frame=T) |>
   as_tibble() |>
   dplyr::select(-ZahlZellen) |> 
@@ -94,6 +94,7 @@ This takes 2 steps, building the model and computing p-values.
 ```{r}
 # model
 (regressionOut<-lm(Growth~Passage,data=rawdata))
+regressionOut$coefficients
 # model and p.value for slope, not recommended
 tidy(regressionOut)
 # computation of SSQs and p-values, use this!
@@ -261,5 +262,5 @@ broom::tidy(aOut)
 # from package performance
 check_model(lmOut_additive)
 check_model(lmOut_interaction)
-dev.off()
+# dev.off()
 ```

@@ -98,7 +98,7 @@ baseplot+
 
 ```{r}
 rawdata$pGLM <- 
-  predict(logreg_out, type = 'response') #predict probability
+  predict(logreg_out, type = 'response') #predict probability 0-1
 # run ROC for cutoff
 roc_out <- roc(response=rawdata$case,
                predictor=rawdata$pGLM) 
@@ -194,9 +194,8 @@ ggroc(roc_out_rt,legacy.axes = T)+
   geom_point(x=1-youden$specificity,
              y=youden$sensitivity, color='red', size=2 )
 
-ggroc(list(roc_out_rt,roc_out),legacy.axes = T)+ 
+ggroc(list(RTbased=roc_out_rt,GLM_based=roc_out),legacy.axes = T)+ 
   geom_abline(slope = 1,intercept = 0)
-
 
 ggplot(rawdata,aes(x=case,y=pRT))+ 
   geom_boxplot(coef=3)+ 
@@ -245,3 +244,6 @@ rawdata |>
   ggplot(aes(case,pAffected,fill=Analysis))+ 
   geom_boxplot() 
 ```
+
+
+

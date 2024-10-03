@@ -1,12 +1,13 @@
-
 # Interaction in linear models
+
 ```{r}
 pacman::p_load(conflicted,tidyverse,car,multcomp,wrappedtools, broom)
 conflicts_prefer(dplyr::select)
 ```
+
 For a better understanding, data with defined effect size and interactions will be simulated and analyzed.
 
-## No age effect, no treatment effect, interaction treatment*agegroup
+## No age effect, no treatment effect, interaction treatment\*agegroup
 
 ```{r}
 set.seed(101)
@@ -42,8 +43,10 @@ summary(glht(model=lmout,
              linfct=mcp(Agegroup='Tukey')))
 
 ```
+
 \newpage
-## Age effect, no treatment effect, interaction treatment*agegroup
+
+## Age effect, no treatment effect, interaction treatment\*agegroup
 
 ```{r}
 set.seed(101)
@@ -79,8 +82,10 @@ summary(glht(model=lmout,
 summary(glht(model=lmout,
              linfct=mcp(Agegroup='Tukey')))
 ```
+
 \newpage
-## Age effect, treatment effect, interaction treatment*agegroup
+
+## Age effect, treatment effect, interaction treatment\*agegroup
 
 ```{r}
 set.seed(101)
@@ -124,7 +129,9 @@ summary(glht(model=lmout,
 summary(glht(model=lmout,
              linfct=mcp(Agegroup='Tukey')))
 ```
+
 Ignoring the interaction in the model is no solution. Effect sizes will be wrongly estimated:
+
 ```{r}
 # falsch!!!
 lmout <- lm(Outcome~Agegroup+Treatment,
@@ -139,7 +146,9 @@ Anova(lmout,type = 2) |>
   tidy() |> slice(1:2) |> 
   mutate(p.value=formatP(p.value,ndigits=3, mark=TRUE))
 ```
+
 \newpage
+
 ## How to specify interaction in multivariable models
 
 ```{r}
@@ -153,5 +162,3 @@ Anova(lmout,type = 2) |>
 (lm_out <- lm(mpg~wt*(gear+factor(am)+cyl),
               data=mtcars))
 ```
-
-

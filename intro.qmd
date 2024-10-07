@@ -1,5 +1,70 @@
 # Introduction
 
+Chapters will follow my usual schedule, starting from R basics, introducing ggplot, data import, data preparation and cleaning, descriptive statistics, simple test statistics, then progression to linear models (regression/ANOVA), generalized linear models with logistic regression as example, linear mixed effect models, and machine learning.
+
+## Installation of R:
+
+[The Comprehensive R Archive Network (r-project.org)](https://cran.r-project.org/)
+
+If using Windows, install Rtools as well (3 GB)
+
+If on linux, R2U is useful:
+
+[CRAN as Ubuntu Binaries - r2u (eddelbuettel.github.io)](https://eddelbuettel.github.io/r2u/)
+
+## Installation of RStudio Desktop (UI):
+
+[RStudio Desktop - Posit](https://posit.co/download/rstudio-desktop/)
+
+## Installation of Quarto (Reportgenerator):
+
+[Quarto - Get Started](https://quarto.org/docs/get-started/)
+
+## Installation of git:
+
+[Git - Downloads (git-scm.com)](https://git-scm.com/downloads)
+
+## Setup RStudio
+
+There are many options available to adjust the UI to your liking, some default settings should be changed. There are global and project specific options, both can be found under Menu /Tools
+
+Screenshots....
+
+## Projects on your computer
+
+It is terribly important to be organized (or at least helpful)! Different analyses for e.g. new experiments or new data sets should be separated, demo analyses and exercises as well. Project structures should be consistent to make re-use of scripts easier.
+
+As a starting point, I suggest creating a folder for everything R-related, e.g. ***Rstuff***
+
+### Option 1: Create manually
+
+-   Define location for project folder (often somewhere under C:/Users/SomeName/Documents),\
+    for seminar projects this should be the folder you just created, Rstuff or whatever name you used.
+
+-   In the folder, create a new folder, e.g. Rexercises
+
+-   Create useful sub-folders, I recommend /RScripts and /Data as minimal structure; be consistent in naming!!
+
+You should have a folder structure something like this:\
+
+-   Rstuff
+
+    -   RStuff/Rexercises
+
+    -   RStuff/Rexercises/Rscripts
+
+    -   RStuff/Rexercises/Data\
+
+### Option 2: Create from a github repository
+
+e.g.  https://github.com/abusjahn/RStatsbook
+
+Define source and new location
+
+# Some useful resources
+
+## Books
+
 There are plenty of books available, check out e.g.
 
 [R for Data Science](https://r4ds.hadley.nz/ "R for Data Science"){target="_blank"}
@@ -12,4 +77,22 @@ There are plenty of books available, check out e.g.
 
 [The big book of R](https://www.bigbookofr.com/){target="_blank"}
 
-Chapters will follow my usual schedule, starting from R basics, introducing ggplot, data import, data preparation and cleaning, descriptive statistics, simple test statistics, then progression to linear models (regression/ANOVA), generalized linear models with logistic regression as example, linear mixed effect models, and machine learning.
+[Fundamentals of Data Visualization (clauswilke.com)](https://clauswilke.com/dataviz/index.html)
+
+[Statistical Inference via Data Science (moderndive.com)](https://moderndive.com/)
+
+[Data Science Live Book (datascienceheroes.com)](https://livebook.datascienceheroes.com/)
+
+[Biostatistics for Biomedical Research (hbiostat.org)](https://hbiostat.org/bbr/)
+
+[Welcome \| Data Science at the Command Line, 2e (jeroenjanssens.com)](https://jeroenjanssens.com/dsatcl/)
+
+## Ressorces
+
+[Cheatsheets - Posit](https://posit.co/resources/cheatsheets/)
+
+[Contributed Cheatsheets (rstudio.github.io)](https://rstudio.github.io/cheatsheets/contributed-cheatsheets.html?_gl=1*gbrdhb*_ga*MTQ0Nzc3NTc1NS4xNjg0MDU2NDIz*_ga_2C0WZ1JHG0*MTY5NzYzMDM0MS4yNi4wLjE2OTc2MzAzNDEuMC4wLjA.)
+
+[R-bloggers](https://www.r-bloggers.com/)
+
+[Bioconductor - Home](https://www.bioconductor.org/)

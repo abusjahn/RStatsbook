@@ -2,7 +2,7 @@
 
 ```{r}
 pacman::p_load(conflicted,tidyverse, wrappedtools, 
-               readxl, readODS, foreign, haven)
+               readxl, readODS, foreign, haven, here)
 ```
 
 ## Import from text files (.txt, .csv)
@@ -10,7 +10,7 @@ pacman::p_load(conflicted,tidyverse, wrappedtools,
 There are base functions like read.csv() and tidyverse-based updated ones like read_csv(). Different versions like read_csv2() or read_delim() have different settings for deliminators, number formats etc.
 
 ```{r}
-rawdata <- read_csv2("data/Medtest_e.csv")
+rawdata <- read_csv2(here("data/Medtest_e.csv"))
 ```
 
 ## Import from Excel
@@ -18,14 +18,14 @@ rawdata <- read_csv2("data/Medtest_e.csv")
 ### Tidy Excel files
 
 ```{r}
-rawdata <- read_excel(path = "data/Medtest_e.xlsx") |> 
+rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |> 
   rename_with(.fn = ~str_replace_all(.x,pattern="_",replacement=" ")) |>
   rename_with(.fn=str_to_title,
               .cols = !contains(c("BP","BMI","NY"))) |> 
   rename(`Size (cm)`=Size, #newname=oldname
          `Weight (kg)`=Weight) |> 
   select(-`Sex M`)
-saveRDS(rawdata,file = "data/rawdata.rds")
+saveRDS(rawdata,file = here("data/rawdata.rds"))
 ```
 
 ### ODS files
@@ -45,7 +45,7 @@ Package readODS provides similar functionality for OpenOffice/LibreOffice files.
 3.  Use 1st row as colnames for data
 
 ```{r}
-cn_temp <- read_excel(path = "data/Medtest_e.xlsx",
+cn_temp <- read_excel(path = here("data/Medtest_e.xlsx"),
                       range = "A1:Y2",col_names = FALSE,
                       sheet = 2)
 for(col_i in colnames(cn_temp)){
@@ -55,7 +55,7 @@ for(col_i in colnames(cn_temp)){
   }
 }
 
-rawdata <- read_excel(path = "data/Medtest_e.xlsx",
+rawdata <- read_excel(path = here("data/Medtest_e.xlsx"),
                       skip = 2, col_names = FALSE,
                       sheet = 2)
 colnames(rawdata) <- cn_temp[1,]
@@ -78,12 +78,12 @@ Import from SPSS generic files is implemented in various packages:
     -   as_factor uses value labels
 
 ```{r}
-import1 <- read.spss(file = "data/Zellbeads.sav",
+import1 <- read.spss(file = here("data/Zellbeads.sav"),
                      to.data.frame = TRUE,
                      use.value.labels = TRUE)
 str(import1)
 
-import2 <- read_sav(file = "data/Zellbeads.sav")
+import2 <- read_sav(file = here("data/Zellbeads.sav"))
 str(import2$Bedingung)
 attr(import2$Bedingung,"labels")
 import2 <- mutate(import2,

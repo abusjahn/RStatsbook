@@ -1,9 +1,9 @@
 # Grouping of variables by type / distribution / use
 
 ```{r}
-pacman::p_load(conflicted,wrappedtools,tidyverse)
+pacman::p_load(conflicted,wrappedtools,tidyverse, here)
 conflicts_prefer(dplyr::filter)
-rawdata <- readRDS('data/rawdata.rds')
+rawdata <- readRDS(here('data/rawdata.rds'))
 ```
 
 ## Test for Normal distribution
@@ -189,6 +189,6 @@ rawdata <- mutate(rawdata,
                   across(all_of(factvars$names),
                          ~factor(.x)))
 save(rawdata,list = ls(pattern = "vars"),
-     file = "data/bookdata1.RData")
+     file = here("data/bookdata1.RData"))
 
 ```

@@ -3,10 +3,10 @@
 ```{r}
 pacman::p_load(conflicted,plotrix,tidyverse, wrappedtools,
                coin,ggsignif, patchwork, ggbeeswarm,
-               flextable)
+               flextable, here)
 #conflicted)
 # conflict_prefer("filter", "dplyr")
-load("data/bookdata1.RData")
+load(here("data/bookdata1.RData"))
 
 ```
 

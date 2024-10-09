@@ -6,14 +6,14 @@ Descriptive statistics are used to summarize and organize data in a manner that 
 
 ```{r}
 pacman::p_load(conflicted,tidyverse,wrappedtools,
-               flextable)
+               flextable, here)
 set_flextable_defaults(font.size = 9, 
                        padding.bottom = 1, 
                        padding.top = 3,
                        padding.left = 3,
                        padding.right = 4
-)#dir("Data/")
-load("data/bookdata1.RData")
+)
+load(here("data/bookdata1.RData"))
 ```
 
 ## Graphical exploration should start before descriptive statistics
@@ -70,7 +70,7 @@ median_quart(rawdata$Age,range = T)
 
 Median and quartiles are sometimes the better choice even when assuming a Normal distribution, if there are outliers.
 
-![](Graphs/MeanMedian.jpg){fig-align="center"}
+![](../Graphs/MeanMedian.jpg){fig-align="center"}
 
 \newpage
 

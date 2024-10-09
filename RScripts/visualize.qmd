@@ -131,20 +131,20 @@ There are two distinct ways, using ggsave() or more generally creating an extern
 
 ```{r}
 #| eval: false
-ggsave(filename = "Graphs/ggtestplot.png",
+ggsave(filename = here("Graphs/ggtestplot.png"),
        plot = printplot,
        width=20,height=20,
        units="cm",dpi=150)
-ggsave(filename = "Graphs/ggtestplot.tiff",
+ggsave(filename = here("Graphs/ggtestplot.tiff"),
        plot = printplot,
        width=20,height=20,
        units="cm",dpi=600)
-ggsave(filename = "Graphs/ggtestplot_c.tiff",
+ggsave(filename = here("Graphs/ggtestplot_c.tiff"),
        plot = printplot,
        width=20,height=20, compression="lzw",
        units="cm",dpi=600)
 # alternative:
-png(filename = "Graphs/ggtestplot2.png",
+png(filename = here("Graphs/ggtestplot2.png"),
     width = 20,height = 20,units = "cm",res = 150)
 plottemp
 dev.off()

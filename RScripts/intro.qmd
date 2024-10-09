@@ -2,7 +2,9 @@
 
 Chapters will follow my usual schedule, starting from R basics, introducing ggplot, data import, data preparation and cleaning, descriptive statistics, simple test statistics, then progression to linear models (regression/ANOVA), generalized linear models with logistic regression as example, linear mixed effect models, and machine learning.
 
-## Installation of R:
+But first things first, installation of necessary and useful tools and setup of our environment.
+
+## Installation of R
 
 [The Comprehensive R Archive Network (r-project.org)](https://cran.r-project.org/)
 
@@ -12,11 +14,11 @@ If on linux, R2U is useful:
 
 [CRAN as Ubuntu Binaries - r2u (eddelbuettel.github.io)](https://eddelbuettel.github.io/r2u/)
 
-## Installation of RStudio Desktop (UI):
+## Installation of RStudio Desktop (UI)
 
 [RStudio Desktop - Posit](https://posit.co/download/rstudio-desktop/)
 
-## Installation of Quarto (Reportgenerator):
+## Installation of Quarto (Reportgenerator)
 
 [Quarto - Get Started](https://quarto.org/docs/get-started/)
 
@@ -32,7 +34,7 @@ Screenshots....
 
 ## Projects on your computer
 
-It is terribly important to be organized (or at least helpful)! Different analyses for e.g. new experiments or new data sets should be separated, demo analyses and exercises as well. Project structures should be consistent to make re-use of scripts easier.
+It is terribly important (or at least helpful) to be organized ! Different analyses for e.g. new experiments or new data sets should be separated, demo analyses and exercises as well. Project structures should be consistent to make re-use of scripts easier.
 
 As a starting point, I suggest creating a folder for everything R-related, e.g. ***Rstuff***
 

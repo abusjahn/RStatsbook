@@ -247,7 +247,7 @@ paste("mean", "SD", sep = " \u00b1 ")
 
 *Functions often just solve one problem or task, so usually we need to combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions:*
 
-![*Piping functions*](Graphs/piping_complete.jpg){fig-pos="h"}
+![*Piping functions*](../Graphs/piping_complete.jpg){fig-pos="h"}
 
 ```{r}
 # functions may be nested:
@@ -540,7 +540,7 @@ rawdata |> pull(`sysRR (mmHg)`)
 
 -   *print 100 saltgrains*
 
-![](Graphs/menage.jpg)
+![](../Graphs/menage.jpg)
 
 ### *List*
 

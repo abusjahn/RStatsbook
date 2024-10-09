@@ -13,20 +13,20 @@ book:
   repo-url: https://github.com/abusjahn/RStatsbook/
   chapters:
     - index.qmd
-    - intro.qmd
-    - R101.qmd
-    - regex.qmd
-    - import.qmd
-    - pivot.qmd
-    - variableclassification.qmd
-    - visualize.qmd
-    - describe.qmd
-    - summarize.qmd
+    - RScripts/intro.qmd
+    - RScripts/R101.qmd
+    - RScripts/regex.qmd
+    - RScripts/import.qmd
+    - RScripts/pivot.qmd
+    - RScripts/variableclassification.qmd
+    - RScripts/visualize.qmd
+    - RScripts/describe.qmd
+    - RScripts/summarize.qmd
     # - flextable.qmd
-    - test2groups.qmd
-    - lm.qmd
-    - lm_interaction.qmd
-    - glm.qmd
+    - RScripts/test2groups.qmd
+    - RScripts/lm.qmd
+    - RScripts/lm_interaction.qmd
+    - RScripts/glm.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

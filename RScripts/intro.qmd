@@ -28,9 +28,15 @@ If on linux, R2U is useful:
 
 ## Setup RStudio
 
-There are many options available to adjust the UI to your liking, some default settings should be changed. There are global and project specific options, both can be found under Menu /Tools
+There are many options available to adjust the UI to your liking, some default settings should be changed. There are global and project specific options, both can be found under Menu /Tools. Some useful (IMHO) changes are highlighted:
 
-Screenshots....
+![](/Graphs/options1.png)
+
+![](/Graphs/options2.png)
+
+![](/Graphs/options3.png)
+
+There are MANY more settings to adjust RStudios appearance and behavior to your liking.
 
 ## Projects on your computer
 
@@ -43,25 +49,43 @@ As a starting point, I suggest creating a folder for everything R-related, e.g. 
 -   Define location for project folder (often somewhere under C:/Users/SomeName/Documents),\
     for seminar projects this should be the folder you just created, Rstuff or whatever name you used.
 
--   In the folder, create a new folder, e.g. Rexercises
+-   In that folder, create a new folder, e.g. Rexercises
 
 -   Create useful sub-folders, I recommend /RScripts and /Data as minimal structure; be consistent in naming!!
 
-You should have a folder structure something like this:\
+You should have a folder structure something like this:
 
 -   Rstuff
 
-    -   RStuff/Rexercises
+    -   Rexercises
 
-    -   RStuff/Rexercises/Rscripts
+        -   RScripts
 
-    -   RStuff/Rexercises/Data\
+        -   Data
+
+    -   SomeProject
+
+        -   RScripts
+
+        -   Data
+
+Now you are ready to create a project in RStudio:
+
+![](/Graphs/project1.png)
+
+As there is an existing directory, this is what you select.
+
+![](/Graphs/project2.png)
+
+In this new window you browse to the root folder of your project and create your project. Tgis will create new (possibly hidden) entries:
+
+![](/Graphs/projectfolder.png)
 
 ### Option 2: Create from a github repository
 
 e.g.  https://github.com/abusjahn/RStatsbook
 
-Define source and new location
+Here you have to define source and new location.
 
 # Some useful resources
 

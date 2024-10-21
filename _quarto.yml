@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2024/07/11"
+  date: "2024/10/20"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -27,6 +27,9 @@ book:
     - RScripts/lm.qmd
     - RScripts/lm_interaction.qmd
     - RScripts/glm.qmd
+    - RScripts/MLintro.qmd
+    - RScripts/MCMC.qmd
+    - RScripts/knn.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

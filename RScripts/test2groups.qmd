@@ -86,7 +86,7 @@ for(group_i in seq_len(groupvars$count)){
   flextable(resulttmp)  |> 
   set_table_properties(width=1, layout="autofit") |>
   flex2rmd() #|> print()
-  cat("<br>\n\n")
+  # cat("<br\n\n")
   cat("\\newpage\n\n")
 }
 ```

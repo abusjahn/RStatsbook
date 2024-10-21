@@ -261,7 +261,7 @@ mtcars |>   # inbuild example data, use F1!
   mutate(am=factor(am,
                    levels=c(0,1),
                    labels=c("automatic",
-                            "manual")))  |> # %>% # #change into better class
+                            "manual")))  |> # #change into better class
   filter(vs==1) |> #filter out V-shaped
   group_by(am) |> # ask for grouped analysis
   summarize(across(.cols = c(wt, mpg, qsec, disp),

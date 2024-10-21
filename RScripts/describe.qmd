@@ -115,7 +115,7 @@ rawdata |>
   summarise(WeightSummary=meansd(`Weight (kg)`,add_n = TRUE),
             .groups="drop") |> 
   flextable()
-# cat("<br>\n\n")
+# # cat("<br\n\n")
 
 rawdata |> 
   group_by(Sex) |> 
@@ -125,7 +125,7 @@ rawdata |>
                names_to="Measure") |> 
   pivot_wider(names_from=Sex) |> 
   flextable()
-# cat("<br>\n\n")
+# # cat("<br\n\n")
 rawdata |> 
   group_by(Sex) |> 
   summarize(across(gaussvars$names,
@@ -148,7 +148,7 @@ rawdata |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit") 
 
-# cat("<br>\n\n")
+# # cat("<br\n\n")
 
 compare2numvars(data = rawdata,
                 dep_vars = c( "Size (cm)","Weight (kg)",
@@ -157,5 +157,5 @@ compare2numvars(data = rawdata,
                 gaussian = TRUE) |> 
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
-cat("<br>\n\n")
+# cat("<br\n\n")
 ```

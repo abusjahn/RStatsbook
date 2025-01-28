@@ -77,7 +77,7 @@ As there is an existing directory, this is what you select.
 
 ![](/Graphs/project2.png)
 
-In this new window you browse to the root folder of your project and create your project. Tgis will create new (possibly hidden) entries:
+In this new window you browse to the root folder of your project and create your project. This will create new (possibly hidden) entries:
 
 ![](/Graphs/projectfolder.png)
 

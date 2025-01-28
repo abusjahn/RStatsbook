@@ -63,7 +63,7 @@ groupvars <- ColSeeker(namepattern = c("Sex","Test"))
 
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,
                 indep_var = "Sex",gaussian = T,
-                round_desc = 3,add_n = T, mark=T) |> 
+                round_desc = 3,n = T, mark=T) |> 
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
 compare2numvars(data = rawdata,dep_vars = gaussvars$names,

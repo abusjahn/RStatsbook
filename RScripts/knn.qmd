@@ -1,4 +1,4 @@
-# k nearest neigbors knn
+# k nearest neighbors knn
 
 ```{r}
 # Bioconductor packages needed!
@@ -75,9 +75,8 @@ rawplot+
 ```
 
 ## Scaling
-To avoid the effect of different scales of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predicor variables, there are a number of approaches to make canter and spread/range of the data comparable.
-Here we first use the `preProcess` function from the `caret` package. 
-To compare the scaled data to the original, we'll keep the original data in the data frame.
+
+To avoid the effect of different scales of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make canter and spread/range of the data comparable. Here we first use the `preProcess` function from the `caret` package. To compare the scaled data to the original, we'll keep the original data in the data frame.
 
 ### caret function preProcess
 
@@ -94,8 +93,9 @@ rawdata <- predict(scaled,rawdata) |>
 ```
 
 ### preprocessCore function normalize.quantiles
+
 For ...omics data, bioconductor provides functions for ML including preprocessing. Here we use the `normalize.quantiles` function from the `preprocessCore` package.
-  
+
 ```{r}
 rawdata <- rawdata |> 
   select(predvars$names) |> 
@@ -105,7 +105,9 @@ rawdata <- rawdata |>
   rename_with(~paste0(.,'_qnorm')) |> 
   bind_cols(rawdata)
 ```
+
 ### Visual comparison of the scaled data
+
 ```{r}
 rawdata |> 
   select(contains('length')) |> 
@@ -125,7 +127,9 @@ rawdata |>
 ```
 
 ## Modelling
+
 ### Definition of predictor variables (IV)
+
 ```{r}
 predvars_std <- ColSeeker(namepattern = '_std')
 ```
@@ -147,10 +151,12 @@ testdata <- filter(rawdata,
 ```
 
 ### Model fitting
+
 For the training data, a model is created and used to (re-)predict the species of the test data. The `knn3Train` function from the `caret` package is used to fit the model. The `k` parameter specifies the number of neighbors to consider. The `prob` attribute of the output is used to get the probabilities of the species.
+
 ```{r}
 train_out <- 
-  knn3Train( train = select(traindata,predvars_std$names),
+  knn3Train(train = select(traindata,predvars_std$names),
   test = select(testdata, predvars_std$names), 
   cl = traindata$species, k = 5)  
 str(train_out) 
@@ -170,9 +176,11 @@ train_res |>
   geom_beeswarm(cex = .5, alpha=.25)+ 
   facet_grid(rows = vars(species), labeller='label_both')
 ```
+
 \newpage
 
 ### Model evaluation
+
 ```{r}
 CrossTable(train_res$predicted,
            train_res$species, prop.chisq = FALSE, prop.t = FALSE, 
@@ -180,6 +188,7 @@ CrossTable(train_res$predicted,
 ```
 
 ### Alternative approach to modelling
+
 ```{r}
 knn_formula <- 
   paste0('species~', 
@@ -211,6 +220,7 @@ predictions <-
 ```
 
 ### Evaluation of the alternative approach
+
 ```{r}
 yardstick::accuracy(data = pred_all, truth=species, estimate=predicted)
 
@@ -228,6 +238,7 @@ ggplot(rawdata, aes(bill_length_mm_std,flipper_length_mm_std, color=sex,shape=sp
 ```
 
 ### Adding predictor variables
+
 Now we'll try to predict the sex based on body measures and species.
 
 ```{r}
@@ -270,4 +281,3 @@ CrossTable(rawdata$pred_sex,
            format = 'SPSS')
 
 ```
-

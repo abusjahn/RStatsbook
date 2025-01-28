@@ -1,0 +1,161 @@
+# Regression and classification trees / Random forrests
+
+## Regression trees
+
+```{r}
+pacman::p_load(conflicted,
+               tidyverse,
+               wrappedtools, 
+               palmerpenguins,
+               rpart, rpart.plot,
+               randomForest,
+               caret)
+
+# conflict_scout()
+conflict_prefer('slice','dplyr')
+conflict_prefer("filter", "dplyr")
+rawdata <- penguins |> 
+  na.omit()
+rawdata <- mutate(rawdata,
+                  ID=paste('P', 1:nrow(rawdata))) |> 
+  select(ID, everything())
+```
+
+### Graphical exploration
+
+When looking at the 2 measures `bill_length_mm` and `flipper_length_mm`, we can see that the 3 species of penguins are separated to a large extend, with the Gentoos having longer flippers than Adelies and Chinstraps, and Adelies and Chinstraps separated by smaller / longer bills. We can define a rough classification rule based on that just by eyeballing the data.
+
+```{r}
+predvars <- ColSeeker(namepattern = 'length')
+rawplot <- 
+  ggplot(rawdata, 
+         aes(.data[[predvars$names[1]]], 
+             .data[[predvars$names[2]]], color=species))+
+  geom_point()  
+rawplot+
+  geom_hline(yintercept = 206)+
+  geom_vline(xintercept = 44)
+```
+
+### Modelling
+
+A regression tree is following the same logic as the classification rule we defined above, but in a more systematic way. It is a recursive partitioning algorithm that splits the data into subsets that are as homogeneous as possible with respect to the target variable. The algorithm is greedy, meaning that it makes the best split at each step, without considering the impact of the split on future steps. This can lead to overfitting, so we need to be careful with the depth of the tree. As each split is testing each variable separately, there is no need for scaling. Accordingly, the results are easily comprehensible as they relate to the actual measurements. Beside the actual classification rules, the output contains information on variable importance as well.
+
+```{r}
+rpart_formula <- paste('species',
+                       paste(predvars$names,
+                             collapse='+'),
+                       sep='~') |> 
+  as.formula()
+rpart_out <- rpart(formula = rpart_formula,
+                   data = rawdata)
+prp(rpart_out,
+    type = 4,
+    extra = 104,
+    digits=4,
+    fallen.leaves = TRUE)
+importance <- tibble(
+  Variable=names(rpart_out$variable.importance),
+  Importancescore=rpart_out$variable.importance)
+ggplot(importance, aes(x=Variable,y=Importancescore))+
+  geom_col()+
+  coord_flip()
+```
+
+To make model more interesting, we add 2 more variables.
+
+```{r}
+predvars <- ColSeeker(namepattern = c('_mm','_g'))
+rpart_formula_4 <- paste('species',
+                         paste(predvars$names,
+                               collapse='+'),
+                         sep='~') |> 
+  as.formula()
+
+set.seed(2023)
+traindata <- rawdata |> 
+  select(ID,species,sex,predvars$names) |>
+  group_by(species, sex) |>
+  slice_sample(prop = 2/3) |>
+  ungroup() |>
+  select(-sex)
+
+testdata <- filter(rawdata,
+                   !ID %in% traindata$ID) |>
+  select(ID,species,predvars$names)
+# tree for training sample
+rpart_out_tr <- rpart(formula = rpart_formula_4,
+                      data = traindata)
+rpart_out$variable.importance
+rpart_out_tr$variable.importance
+prp(rpart_out_tr,
+    type = 4,
+    extra = 104,
+    fallen.leaves = T)
+```
+
+### Model evaluation
+
+```{r}
+test_predicted <- 
+  bind_cols(testdata,
+            as_tibble(
+              predict(rpart_out_tr, testdata))) |>   
+  mutate(predicted=
+           case_when(Adelie>Chinstrap &
+                       Adelie>Gentoo ~ 'Adelie',
+                     Chinstrap>Adelie &
+                       Chinstrap>Gentoo ~ 'Chinstrap',
+                     Gentoo>Adelie &
+                       Gentoo>Chinstrap ~ 'Gentoo') |> 
+           factor())
+
+gmodels::CrossTable(test_predicted$predicted,
+           test_predicted$species,
+           prop.chisq = F, prop.t = F,
+           format = 'SPSS')
+
+confusionMatrix(test_predicted$predicted,
+                test_predicted$species)
+```
+
+## Random forrests
+
+Random forrests are an ensemble method that builds multiple decision trees and averages their predictions. This reduces the risk of overfitting and increases the accuracy of the model. The random part comes from the fact that each tree is built on a random subset of the data and a random subset of the variables. The number of trees and the number of variables to consider at each split are hyper-parameters that need to be tuned. (more on tuning in chapter caret)
+
+### Modelling
+
+```{r}
+forrest_formula <- 
+  paste('species',
+        paste(predvars$names, collapse='+'),
+        sep='~') |> 
+  as.formula()
+
+rf_out <- randomForest(forrest_formula,
+                       data = traindata,
+                       ntree=500,mtry=2)
+importance(rf_out)
+
+importance(rf_out) |> 
+  as_tibble(rownames='Measure') |> 
+  arrange(#desc(
+    MeanDecreaseGini) |> #) |> 
+  mutate(Measure=fct_inorder(Measure)) |> 
+  ggplot(aes(x=Measure,y=MeanDecreaseGini))+
+  geom_col()+
+  coord_flip()
+```
+
+### Model evaluation
+
+```{r}
+p1 <- predict(rf_out, traindata)
+confusionMatrix(p1, traindata$species)
+
+p2 <- predict(rf_out, testdata)
+confusionMatrix(p2, testdata$species)
+
+p2prob <- predict(rf_out, newdata = testdata, type = "prob")
+
+```

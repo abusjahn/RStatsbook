@@ -1,0 +1,88 @@
+# Regular expressions
+
+## Intro
+
+[Regex cheatsheet](https://rstudio.github.io/cheatsheets/regex.pdf)
+
+Regular expressions are a ***powerful*** tool for searching and manipulating text data. They allow you to define specific patterns within sequences, which is particularly useful when analyzing biological data such as DNA or protein sequences. But more mundane, they are terribly useful for practical tasks like finding or renaming variables, correcting common typos, and checking input patterns.
+
+Basic functions like `grep()` or `gsub()` are difficult to use in pipelines and not very intuitive, tidyverse functions from stringr like `str_detect()` or `str_replace()` are more verbose and easier to use.
+
+**Key symbols and their meanings:**
+
+-   **.** (period): Matches any single character except a newline. For example, "A.T" would match "AAT", "AGT", "ACT", etc.
+
+-   **\[\]** (square brackets): Defines a character class. Any character within the brackets will match. For example, "\[ATGC\]" matches any DNA nucleotide.
+
+-   **{}** (curly braces): Specify the number of occurrences of the preceding element. For example, "A{3}" matches exactly three consecutive "A"s, like in "AAA".
+
+-   **\\d**: Matches any digit (0-9). For example, "\\d+" matches one or more digits, which could be useful for finding numerical identifiers in protein databases.
+
+-   **\\D**: Matches any non-digit character.
+
+### Some basic examples:
+
+```{r}
+pacman::p_load(tidyverse)
+starttext <- "Did grandma eat all the pizza?"
+str_detect(string = starttext, pattern = "pizza")
+str_detect(string = starttext, pattern = "pasta")
+str_detect(string = starttext, pattern = "p.+a\\?$")
+str_detect(string = starttext, pattern = "grand[mp]a")
+str_replace(string=starttext, 
+            pattern = "ma", 
+            replacement = "pa")
+str_replace(string=starttext, 
+            pattern = " all ", 
+            replacement = " half ")
+str_replace(string=starttext, 
+            pattern = "^(\\w+) (\\w*) (.*)", 
+            replacement = "\\2 \\1 \\3") |> 
+  str_to_sentence()
+str_replace(string=starttext, 
+            pattern = "^(\\w+) (\\w*) (.*)\\?", 
+            replacement = "\\2 \\1 \\3!") |> 
+  str_to_sentence()
+str_replace_all(string=starttext,
+                pattern = c("ma"="pa",
+                            "all"="half",
+                            "izz"="ast"))
+
+```
+
+### An example for their use in renaming variables:
+
+```{r}
+temptibble <- tibble(
+  cup_weigh=seq(10,20,.5),
+  CAPSIZE_cm=5,
+  height_of_cup_cm=rnorm(21,10,.01))
+colnames(temptibble)  
+rename_with(
+  .data = temptibble,
+  .fn = ~str_replace_all(.x,
+                         c("CAP"="CUP",
+                           "_(cm)"=" [\\1]",
+                           "(.*)_of_(.+)( .*)"="\\2\\1\\3",
+                           "_"="")) |> 
+    str_to_sentence()) |> 
+  colnames()
+```
+
+## Exercise
+
+```{r}
+testset1 <- c("Meier","Mayer","Maier","Meyer","Mayr","Maya","Mayor")
+# find all variations of the name "Meier"
+
+testset2 <- c("weight_mm","height_cm","age_yr","temp_c")
+#replace _ with space
+#replace _ with space and add unit in brackets
+
+
+testset3 <- c("1980_12_30","13.04.2005", "2005/04/25","24121990")
+# transform into YYYY-MM-DD
+
+testset4 <- c("pw2000","That1sb3tt3r","M@kesSense?","NoDigits@this1")
+# test pwd strength, rules: Upper, lower, special char, number, min 8 char long
+```

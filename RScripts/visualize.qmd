@@ -3,7 +3,7 @@
 While there are various packages providing visualizations, here we are focusing on ggplot2 (grammar of graphics) as a very flexible and versatile approach with many extensions implemented in additional packages. See e.g. [https://exts.ggplot2.tidyverse.org/](https://exts.ggplot2.tidyverse.org/){target="_blank"}.
 
 ```{r}
-pacman::p_load(conflicted, tidyverse,
+pacman::p_load(conflicted, tidyverse,here,
                grid,gridExtra,car,
                ggsci,ggsignif, ggthemes, ggridges,
                # gganimate,

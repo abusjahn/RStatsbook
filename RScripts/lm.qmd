@@ -1,4 +1,4 @@
-# Intro to lm
+# Intro to linear models
 
 In this chapter, linear models (including linear regression and ANOVA) will be introduced.\
 Output is not optimized for print, but rather for interactive use.
@@ -258,7 +258,7 @@ broom::tidy(aOut)
 #| fig-height: 8
 #| fig-dpi: 1200
 # x11() #interactive only!
-
+# quartz() for mac
 # from package performance
 check_model(lmOut_additive)
 check_model(lmOut_interaction)

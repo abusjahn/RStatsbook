@@ -3,8 +3,11 @@
 Generalized linear models will be introduced using logistic regression as an example. The data set infert contains information were the outcome follows a binomial distribution.
 
 ```{r}
-pacman::p_load(car, wrappedtools, tidyverse, ggbeeswarm, 
-               rpart, rpart.plot, pROC ) 
+pacman::p_load(car, # Anova()
+               wrappedtools, tidyverse, ggbeeswarm, 
+               rpart, rpart.plot, 
+               pROC # roc() ggroc()
+               ) 
 rawdata <- infert |> 
   as_tibble()  |>
   select(-contains("stratum"))
@@ -28,7 +31,7 @@ rawdata <- rawdata |>
     spontaneous_f=factor(spontaneous), 
     `age [pentayears]`=age/5, 
     education=forcats::fct_rev(education), 
-    parity_grp=forcats::fct_lump(as.character(parity),
+    parity_grp=forcats::fct_lump_n(as.character(parity),
                                  n = 2, other_level = '>2') |>
       fct_rev()) 
 ```
@@ -88,7 +91,7 @@ baseplot <-
 baseplot 
 baseplot+ 
   scale_y_log10(breaks=logrange_15, 
-                 minor_breaks=logrange_123456789 )+ 
+                minor_breaks=logrange_123456789 )+ 
   geom_text(aes(label=Significance), vjust=1.5,color='red')+ 
   ggtitle('OddsRatios shown on log-scale')+ 
   xlab(NULL)
@@ -244,6 +247,3 @@ rawdata |>
   ggplot(aes(case,pAffected,fill=Analysis))+ 
   geom_boxplot() 
 ```
-
-
-

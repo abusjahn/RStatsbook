@@ -1,0 +1,262 @@
+# Boosted regression trees
+
+```{r}
+pacman::p_load(conflicted,
+               tidyverse,
+               ggbeeswarm,
+               wrappedtools,  # just tools 
+               palmerpenguins, # data
+               caret, # Classification and Regression Training
+               gmodels, # tools for model fitting
+               easystats, 
+               yardstick,# model performance
+               xgboost)  # XGBoost
+conflicts_prefer(dplyr::filter,
+                 dplyr::lag)
+
+rawdata <- penguins |> 
+  na.omit() |> 
+  mutate(ID = paste('P', row_number()),
+         species_n = as.numeric(species)-1) |> 
+  select(ID, everything())
+```
+
+```{r}
+#one-hot-encoding sex + island
+tmp <- dummyVars(~sex+island, rawdata)
+#predict(tmp,rawdata) |> view()
+rawdata <- bind_cols(rawdata,
+                     predict(tmp,rawdata))
+cn()
+predvars <- ColSeeker(rawdata,
+                      c('_.+_','sex.+',
+                        "island.+","year"))
+predvars$names
+boostdata <- rawdata |> 
+  select(predvars$names) |> 
+  as.matrix()
+```
+
+```{r}
+xgb_out <- xgboost(
+  data = boostdata,
+  label = rawdata$species_n,
+  num_class=3,
+  nrounds = 100,
+  objective = "multi:softprob")#, # requests class probabilities
+  #nthread=1) 
+prediction <- predict(xgb_out,boostdata) |> 
+  as_tibble() |> # just 1 col, 3 rows per penguin
+  mutate(
+    ID=rep(rawdata$ID, each=3), # 3 rows per penguin
+    species_pred=rep(levels(rawdata$species), # 1 row per species
+                     times=nrow(rawdata))) |> 
+  pivot_wider(names_from=species_pred, # 1 col per species prob
+              values_from=value) |> 
+  mutate(predicted= # find highest prob
+           case_when(Adelie>Chinstrap &
+                       Adelie>Gentoo ~ 'Adelie',
+                     Chinstrap>Adelie &
+                       Chinstrap>Gentoo ~ 'Chinstrap',
+                     Gentoo>Adelie &
+                       Gentoo>Chinstrap ~ 'Gentoo') |> 
+           factor())
+
+slice_sample(prediction, n=10)
+```
+
+```{r}
+train_res <- full_join(rawdata,prediction)
+train_res |> 
+  pivot_longer(c(Adelie,Chinstrap,Gentoo),
+               values_to = 'p species',
+               names_to = 'Species prediction') |> 
+  ggplot(aes(`Species prediction`,`p species`))+
+  # geom_violin()+
+  geom_beeswarm(cex = .25, alpha=.25)+
+  facet_grid(rows = vars(species),
+             labeller='label_both')
+
+CrossTable(train_res$predicted,
+           train_res$species,
+           prop.chisq = F, prop.t = F,
+           format = 'SPSS')
+
+yardstick::accuracy(data = train_res,
+                    truth=species,
+                    estimate=predicted)
+yardstick::specificity(data = train_res,
+                    truth=species,
+                    estimate=predicted)
+
+confusionMatrix(train_res$predicted,
+                train_res$species)  
+
+xgb.importance(model = xgb_out) |> 
+  as_tibble() |> 
+  ggplot(aes(reorder(Feature, Gain), Gain))+
+  geom_col()+
+  coord_flip()+
+  labs(x='Feature', y='Gain')
+```
+
+```{r}
+# splitting ####
+set.seed(1958)
+# splitted tibble
+traindata <- 
+  rawdata |> 
+  select(ID,species,species_n,
+         predvars$names) |> 
+  group_by(species_n) |> 
+  slice_sample(prop = 2/3) |> 
+  ungroup()
+testdata <- filter(rawdata,
+                   !ID %in% traindata$ID) |> 
+  select(ID,species,species_n,
+         predvars$names) 
+
+# splitted matrix-objects
+trainobject <- 
+  xgb.DMatrix(
+    data=traindata |> 
+      select(-ID, -contains("species")) |> 
+      data.matrix(),
+    label=traindata$species_n)
+testobject <- 
+  xgb.DMatrix(
+    data=testdata |>
+      select(-ID,-contains("species")) |> 
+      data.matrix(),
+    label=testdata$species_n)
+```
+
+```{r}
+watchlist = list(train=trainobject, 
+                 test=testobject)
+# preliminary fitting to find nrounds
+xgb.Train0 <- xgb.train(
+  data = trainobject, 
+  max.depth = 5,
+  objective = "multi:softprob",  # requests class probabilities
+  num_class=3,
+  watchlist=watchlist, #objects used in eval
+  nrounds = 10^3) # set high, best will be checked afterwards
+bestround <- 
+  xgb.Train0$evaluation_log |> 
+  as_tibble() |> 
+  filter(test_mlogloss==min(test_mlogloss)) |> 
+  pull(iter)
+bestround
+# v2 with threshold for improvement
+bestround <- 
+  xgb.Train0$evaluation_log |> 
+  as_tibble() |> 
+  filter(test_mlogloss-lead(test_mlogloss)>.001) |> 
+  pull(iter)|> 
+  max()
+bestround
+```
+
+```{r}
+# modelling
+xgb.Train <- xgb.train(
+  data = trainobject, 
+  max.depth = 5,
+  objective = "multi:softprob", 
+  num_class=3,
+  # watchlist=watchlist, 
+  nrounds = bestround)
+prediction <- predict(xgb.Train,testobject) |> 
+  as_tibble() |> 
+  mutate(
+    ID=rep(testdata$ID, each=3),
+    species_pred=rep(levels(rawdata$species),
+                     times=nrow(testdata))) |> 
+  pivot_wider(names_from=species_pred,
+              values_from=value) |> 
+  mutate(predicted=
+           case_when(
+             Adelie>Chinstrap &
+               Adelie>Gentoo ~ 'Adelie',
+             Chinstrap>Adelie &
+               Chinstrap>Gentoo ~ 'Chinstrap',
+             Gentoo>Adelie &
+               Gentoo>Chinstrap ~ 'Gentoo') |> 
+           factor())
+train_res <- full_join(testdata,prediction)
+```
+
+```{r}
+train_res |> 
+  pivot_longer(c(Adelie,Chinstrap,Gentoo),
+               values_to = 'p species',
+               names_to = 'Species prediction') |> 
+  ggplot(aes(`Species prediction`,`p species`))+
+  geom_violin()+
+  geom_beeswarm(cex = .5, alpha=.25)+
+  facet_grid(rows = vars(species))
+
+CrossTable(train_res$predicted,
+           train_res$species,
+           prop.chisq = F, prop.t = F,
+           format = 'SPSS')
+
+yardstick::accuracy(data = train_res,
+                    truth=species,
+                    estimate=predicted)
+
+confusionMatrix(train_res$predicted,
+                train_res$species)  
+
+importance <- 
+  xgb.importance(model = xgb.Train) |> 
+  as_tibble() |> 
+  arrange(Gain) |> 
+  mutate(Feature=fct_inorder(Feature))
+
+importance |> 
+  ggplot(aes(Feature,Gain))+
+  geom_col(aes(fill=Gain))+
+  coord_flip()+
+  guides(fill="none")
+
+plotfeatures <- 
+  slice_max(importance,Gain,n=2) |> 
+  pull(Feature) |> 
+  as.character()
+# tail(importance$Feature,2) |> 
+#  rev() |> 
+#  as.character()
+
+plotfeatures2 <- 
+  xgb.importance(model = xgb.Train)[[1]][1:2] 
+
+impo <- xgb.importance(model = xgb.Train)
+plotfeatures_first <- 
+  impo$Feature[1] 
+plotfeatures_2nd <- 
+  impo$Feature[2] 
+
+ggplot(rawdata,aes(.data[[plotfeatures[1]]],
+                   .data[[plotfeatures[2]]],
+                   color=species, shape=species))+
+  geom_point()+
+  xlab(paste("most important:",
+             plotfeatures[1],sep = "\n"))+
+  ylab(paste("2nd most important:",
+             plotfeatures[2],sep = "\n"))
+
+# importance per species
+xgb.importance(model = xgb.Train, 
+               trees = seq(from=0, by=3, 
+                           length.out=bestround))
+xgb.importance(model = xgb.Train, 
+               trees = seq(from=1, by=3, 
+                           length.out=bestround))
+xgb.importance(model = xgb.Train, 
+               trees = seq(from=2, by=3, 
+                           length.out=bestround))
+
+
+```

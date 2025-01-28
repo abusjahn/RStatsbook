@@ -1,0 +1,298 @@
+# Principal Components Analysis
+
+```{r}
+# BiocManager::install("PCAtools")
+pacman::p_load(conflicted,
+               tidyverse,
+               wrappedtools, 
+               palmerpenguins,
+               ggfortify, GGally,
+               PCAtools, # bioconductor
+               FactoMineR,
+               ggrepel,
+               boot,
+               caret)
+
+# conflict_scout()
+conflicts_prefer(dplyr::slice, dplyr::filter, 
+stats::screeplot,stats::biplot)
+rawdata <- penguins |> 
+  na.omit()
+rawdata <- mutate(rawdata,
+                  ID=paste('P', 1:nrow(rawdata))) |> 
+  select(ID, everything())
+predvars <- ColSeeker(namepattern = c('_mm','_g'))
+```
+
+## Exploration of correlations between predictor variables
+
+```{r}
+#| fig_width: 6
+#| fig.height: 5
+cortestR(rawdata |> 
+           filter(species== "Adelie") |>
+           select(predvars$names),
+         split = T) |> 
+  pluck('corout') |> 
+  ggcormat(maxpoint = 8)
+```
+
+```{r}
+#| fig_width: 6
+#| fig.height: 10
+
+ggpairs(rawdata |> select(species, sex, 
+                          predvars$names) |> 
+          rename_with(~str_replace(.x,'(.+)_(.+)_.+','\\1 \\2') |> 
+                        str_wrap(8)),
+        aes(color=species,alpha=.5))
+```
+
+## two variable example
+
+https://www.youtube.com/watch?v=FgakZw6K1QQ&t=1s&ab_channel=StatQuestwithJoshStarmer
+
+```{r}
+predvars2 <- ColSeeker(namepattern = c('body','flipper'))
+ggplot(rawdata, aes(.data[[predvars2$names[1]]], .data[[predvars2$names[2]]]))+
+  geom_point(aes(color=species))
+v2data <- predict(preProcess(rawdata |> 
+                               select(predvars2$names),
+                             method = c("center", "scale")),
+                  rawdata) |> 
+                    select(species,predvars2$names)
+ggplot(v2data, aes(.data[[predvars2$names[1]]], .data[[predvars2$names[2]]]))+
+  geom_point(aes(color=species))
+
+pca2_out <- prcomp(v2data |> 
+                     select(predvars2$names),
+                   center = F,scale. = F)
+autoplot(pca2_out, data=v2data, colour='species',
+         loadings = TRUE, loadings.colour = 'black',
+         loadings.label = TRUE, loadings.label.size = 4)
+
+
+# Extract PC1 loadings
+pc1_loadings <- pca2_out$rotation[, 1]
+
+# Calculate axis endpoint
+axis_end <- c(pc1_loadings[1] * 2, pc1_loadings[2] * 2)
+slope_pc1 <- pc1_loadings[2] / pc1_loadings[1]
+# Create the plot
+ggplot(v2data, aes(.data[[predvars2$names[1]]], 
+                   .data[[predvars2$names[2]]])) +
+  geom_point(aes(0,0))+
+  geom_point(aes(color = species)) +
+  geom_abline(intercept = 0, slope = slope_pc1,
+              color = "black", linetype = "dashed") +
+  geom_segment(aes(xend = (.data[[predvars2$names[1]]]+
+                 .data[[predvars2$names[2]]])/2, 
+               yend = (.data[[predvars2$names[1]]]+
+                 .data[[predvars2$names[2]]])/2), 
+               color = "grey", 
+               arrow = arrow(length = unit(0.2, "cm")))+
+  coord_fixed(ratio = 1, xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5))
+pc1plot <- 
+  ggplot(v2data |> slice(1,101, 201,301), aes(.data[[predvars2$names[1]]], 
+                   .data[[predvars2$names[2]]])) +
+  geom_point(x=0,y=0, shape=3, size=4)+
+  geom_point(aes(color = species)) +
+  geom_abline(intercept = 0, slope = slope_pc1,
+              color = "black", linetype = "dashed") +
+  annotate("label",x=2.5,y=2.5,label = paste("PC1"), 
+             hjust = 1.1, vjust = 1.1, color="black")+
+  geom_segment(aes(xend = (.data[[predvars2$names[1]]]+
+                 .data[[predvars2$names[2]]])/2, 
+               yend = (.data[[predvars2$names[1]]]+
+                 .data[[predvars2$names[2]]])/2), 
+               color = "grey", 
+               arrow = arrow(length = unit(0.2, "cm")))+
+  geom_label(aes(label = paste(roundR(.data[[predvars2$names[1]]]),"/",
+                               roundR(.data[[predvars2$names[2]]]))), 
+             hjust = -.1, vjust = 1.1)+
+  annotate("segment",x = 0, y = 0, 
+                   xend = (v2data[[predvars2$names[1]]][201]+
+                 v2data[[predvars2$names[2]]][201])/2, 
+                   yend = (v2data[[predvars2$names[1]]][201]+
+                 v2data[[predvars2$names[2]]][201])/2,
+               arrow = arrow(length = unit(0.2, "cm")), color = "deepskyblue")+
+  annotate("label",x=1.05,y=1.05,label = paste("PC1 score:",
+                                               roundR(pca2_out$x[201,1])), 
+             hjust = 1.1, vjust = 1.1, color="deepskyblue")+
+  annotate("segment",x = 0, y = 0, 
+                   xend = (v2data[[predvars2$names[1]]][301]+
+                 v2data[[predvars2$names[2]]][301])/2, 
+                   yend = (v2data[[predvars2$names[1]]][301]+
+                 v2data[[predvars2$names[2]]][301])/2,
+               arrow = arrow(length = unit(0.2, "cm")), color = "darkolivegreen")+
+  annotate("label",x=-0.05,y=0.05,label = paste("PC1 score:",
+                                               roundR(pca2_out$x[301,1])), 
+             hjust = 1.1, vjust = 1.1, color="darkolivegreen")+
+  coord_fixed(ratio = 1, xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5))
+pc1plot
+pc1plot+
+  geom_abline(intercept = 0, slope = -slope_pc1,
+              color = "black", linetype = "dotted")+
+  annotate("label",x=-2.05,y=2.5,label = paste("PC2"), 
+             hjust = 1.1, vjust = 1.1, color="black")+
+  geom_segment(aes(xend = (.data[[predvars2$names[1]]]-
+                             .data[[predvars2$names[2]]])/2, 
+                   yend = (.data[[predvars2$names[1]]]-
+                             .data[[predvars2$names[2]]])/-2), 
+               color = "darkgrey", 
+               arrow = arrow(length = unit(0.2, "cm")))+
+  annotate("segment",x = 0, y = 0, 
+           xend = (v2data[[predvars2$names[1]]][1]-
+                     v2data[[predvars2$names[2]]][1])/2, 
+           yend = (v2data[[predvars2$names[1]]][1]-
+                     v2data[[predvars2$names[2]]][1])/-2,
+           arrow = arrow(length = unit(0.2, "cm")), color = "darkorange")+
+  annotate("label",x=-0.05,y=0.75,label = paste("P21 score:",
+                                                roundR(pca2_out$x[1,2])), 
+           hjust = 1.1, vjust = 1.1, color="darkorange")
+
+
+  pca2_out$x[c(1,101, 201,301),]
+v2data[c(1,101, 201,301),]
+```
+
+
+```{r}
+pca_out <- prcomp(rawdata |> 
+                    select(predvars$names),
+                  center = T,scale. = T)
+summary(pca_out)
+
+screeplot(pca_out,npcs = 4)
+
+pca_out$rotation
+
+biplot(pca_out)
+
+autoplot(pca_out)
+autoplot(pca_out, data=rawdata, colour='species')
+autoplot(pca_out, data=rawdata, 
+         colour='species', shape="sex")
+autoplot(pca_out, data=rawdata, colour='species',
+         loadings = TRUE, loadings.colour = 'black',
+         loadings.label = TRUE, loadings.label.size = 4)
+#contribution of variables to component
+autoplot(pca_out, data=rawdata, colour='species',
+         loadings = TRUE, loadings.colour = 'black',
+         loadings.label = TRUE, loadings.label.size = 3,
+         x=1,y=3)
+
+pca_out$x |> 
+  as_tibble() |> 
+  cbind(rawdata) |> 
+  ggplot(aes(PC1,PC3,color=species))+
+  geom_point()
+
+pca_out$rotation |> 
+  as_tibble(rownames = "Variable") |> 
+  ggplot(aes(PC1,PC3))+
+  # geom_label_repel(aes(label=Variable))+
+  geom_text(aes(label=Variable),
+            hjust=0)+
+  geom_segment(aes(xend=0,yend=0),
+               arrow = arrow(end='first'))+
+  scale_y_continuous(expand=expansion(.2))+
+  scale_x_continuous(expand=expansion(
+    mult = c(.1,.75)))
+
+pca_loadings <- (pca_out$rotation*2.5) |> 
+  as_tibble(rownames = "Variable")
+pca_out$x |> 
+  as_tibble() |> 
+  cbind(rawdata) |> 
+  ggplot(aes(PC1,PC3,color=species))+
+  geom_point()+
+  geom_text(
+    data=pca_loadings,
+    color="black",
+    aes(label=Variable),
+            hjust=0)+
+  geom_segment(aes(xend=0,yend=0),
+               data=pca_loadings,
+               color="black",
+               arrow = arrow(end='first',
+                             length = unit(.05,
+                                           'npc')))+
+  scale_y_continuous(expand=expansion(.2),
+                     breaks=seq(-10,10,1),
+                     sec.axis = sec_axis(
+                       ~(./2.5), 
+                       name = "Loading",
+                       breaks = seq(-3,10,1)/2.5))+
+  scale_x_continuous(expand=expansion(
+    mult = c(.1,.75)),
+    breaks=seq(-10,10,1),
+    sec.axis = sec_axis(
+      ~(./2.5), name = "Loading",
+      breaks = seq(-10,10,1)/2.5))
+```
+
+```{r}
+#| fig_width: 6
+#| fig.height: 5
+# decathlon
+data("decathlon")
+cortestR(decathlon |> select(1:10),
+         split = T) |> 
+  pluck('corout') |> 
+  ggcormat(maxpoint = 5)
+```
+
+```{r}
+#| fig_width: 6
+#| fig.height: 10
+ggpairs(decathlon |> select(1:10) |> 
+                    rename_with(~str_replace(.x,'\\.',' ') |> 
+                        str_wrap(8)))
+```
+
+```{r}
+pca_out_deca <- prcomp(decathlon |> select(1:10),
+                  center = T,scale. = T)
+summary(pca_out_deca)
+pca_out_deca$rotation |> 
+  as_tibble(rownames = 'Exercise') |> 
+  mutate(across(-Exercise,
+                ~case_when(abs(.)<.25 ~ 0,
+                           TRUE ~ .))) |> 
+  select(1:6)
+
+autoplot(pca_out_deca, data=decathlon, 
+         loadings = TRUE, loadings.colour = 'black',
+         loadings.label = TRUE, loadings.label.size = 4)
+```
+
+## PCA bioconductor style
+
+```{r}
+# PCA tools
+pca_mat <- rawdata |> select(ID,predvars$names) |> 
+  column_to_rownames(var = 'ID') |> 
+  as.matrix() |> 
+  t()
+
+pca_out3 <- pca(mat = pca_mat,
+                center = T,scale = T
+)
+getVars(pca_out3)
+getLoadings(pca_out3)
+
+PCAtools::screeplot(pca_out3)
+PCAtools::biplot(pca_out3,
+                 showLoadings = TRUE,ntopLoadings = 2,
+                 labSize = 5, pointSize = 3, sizeLoadingsNames = 3)
+# pairsplot(pca_out3)
+# eigencorplot(pca_out3,
+#              metavars=predvars$names)
+pca_out3$loadings |> 
+  as_tibble(rownames='measure') |> 
+  ggplot(aes(PC1,PC2,shape=measure))+
+  geom_point(data=pca_out3$rotated, color='grey', shape=1)+
+  geom_segment(xend=0,yend=0,arrow=arrow(ends='first'))+
+  ggrepel::geom_label_repel(aes(label=measure))
+```

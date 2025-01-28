@@ -1,0 +1,16 @@
+# Machine Learning with R: Basic concepts
+
+## structured vs. unstructured data
+
+## supervised vs. unsupervised methods
+
+## Resampling methods
+### Permutation tests
+
+### Bootstrapping
+
+### Cross-validation (k-fold, leave-one-out/Jacknife)
+
+#### Jacknife
+
+#### k-fold CV

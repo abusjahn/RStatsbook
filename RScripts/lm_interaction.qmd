@@ -134,9 +134,9 @@ Ignoring the interaction in the model is no solution. Effect sizes will be wrong
 
 ```{r}
 # falsch!!!
-lmout <- lm(Outcome~Agegroup+Treatment,
+lmout_add <- lm(Outcome~Agegroup+Treatment,
              data = rawdata)
-tidy(lmout) |> 
+tidy(lmout_add) |> 
   select(1:2)
 anova(lmout) |>  # this is WRONG!!!
   tidy() |> slice(1:2) |> 

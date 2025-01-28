@@ -77,7 +77,7 @@ long_data <- pivot_longer(
   data=wide_data,
   cols=contains("Time"),
   names_to = c(".value","Time"), # .value will be replaced dynamically
-  # names_sep = "Time"
+  #names_sep = "Time"
   names_pattern = "(Var\\d+)(Time\\d+)"
 )
 long_data

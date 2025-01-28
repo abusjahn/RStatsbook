@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2024/10/20"
+  date: "2024-10-21"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -14,9 +14,9 @@ book:
   chapters:
     - index.qmd
     - RScripts/intro.qmd
-    - RScripts/R101.qmd
-    - RScripts/regex.qmd
-    - RScripts/import.qmd
+    - RScripts/01_R101.qmd
+    - RScripts/02_regex.qmd
+    - RScripts/03_import.qmd
     - RScripts/pivot.qmd
     - RScripts/variableclassification.qmd
     - RScripts/visualize.qmd
@@ -24,12 +24,19 @@ book:
     - RScripts/summarize.qmd
     # - flextable.qmd
     - RScripts/test2groups.qmd
+    - RScripts/CovCor.qmd
     - RScripts/lm.qmd
     - RScripts/lm_interaction.qmd
     - RScripts/glm.qmd
     - RScripts/MLintro.qmd
     - RScripts/MCMC.qmd
     - RScripts/knn.qmd
+    - RScripts/regressiontree.qmd
+    - RScripts/xgboost.qmd
+    - RScripts/PCA.qmd
+    - RScripts/LDA.qmd
+    - RScripts/cluster.qmd
+    - RScripts/caret.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

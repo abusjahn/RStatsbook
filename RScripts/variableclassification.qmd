@@ -24,7 +24,7 @@ ks.test(x = rawdata$`Size (cm)`,
         sd=sd(rawdata$`Size (cm)`, 
               na.rm = TRUE))
 
-ksnormal(rawdata$`Size (cm)`)
+ksnormal(rawdata$`Size (cm)`,lillie = FALSE)
 shapiro.test(rawdata$`Size (cm)`)
 
 ggplot(rawdata,aes(x = `Size (cm)`))+
@@ -41,7 +41,9 @@ rawdata |> filter(Sex=="m") |>
   ksnormal()
 rawdata |> 
   group_by(Sex) |>
-  summarize(p_KS = ksnormal(`Size (cm)`,lillie = FALSE),
+  summarize(
+    n=n(),
+    p_KS = ksnormal(`Size (cm)`,lillie = FALSE),
             `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
 ```
 
@@ -119,9 +121,12 @@ resulttable1a <-
                        pluck("p.value") |> 
                        formatP(mark = TRUE)))) |> 
   pivot_longer(everything(),
-               names_to=c("Variable","test"), #.variable
-               names_sep = "_") |> 
-  pivot_wider(names_from=test, values_from=value)
+               names_to=c("Variable",".value"), 
+               names_sep = "_")  
+# pivot_longer(everything(),
+  #              names_to=c("Variable","test"), #.variable
+  #              names_sep = "_") |> 
+  # pivot_wider(names_from=test, values_from=value)
 head(resulttable1a)
 head(resulttable1)
 

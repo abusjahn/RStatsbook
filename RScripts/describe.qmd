@@ -113,7 +113,7 @@ When creating tables with descriptive statistics, you usually report on more tha
 rawdata |> 
   group_by(Testmedication,Sex) |> 
   summarise(WeightSummary=meansd(`Weight (kg)`,add_n = TRUE),
-            .groups="drop") |> 
+            .groups="keep") |> 
   flextable()
 # # cat("<br\n\n")
 

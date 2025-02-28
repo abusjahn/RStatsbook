@@ -646,7 +646,7 @@ while(test<10){
 sex<-"female"
 if(sex=="male") {
   print("Male")
-  } else {
+} else {
   print("Female")
 }
 

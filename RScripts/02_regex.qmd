@@ -63,7 +63,7 @@ rename_with(
   .fn = ~str_replace_all(.x,
                          c("CAP"="CUP",
                            "_(cm)"=" [\\1]",
-                           "(.*)_of_(.+)( .*)"="\\2\\1\\3",
+                           "(.*)_.+_(.+)( .*)"="\\2\\1\\3",
                            "_"="")) |> 
     str_to_sentence()) |> 
   colnames()

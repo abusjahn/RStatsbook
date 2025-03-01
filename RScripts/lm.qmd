@@ -53,9 +53,13 @@ with(rawdata, interaction.plot(
 #    stat_summary(geom='line',fun='mean',aes(color=Treatment))+
 #    stat_summary(geom='line',fun='mean')
 p1<-ggplot(rawdata,aes(x=Passage,y=Growth))+
-  stat_summary(geom='line',fun='mean',aes(color=Treatment))+
-  stat_summary(aes(color=Treatment))+
-  ylab('Growth \u00b1 SEM')
+  stat_summary(geom='line',fun='mean',
+               aes(color=Treatment),
+               position=position_dodge(width = .15))+
+  stat_summary(aes(color=Treatment),
+               position=position_dodge(width = .15),
+               fun.data = "mean_cl_normal")+
+  ylab('Growth \u00b1 95% CI')
 p1
 p1+geom_smooth(method='lm',color='black',se=F)+
   geom_smooth(method='lm',aes(color=Treatment),se=F)
@@ -166,9 +170,9 @@ pt_out<-pairwise.t.test(x=rawdata$Growth,
                         g=rawdata$Passage_F,
                         p.adjust.method='none')
 pt_out
-pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage,
+pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage_F,
                 p.adjust.method='fdr')
-pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage,
+pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage_F,
                 p.adjust.method='bonferroni')
 # comparison against reference group 1
 pt_out$p.value[,1]

@@ -95,8 +95,8 @@ for(group_i in seq_len(groupvars$count)){
 
 ```{r}
 ordvars$names
-ggplot(rawdata,aes(`Ptt Lab`))+
-  geom_density()
+ggplot(rawdata,aes(`Ptt Lab`,fill=Sex))+
+  geom_density(alpha=.3)
 by(data = rawdata[[ordvars$index[1]]], 
    INDICES = rawdata$Sex,FUN = median_quart)
 
@@ -104,7 +104,7 @@ ggplot(rawdata,aes(Sex,`Ptt Lab`))+
   geom_boxplot()+
   geom_beeswarm(alpha=.5)
 (uOut<-wilcox.test(
-  rawdata[[ordvars$names[3]]]~rawdata$Sex,exact=F))
+  rawdata[[ordvars$names[1]]]~rawdata$Sex,exact=F))
 uOut$p.value
 #  coin::wilcox_test
 (uOut2<-wilcox_test(`Ptt Lab`~Sex,
@@ -155,8 +155,14 @@ tabletestOut$p.value
 # report_cat
 groupvar <- "Testmedication"
 
-compare2qualvars(rawdata,dep_vars = factvars$names[-1],
+rawdata |> 
+  mutate(Testmedication=factor(Testmedication,
+                               levels=0:1,
+                               labels=c("Placebo","Verum"))) |> 
+  compare2qualvars(,dep_vars = factvars$names[-1],
                  indep_var = groupvar,spacer = " ") |> 
+  rename_with(~str_remove(.x, "Testmedication")) |> 
+  rename(`Total sample`=desc_all) |> 
   flextable() |> 
   align(~p==" ",j = 1,align = "center")
 ```

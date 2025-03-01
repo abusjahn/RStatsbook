@@ -107,7 +107,33 @@ rawdata |>
 
 ## Summarize data
 
-When creating tables with descriptive statistics, you usually report on more than just 1 variable in more than just 1 subgroup, and there may be more than 1 statistics to report. `Summarize()`, often in combination with `across()`, makes that task easier:
+When creating tables with descriptive statistics, you usually report on more than just 1 variable in more than just 1 subgroup, and there may be more than 1 statistics to report. `Summarize()`, often in combination with `across()`, makes that task easier, usually in a pipeline:
+
+```{r}
+# we pipe the data
+rawdata |> 
+  # into the summarize function
+  summarize(across(all_of(gaussvars$names), #which variables to analyse?
+                   .fns=list( #which functions to apply?
+                     # ~ changes a function into a template
+                     n=~n(),
+                     # .x is the placeholder for the actual values
+                     Mean=~mean(.x,na.rm=TRUE) |> 
+                       roundR(textout = F),
+                     Median=~median(.x,na.rm=TRUE) |> 
+                       roundR(textout = F),
+                     SD=~sd(.x,na.rm=TRUE) |> 
+                       roundR(textout = F)))) |> 
+  # the wide table with n vars * n functions columns is reshaped
+  pivot_longer(
+    everything(), # transform all columns into long form
+    names_to=c("Variable",".value"), # .value is extracting names for values
+               names_sep="_") |> 
+  # pipe into formatted table
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit") 
+```
+
 
 ```{r}
 rawdata |> 

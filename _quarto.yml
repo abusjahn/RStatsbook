@@ -18,8 +18,8 @@ book:
     - RScripts/02_regex.qmd
     - RScripts/03_import.qmd
     - RScripts/pivot.qmd
-    - RScripts/variableclassification.qmd
     - RScripts/visualize.qmd
+    - RScripts/variableclassification.qmd
     - RScripts/describe.qmd
     - RScripts/summarize.qmd
     # - flextable.qmd

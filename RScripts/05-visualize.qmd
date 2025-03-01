@@ -108,12 +108,13 @@ For the demonstration, I store a plot into a variable, this includes all data an
 (plottemp <- ggplot(data=diamonds,aes(x=clarity,fill=cut))+
     geom_bar())
 plottemp + scale_fill_brewer(palette="Set2") #in-built "scale" for fill
-plottemp + scale_fill_grey(name = "cut of\ndiamonds")
+plottemp + scale_fill_grey(name = "cut of diamonds")
 plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
   scale_y_continuous(expand = expansion(mult = c(0,.5)))+ # rescaling y
   theme_bw(base_size = 20)+
   theme(panel.grid.major.x = element_blank())
-
+my_colors <- c("gold",'blue','violet',"#FF012F","#01AABC")
+plottemp+ scale_fill_manual(values=my_colors)
 ```
 
 ### External color definitions from ggsci
@@ -215,7 +216,7 @@ ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
                         mid="white",
                         limits=c(13,23),midpoint=18)+
   geom_point()+
-  scale_x_continuous(breaks = seq(-10^3,10^3,5),
+  scale_x_continuous(breaks = seq(-10^3,10^3,),
                      minor_breaks=seq(-10^3,10^3,1),
                      limits = c(0,10))+
   scale_y_log10(
@@ -352,16 +353,16 @@ Margins (taking all elements together) can be shown for rows and/or columns.
 
 ```{r}
 #| warning: false
-(p.tmp <- ggplot(mtcars, aes(wt, mpg)) +
+(plot_tmp <- ggplot(mtcars, aes(wt, mpg)) +
     geom_point())
-p.tmp + facet_grid(rows = vars(gear),
+plot_tmp + facet_grid(rows = vars(gear),
                    cols = vars(cyl))
 cat("facet labeling improved:\n")
-p.tmp + facet_grid(rows = vars(gear),
+plot_tmp + facet_grid(rows = vars(gear),
                    cols = vars(cyl),
                    labeller=label_both,margins="gear")
 # options(warn=-1) 
-p.tmp + geom_smooth(method="lm")+
+plot_tmp + geom_smooth(method="lm")+
   facet_grid(rows = vars(gear),
              cols = vars(cyl), 
              labeller=label_both, margins=TRUE)
@@ -374,11 +375,11 @@ p.tmp + geom_smooth(method="lm")+
 When showing many facets, wrapping around after some is useful, less systematic than grid.
 
 ```{r}
-p.tmp + facet_wrap(facets = vars(cyl))
-p.tmp + facet_wrap(facets = vars(cyl), ncol=2)
+plot_tmp + facet_wrap(facets = vars(cyl))
+plot_tmp + facet_wrap(facets = vars(cyl), ncol=2)
 
 # empty combination is dropped
-p.tmp + facet_wrap(facets=vars(cyl,gear),labeller=label_both) 
+plot_tmp + facet_wrap(facets=vars(cyl,gear),labeller=label_both) 
 
 #combining variables
 mtcars |> 
@@ -392,13 +393,13 @@ mtcars |>
 ### Controlling scales in facets (default: scales="fixed")
 
 ```{r}
-p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+plot_tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
                    labeller=label_both, scales="fixed")
-p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+plot_tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
                    labeller=label_both, scales="free")
-p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+plot_tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
                    labeller=label_both, scales="free_x")
-p.tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
+plot_tmp + facet_grid(rows=vars(gear),cols=vars(cyl), 
                    labeller=label_both, scales="free_y")
 ```
 
@@ -412,6 +413,8 @@ Functions for summary statistics (mean_se, mean_cl_normal, mean_cl_boot etc.) ar
 (plottemp <- ggplot(mtcars,aes(factor(gear),mpg))+
    geom_beeswarm(alpha=.5))
 plottemp+stat_summary(color="red")
+plottemp+stat_summary(fun.data="mean_se",
+                      color="red")
 plottemp+stat_summary(fun.data="mean_sdl",
                       fun.args=list(mult=1),
                       color="red")+
@@ -461,7 +464,7 @@ p <- round(
 plottemp+geom_signif(
   comparisons=list(c(1,2)),
   # aes(y=0),
-  textsize = rel(10), vjust = .0,
+ textsize = rel(10), vjust = .0,
   #y_position=max(mtcars$mpg+3),
   # annotations=paste0("p = ", p),
   annotations=markSign(p),
@@ -491,7 +494,7 @@ ggplot(diamonds,aes(clarity, price))+
   geom_signif(comparisons=list(c(1,2),c(2,3),c(3,4),c(4,5),
                                c(5,6),c(6,7),c(7,8)),
               map_signif_level = TRUE,
-              extend_line = -.01)+
+              extend_line = -.005)+
   ggtitle("nominal p-values!!")+
   scale_y_continuous(expand = expansion(mult=c(0.05,.1)))
 
@@ -538,7 +541,8 @@ plottemp+theme_excel()+
 plottemp+theme_minimal()
 plottemp+theme_void()
 plottemp+theme_base()
-plottemp+theme_bw()
+plottemp+theme_bw()+
+  theme(panel.grid.major.x = element_blank())
 
 # https://www.data-imaginist.com/2019/a-flurry-of-facets/
 

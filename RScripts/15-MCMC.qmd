@@ -1,0 +1,358 @@
+# Markov Chain Monte Carlo: Metropolis algorithm simulation
+
+based on [Markov Chain Monte Carlo \| Columbia Public Health](https://www.publichealth.columbia.edu/research/population-health-methods/markov-chain-monte-carlo) with slightly changed assumptions (10 counties, pre-defined populations either systematically chosen or randomized) and these rules:
+
+1.  Flip a coin. Heads to move east, tails to move west. If in borderline county, wrap around (alternative: move towards center?)
+
+2.  If the district indicated by the coin (east or west) has more voters than the present district, move there.
+
+3.  If the district indicated by the coin has fewer likely voters, make the decision based on a probability calculation:
+
+4.  calculate the probability of moving as the ratio of the number of likely voters in the proposed district, to the number of voters in the current district:
+
+5.  Pr\[move\] = voters in indicated district/voters in present district
+
+6.  Take a random sample between 0 and 1.
+
+7.  If the value of the random sample is between 0 and the probability of moving, move. Otherwise, stay put.
+
+```{r preparation}
+#| layout-align: left
+pacman::p_load(wrappedtools, tidyverse, ggrepel, ggforce, 
+               ggnewscale, ggtext, tictoc)
+
+set.seed(1012)
+counties <- tibble(County = LETTERS[1:9],
+                   Population_defined=seq(from=10^4, 
+                                  to= 9*10^4, 
+                                  by=10^4),
+                   Population_sampled = runif(n = 9,
+                                              min = 10^4,
+                                              max = 9*10^4) |> 
+                     roundR(level = 2,
+                            textout = F,
+                            smooth = T))
+pop_selected <- 'Population_sampled'
+ggplot(counties,aes(County,.data[[pop_selected]]))+
+  geom_col()
+
+```
+
+## Rule definition
+
+```{r rules}
+move_selection <- function(.counties=counties, 
+                           current_county,
+                           which_population=pop_selected) {
+  coinresult <- sample(x = c(1,-1),
+                       size = 1)
+  # if(current_county==1) {
+  #   coinresult <- 1
+  # }
+  # if(current_county==nrow(.counties)) {
+  #   coinresult <- -1
+  # }
+  next_county <- current_county+coinresult
+  if(next_county==0) {next_county <- nrow(.counties)}
+  if(next_county>nrow(counties)) {next_county <- 1}
+  population_ratio <- .counties[[next_county,which_population]] /
+    .counties[[current_county,which_population]]
+  if(runif(n = 1,0,1)>population_ratio){
+    next_county <- current_county
+  }
+  return(next_county)
+}
+
+n_moves <- 10^5
+n_burnin <- 10^3
+start_county <- 5
+```
+
+## Data structures for simulation
+
+```{r data structure moves}
+moves <- tibble(move=seq_len(n_moves),
+                position=NA_integer_)
+moves$position[1] <- start_county
+```
+
+## Simulation
+
+```{r walks}
+set.seed(1210)
+tictoc::tic('here we go...')
+for(step_i in 2:n_moves){
+  moves$position[step_i] <- 
+    move_selection(current_county = moves$position[step_i-1])
+}
+tictoc::toc()
+```
+
+## Results
+
+```{r no burnin filter all data}
+visits <- moves |> 
+  group_by(position) |> 
+  summarise(Visits=n()) |> 
+  ungroup() |> 
+  mutate(County = LETTERS[position]) |> 
+  select(-position) |> 
+  full_join(counties)
+ggplot(visits,aes(.data[[pop_selected]],Visits))+
+  geom_smooth(method='lm')+
+  geom_abline(intercept = 0,
+              slope = n_moves/sum(counties[[pop_selected]]),
+              linetype=2)+
+  geom_point()+
+  geom_label_repel(aes(label=County),nudge_x = 0, nudge_y = 100)+
+  scale_shape_manual(values=LETTERS, guide = NULL)+
+  scale_x_continuous(breaks=seq(0,10^5,10^4))+
+    scale_y_continuous(breaks=seq(0,10^5,10^3))+
+  ggtitle('All moves analyzed')
+```
+
+```{r after burnin}
+visits <- moves |>
+  filter(move>n_burnin) |> 
+  group_by(position) |> 
+  summarise(Visits=n()) |> 
+  ungroup() |> 
+  mutate(County = LETTERS[position]) |> 
+  select(-position) |> 
+  full_join(counties)
+moves_from_to <- expand.grid(1:9,1:9) |> 
+  as_tibble() |> 
+  rename(from=Var1,
+         to=Var2) |> 
+  filter(abs(from-to)<2|abs(from-to)==8) |> 
+  mutate(count=0,
+         start=LETTERS[from],
+         stop=LETTERS[to])
+for(move_i in seq_len(nrow(moves_from_to))){
+  moves_from_to$count[move_i] <- 
+    sum(moves$position[-nrow(moves)]==moves_from_to$from[move_i] &
+          moves$position[-1]==moves_from_to$to[move_i])
+}
+moves_to <- moves_from_to |> 
+  filter(to!=from)|> group_by(to) |> summarize(moves_to=sum(count)) |> 
+  mutate(County=LETTERS[to])
+moves_from <- moves_from_to |> 
+  filter(to!=from)|> group_by(from) |> summarize(moves_from=sum(count)) |> 
+  mutate(County=LETTERS[from])
+moves_stay <- moves_from_to |> 
+  filter(to==from)|> group_by(from) |> summarize(moves_stay=sum(count)) |> 
+  mutate(County=LETTERS[from])
+moves_from_to_stay <- 
+  full_join(moves_from,moves_to) |> 
+  full_join(moves_stay) |> 
+  full_join(counties |> select(-Population_defined)) |> 
+  select(-from,-to) |> 
+  pivot_longer(cols=c(moves_from,moves_to,moves_stay),
+               names_to='move',
+               values_to='count') |> 
+    mutate(County=paste0(County,"\n",
+                         round(Population_sampled/1000),
+                         "k"
+                         )) 
+
+ggplot(moves_from_to_stay,aes(County,count, fill=move))+
+  geom_col()+
+  scale_fill_manual(values=c('red','blue','green'))+
+  ggtitle('Moves from, to, and stay')
+# cat("<br\n\n")
+
+ggplot(visits,aes(.data[[pop_selected]],Visits))+
+  geom_smooth(method='lm')+
+  geom_abline(intercept = 0,
+              slope = (n_moves-n_burnin)/sum(counties[[pop_selected]]),
+              linetype=2)+
+  geom_point()+
+  geom_label_repel(aes(label=County),nudge_x = 0, nudge_y = 100)+
+  scale_shape_manual(values=LETTERS, guide = NULL)+
+  scale_x_continuous(breaks=seq(0,10^5,10^4))+
+    scale_y_continuous(breaks=seq(0,10^5,10^3))+
+  ggtitle('Only moves after burn-in analyzed')
+# cat("<br\n\n")
+
+```
+
+```{r}
+#| fig.width: 8
+#| fig.height: 10
+# circle for county plot
+# Define circle aesthetics
+theta <- seq(0, 2*pi, length.out = 10)[c(4:9,1:3)] |> 
+  rev()
+# Create sequence for angles (0 to 2*pi) with 5 equally spaced points
+radius <- 1  # Set radius of the circle
+
+# Create data frame with circle coordinates and labels
+circle_data <- tibble(
+  angle=theta,
+  x = radius * cos(theta),
+  y = radius * sin(theta),
+  label =LETTERS[1:9]  # Assign letters A to E as labels
+) |> 
+  full_join(visits, by=c('label'='County')) |> 
+  mutate(plotlabel=paste0(label,"\n",
+                         round(Population_sampled/1000),
+                         "k"
+                         )) 
+arrow_data <- 
+  moves_from_to |> 
+  full_join(circle_data |> 
+              select(x:label, angle), by=c('start'='label')) |> 
+  rename(from_x="x",from_y="y") |> 
+    full_join(circle_data |> 
+              select(x:label), by=c('stop'='label')) |> 
+  rename(to_x="x",to_y="y") |> 
+  mutate(x_end=from_x+count*10/n_moves*cos(angle),
+         y_end=from_y+count*10/n_moves*sin(angle),
+         count=case_when((from<to & !(from==1 & to==9)) | (from==9 & to==1)~-count,
+                         .default=count)) 
+
+  
+# Createggplot with circle and labels
+# ggplot(circle_data, aes(x = x, y = y)) +
+#   # geom_point(aes(size = Visits), shape=1) +  # Increase point size for better visibility
+#   geom_circle(aes(r=1,x0=0,y0=0),
+#               color="darkorange2")+
+#   geom_curve(data=arrow_data |> 
+#                filter(from<to),
+#              aes(x=from_x,y=from_y,
+#                  xend=to_x,yend=to_y,
+#                  linewidth=count),
+#              arrow=arrow(length=unit(0.1,"inches")),
+#              curvature=-1.0,
+#              color="darkolivegreen")+
+#   geom_curve(data=arrow_data |> 
+#                filter(from>to),
+#              aes(x=from_x,y=from_y,
+#                  xend=to_x,yend=to_y,
+#                  linewidth=count),
+#              arrow=arrow(length=unit(0.1,"inches")),
+#              angle=90,
+#              curvature=-.75,
+#              color="dodgerblue")+
+#   geom_text(aes(label = plotlabel, size=.data[[pop_selected]]),
+#             hjust = 0.5, vjust = 0.5) +  # Adjust text position slightly
+#   scale_size_continuous(range=c(3,7)) +  # Set size of labels
+#   scale_linewidth_continuous(range=c(.5,3)) +  # Set size of labels
+#   coord_fixed(xlim = c(-radius - radius/5, radius + radius/5), ylim = c(-radius - radius/5, radius + radius/5)) +  # Set axis limits slightly bigger than radius
+#   labs(title = "County population and move count", x = "", y = "",
+#        caption = "inner arrows: moves to left neighbor,\nouter arrows: moves to right neighbor") +  # Add title and remove axis labels
+#   guides(size="none", linewidth="none")+
+#   theme_void()  # Remove background gridlines
+# # cat("<br\n\n")
+
+# Create ggplot with circle and labels
+ggplot(circle_data, aes(x = x, y = y)) +
+  # geom_point(aes(size = Visits), shape=1) +  # Increase point size for better visibility
+  # geom_circle(aes(r=1,x0=0,y0=0),
+  #             color="darkorange2")+
+  geom_curve(data=arrow_data |> 
+               filter((from<to & !(to==9 & from==1)) | (to==1 & from==9)),
+             aes(x=from_x,y=from_y,
+                 xend=to_x,yend=to_y,
+                 color=count, linewidth=abs(count)),
+             arrow=arrow(length=unit(0.1,"inches")),
+             curvature=.75,
+             alpha=.6)+#, linewidth=1.5,)+
+  scale_colour_gradient2(low="gold", mid="grey",high="red")+
+  # scale_color_gradient("move count", low = "gold",high = "gold4") +
+  geom_curve(data=arrow_data |> 
+               filter(from>to &!(from==9 & to==1) | (to==9 & from==1)),
+             aes(x=from_x,y=from_y,
+                 xend=to_x,yend=to_y,
+                 color=count, linewidth=abs(count)),
+             arrow=arrow(length=unit(0.1,"inches"),
+                         type="closed"),
+             # angle=90,#linewidth=1.5,
+             curvature=.75,
+             alpha=.6)+
+  geom_segment(data=arrow_data |> 
+                 filter(from==to,count>0),
+               aes(x=from_x,y=from_y,
+                   xend=x_end,
+                   yend=y_end),
+               arrow=arrow(length=unit(0.1,"inches"),
+                           ends = "both",
+                         type="closed"),
+               color='dodgerblue', linewidth=1.2, alpha=.7)+
+  geom_text(aes(label = plotlabel, size=.data[[pop_selected]]),
+            hjust = 0.5, vjust = 0.5) +  # Adjust text position slightly
+  scale_size_continuous(range=c(3,7)) +  # Set size of labels
+  scale_linewidth_continuous(range = c(.25,2))+# Set size of labels
+  coord_fixed(xlim = c(-radius * 1.75, radius * 1.75),
+              ylim = c(-radius * 1.75, radius * 1.75)) +  # Set axis limits slightly bigger than radius
+  labs(title = "County population and move count", x = "", y = "",
+       caption = "inner golden arrows: moves to right neighbor (clockwise),\nouter redish arrows: moves to left neighbor (counter-clockwise)\nstraight blue arrows: stay put") +  # Add title and remove axis labels
+  guides(size="none", linewidth="none", color="none")+
+  theme_void()  # Remove background gridlines
+```
+
+```{r just burnin}
+visits <- moves |>
+  filter(move<=n_burnin) |> 
+  group_by(position) |> 
+  summarise(Visits=n()) |> 
+  ungroup() |> 
+  mutate(County = LETTERS[position]) |> 
+  select(-position) |> 
+  full_join(counties)
+ggplot(visits,aes(.data[[pop_selected]],Visits))+
+  geom_smooth(method='lm')+
+  geom_abline(intercept = 0,
+              slope = n_burnin/sum(counties[[pop_selected]]),
+              linetype=2)+
+  geom_point()+
+  geom_label_repel(aes(label=County),nudge_x = 0, nudge_y = 10)+
+  scale_shape_manual(values=LETTERS, guide = NULL)+
+  scale_x_continuous(breaks=seq(0,10^5,10^4))+
+    scale_y_continuous(breaks=seq(0,10^5,10^1))+
+  ggtitle('Only burn-in moves analyzed')
+```
+
+```{r}
+moves |> 
+  filter(move<=n_burnin) |>
+  ggplot(aes(move,position))+
+  # geom_point()+
+  geom_line()+
+  scale_y_continuous(breaks=1:9,
+                     labels = LETTERS[1:9])
+
+moves |> 
+  filter(move<=100) |>
+  ggplot(aes(move,position))+
+  # geom_point()+
+  geom_line()+
+  scale_y_continuous(breaks=1:9,
+                     labels = LETTERS[1:9])
+moves |> 
+  filter(move>9500, move<10000) |>
+  ggplot(aes(move,position))+
+  # geom_point()+
+  geom_line()+
+  scale_y_continuous(breaks=1:9,
+                     labels = LETTERS[1:9])
+
+moves |> 
+  # filter(move<=n_burnin) |>
+  ggplot(aes(move,position))+
+  # geom_point()+
+  geom_line()+
+  scale_x_continuous(limits = c(1,30))+
+  scale_y_continuous(breaks=1:9,
+                     labels = LETTERS[1:9])
+
+moves |> 
+  # filter(move<=n_burnin) |>
+  ggplot(aes(move,position))+
+  # geom_point()+
+  geom_line()+
+  # scale_x_continuous(limits = c(1,30))+
+  scale_y_continuous(breaks=1:9,
+                     labels = LETTERS[1:9])+
+  coord_cartesian(xlim=c(1,30))
+```

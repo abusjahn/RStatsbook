@@ -1,0 +1,283 @@
+# k nearest neighbors knn
+
+```{r}
+# Bioconductor packages needed!
+if(!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+  BiocManager::install(version=BiocManager::version())
+}
+  
+if(!requireNamespace("preprocessCore", quietly = TRUE)) {
+  BiocManager::install("preprocessCore")
+}
+
+  
+pacman::p_load(conflicted,
+               tidyverse,
+               wrappedtools,  # just tools 
+               palmerpenguins, # data
+               ggforce, # for cluster plots, hulls, zoom etc
+               ggbeeswarm,
+               flextable,
+               caret, # Classification and Regression Training
+               preprocessCore,  # pre-processing functions
+               gmodels, # tools for model fitting
+               easystats, 
+               yardstick)  # model performance
+
+# conflict_scout()
+conflict_prefer('slice','dplyr')
+conflict_prefer("filter", "dplyr")
+
+```
+
+## Data preparation
+
+In the penguin data set, the four numerical variables related to body are `bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`, and `body_mass_g`. We will use the first two variables to demonstrate the use knn.
+
+```{r}
+rawdata <- penguins |> 
+  na.omit()
+rawdata <- mutate(rawdata,
+                  ID=paste('P', 1:nrow(rawdata))) |> 
+  select(ID, everything())
+predvars <- ColSeeker(rawdata,'length')
+```
+
+## Exploratory plots
+
+Package `ggforce` provides functions to plot convex hulls, ellipses, and zoomed facets. This is helpful in exploring group separation across 2 dimensions.
+
+```{r}
+rawplot <- 
+  ggplot(rawdata, 
+         aes(.data[[predvars$names[1]]], 
+             .data[[predvars$names[2]]], 
+             color=species))+
+  geom_point()  
+rawplot
+# cat("<br\n\n")
+rawplot+
+  geom_mark_hull(expand = unit(2.5,'mm'))
+# cat("<br\n\n")
+rawplot+
+  geom_mark_ellipse(expand = unit(2.5,'mm'))
+# cat("<br\n\n")
+rawplot+
+  geom_hline(yintercept = 206)+
+  geom_vline(xintercept = 44)
+rawplot+
+  facet_zoom(xlim = c(45,48),
+             ylim = c(190,200))
+rawplot+
+  facet_zoom(xlim = c(41,50),
+             ylim = c(205,215))
+```
+
+## Scaling
+
+To avoid the effect of different scales of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make canter and spread/range of the data comparable. Here we first use the `preProcess` function from the `caret` package. To compare the scaled data to the original, we'll keep the original data in the data frame.
+
+### caret function preProcess
+
+```{r}
+scaled <- rawdata |> 
+  select(predvars$names) |> 
+  caret::preProcess(method = c('center',"scale"))
+rawdata <- predict(scaled,rawdata) |> 
+  select(ID,all_of(predvars$names)) |>
+  rename_with(.cols=predvars$names,
+                     ~paste0(.x,"_std")) |> 
+  full_join(select(rawdata,-contains("_std")),
+            by='ID') 
+```
+
+### preprocessCore function normalize.quantiles
+
+For ...omics data, bioconductor provides functions for ML including preprocessing. Here we use the `normalize.quantiles` function from the `preprocessCore` package.
+
+```{r}
+rawdata <- rawdata |> 
+  select(predvars$names) |> 
+  as.matrix() |> 
+  preprocessCore::normalize.quantiles(keep.names = TRUE) |> 
+  as_tibble() |> 
+  rename_with(~paste0(.,'_qnorm')) |> 
+  bind_cols(rawdata)
+```
+
+### Visual comparison of the scaled data
+
+```{r}
+rawdata |> 
+  select(contains('length')) |> 
+  pivot_longer(everything()) |> 
+  ggplot(aes(value,fill=name))+
+  geom_density()+
+  facet_wrap(facets = vars(name), scales='free')+
+  guides(fill="none")
+
+rawdata |> 
+  ggplot(aes(bill_length_mm,bill_length_mm_std))+ 
+  geom_point() 
+rawdata |> 
+  ggplot(aes(bill_length_mm,bill_length_mm_qnorm))+ 
+  geom_point()
+
+```
+
+## Modelling
+
+### Definition of predictor variables (IV)
+
+```{r}
+predvars_std <- ColSeeker(namepattern = '_std')
+```
+
+### Data splitting
+
+```{r}
+set.seed(2025)
+traindata <- rawdata |> 
+  select(ID,species,sex,predvars_std$names) |>
+  group_by(species, sex) |>
+  slice_sample(prop = 2/3) |>
+  ungroup() |>
+  select(-sex)
+
+testdata <- filter(rawdata,
+                   !ID %in% traindata$ID) |>
+  select(ID,species,predvars_std$names)
+```
+
+### Model fitting
+
+For the training data, a model is created and used to (re-)predict the species of the test data. The `knn3Train` function from the `caret` package is used to fit the model. The `k` parameter specifies the number of neighbors to consider. The `prob` attribute of the output is used to get the probabilities of the species.
+
+```{r}
+train_out <- 
+  knn3Train(train = select(traindata,predvars_std$names),
+  test = select(testdata, predvars_std$names), 
+  cl = traindata$species, k = 5)  
+str(train_out) 
+head(train_out) 
+train_res <- 
+  attr(x = train_out,which = 'prob') |> 
+  as_tibble() |> 
+  mutate(predicted=factor(train_out)) |> 
+  bind_cols(testdata)
+
+train_res |> 
+  pivot_longer(c(Adelie,Chinstrap,Gentoo), 
+               values_to = 'p species', 
+               names_to = 'Species prediction') |> 
+  ggplot(aes(`Species prediction`,`p species`))+ 
+  geom_violin()+ 
+  geom_beeswarm(cex = .5, alpha=.25)+ 
+  facet_grid(rows = vars(species), labeller='label_both')
+```
+
+\newpage
+
+### Model evaluation
+
+```{r}
+CrossTable(train_res$predicted,
+           train_res$species, prop.chisq = FALSE, prop.t = FALSE, 
+           format = 'SAS')
+```
+
+### Alternative approach to modelling
+
+```{r}
+knn_formula <- 
+  paste0('species~', 
+         paste(predvars_std$names, collapse = '+')) |> 
+  as.formula() 
+knn_out <- 
+  knn3(knn_formula, data=rawdata,k = 5) 
+pred_all <- predict(knn_out,newdata = rawdata) |> 
+  as_tibble() |> 
+  bind_cols(rawdata) |> 
+  mutate(predicted= case_when(
+    Adelie>Chinstrap & Adelie>Gentoo ~ 'Adelie', 
+    Chinstrap>Adelie & Chinstrap>Gentoo ~ 'Chinstrap',
+    Gentoo>Adelie & Gentoo>Chinstrap ~ 'Gentoo') |> 
+      factor())
+
+# Alternative approach to prediction
+predictions <- 
+  predict(knn_out,newdata = rawdata) |> 
+  as_tibble() |> 
+  rowwise() |>
+  mutate(predicted=case_when(
+    Adelie==max(Adelie,Chinstrap,Gentoo) ~ 'Adelie',
+    Chinstrap==max(Adelie,Chinstrap,Gentoo) ~ 'Chinstrap',
+    Gentoo==max(Adelie,Chinstrap,Gentoo) ~ 'Gentoo') |>
+      factor()) |>
+ ungroup() 
+
+```
+
+### Evaluation of the alternative approach
+
+```{r}
+yardstick::accuracy(data = pred_all, truth=species, estimate=predicted)
+
+pred_all |> 
+  pivot_longer(c(Adelie,Chinstrap,Gentoo), 
+               values_to = 'p species', 
+               names_to = 'Species_pred') |> 
+  ggplot(aes(Species_pred,`p species`))+ 
+  geom_violin()+ 
+  geom_beeswarm(cex = .25, alpha=.25)+ 
+  facet_grid(rows = vars(species))
+
+ggplot(rawdata, aes(bill_length_mm_std,flipper_length_mm_std, color=sex,shape=species))+ 
+  geom_point()
+```
+
+### Adding predictor variables
+
+Now we'll try to predict the sex based on body measures and species.
+
+```{r}
+knn_out <- 
+  knn3(sex ~ bill_length_mm_std + flipper_length_mm_std + species, 
+       data=rawdata,k = 5)
+
+rawdata <- 
+  predict(knn_out,newdata = rawdata) |> 
+  as_tibble() |> 
+  cbind(rawdata)
+
+rawdata |> 
+  pivot_longer(c(female,male), 
+               values_to = 'p sex', 
+               names_to = 'Sex') |> 
+  ggplot(aes(Sex,`p sex`))+ 
+  geom_violin()+ 
+  geom_beeswarm(cex = .25, alpha=.25)+ 
+  facet_grid(rows = vars(sex))
+
+rawdata <- 
+  mutate(rawdata, 
+         pred_sex=case_when( male>=.5 ~ "male", 
+                             .default = "female" ) |> 
+           as.factor()) 
+yardstick::accuracy(data = rawdata, truth=sex, 
+                    estimate=pred_sex) 
+yardstick::sensitivity(data = rawdata, truth=sex, 
+                       estimate=pred_sex, 
+                       event_level="second") 
+yardstick::specificity(data = rawdata, truth=sex, 
+                       estimate=pred_sex, 
+                       event_level="second") 
+yardstick::ppv(data = rawdata, truth=sex, 
+               estimate=pred_sex, 
+               event_level="second") 
+CrossTable(rawdata$pred_sex,
+           rawdata$sex, prop.chisq = F, prop.t = F, 
+           format = 'SPSS')
+
+```

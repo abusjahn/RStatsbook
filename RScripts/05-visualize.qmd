@@ -199,6 +199,17 @@ ggplot(mtcars,aes(mpg, fill=factor(am)))+
 ggplot(diamonds,aes(price,y=clarity))+
   geom_density_ridges()
 
+#empirical vs. theoretical distribution
+ggplot(mtcars, aes(wt))+
+  geom_density(fill = "darkorange")+
+  stat_function(fun = dnorm, 
+                args = list(mean = mean(mtcars$wt),
+                                sd = sd(mtcars$wt)),
+                color = "darkgreen",
+                linewidth = 1.2)+
+  scale_x_continuous(
+    limits = c(mean(mtcars$wt)-3*sd(mtcars$wt),
+               mean(mtcars$wt)+3*sd(mtcars$wt)))
 ```
 
 ## Combining and finetuning aesthetics

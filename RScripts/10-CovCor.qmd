@@ -1,0 +1,53 @@
+# Covariance / Correlation
+
+```{r}
+pacman::p_load(conflicted,plotrix,tidyverse, wrappedtools,
+               coin,ggsignif, patchwork, ggbeeswarm,
+               flextable, here, corrr)
+load(here("data/bookdata1.RData"))
+```
+
+## Covariance
+
+Covariance is a measure of the relationship between two random variables. The sign of the covariance shows the tendency in the linear relationship between the variables. The covariance between two variables is computed as follows:
+
+```{r}
+cov(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
+cov(rawdata |> select(contains("BP")), 
+    use = "pairwise.complete.obs")
+```
+
+## Correlation
+
+Correlation is a measure of the strength and direction of the linear relationship between two variables. Other than the covariance, it is standardized, so it is not affected by the scale of the variables. The correlation between two variables is computed as follows:
+
+```{r}
+cor(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
+cor(rawdata |> select(contains("Mri")), 
+    use = "pairwise.complete.obs")
+```
+
+Significance of correlations can be tested:
+
+```{r}
+cor.test(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
+wrappedtools::cortestR(rawdata |> select(contains("BP")))
+wrappedtools::cortestR(rawdata |> select(contains("BP")),
+                       split=TRUE)
+cor_out <- 
+  wrappedtools::cortestR(rawdata |> select(contains("BP")),
+                       split=TRUE, sign_symbol=FALSE)
+cor_out
+```
+
+## Vizualizations
+
+```{r}
+corrr::correlate(rawdata |> select(contains("BP"))) |> 
+  corrr::network_plot(min_cor = .05)
+wrappedtools::ggcormat(cor_mat = cor_out$corout,
+                       maxpoint = 15)
+wrappedtools::ggcormat(cor_mat = cor_out$corout,
+                       p_mat = cor_out$pout,
+                       maxpoint = 20)
+```

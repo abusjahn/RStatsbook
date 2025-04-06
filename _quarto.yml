@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2024-10-21"
+  date: "2025-04-06"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -17,26 +17,26 @@ book:
     - RScripts/01_R101.qmd
     - RScripts/02_regex.qmd
     - RScripts/03_import.qmd
-    - RScripts/pivot.qmd
-    - RScripts/visualize.qmd
-    - RScripts/variableclassification.qmd
-    - RScripts/describe.qmd
-    - RScripts/summarize.qmd
+    - RScripts/04-pivot.qmd
+    - RScripts/05-visualize.qmd
+    - RScripts/06-variableclassification.qmd
+    - RScripts/07-describe.qmd
+    - RScripts/08-summarize.qmd
     # - flextable.qmd
-    - RScripts/test2groups.qmd
-    - RScripts/CovCor.qmd
-    - RScripts/lm.qmd
-    - RScripts/lm_interaction.qmd
-    - RScripts/glm.qmd
-    - RScripts/MLintro.qmd
-    - RScripts/MCMC.qmd
-    - RScripts/knn.qmd
-    - RScripts/regressiontree.qmd
-    - RScripts/xgboost.qmd
-    - RScripts/PCA.qmd
-    - RScripts/LDA.qmd
-    - RScripts/cluster.qmd
-    - RScripts/caret.qmd
+    - RScripts/09-test2groups.qmd
+    - RScripts/10-CovCor.qmd
+    - RScripts/11-lm.qmd
+    - RScripts/12-lm_interaction.qmd
+    - RScripts/13-glm.qmd
+    - RScripts/14-MLintro.qmd
+    - RScripts/15-MCMC.qmd
+    - RScripts/16-knn.qmd
+    - RScripts/17-regressiontree.qmd
+    - RScripts/18-xgboost.qmd
+    - RScripts/19-caret.qmd
+    - RScripts/20-PCA.qmd
+    - RScripts/21-LDA.qmd
+    - RScripts/22-cluster.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

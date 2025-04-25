@@ -6,12 +6,72 @@
 
 ## Resampling methods
 
+-   Creation of new samples based on one observed sample.
+
+-   Helps in creating new synthetic datasets for training machine learning models and to estimate properties of a dataset when the dataset is unknown, difficult to estimate, or when the sample size of the dataset is small.
+
+-   Resampling Methods
+
+    -   Permutation tests (also re-randomization tests)
+
+    -   Bootstrapping
+
+    -   Jackknife (Leave one out validation)
+
+    -   Cross validation
+
 ### Permutation tests
+
+-   Permutation reshuffles the observed cases, sampling without replacement, e.g. Random combination of 2 classes (like disease / risk)
+
+-   Original:
+
+| Class 1  | Class 2 |
+|----------|---------|
+| Affected | Exposed |
+| Affected | Exposed |
+| Affected | \-      |
+| Control  | \-      |
+| Control  | \-      |
+
+-   Permutation 1
+
+| Class 1  | Class 2 |
+|----------|---------|
+| Affected | \-      |
+| Affected | Exposed |
+| Affected | \-      |
+| Control  | \-      |
+| Control  | Exposed |
+
+-   repeated x times
 
 ### Bootstrapping
 
-### Cross-validation (k-fold, leave-one-out/Jacknife)
+-   Bootstrapping selects from the population of observed cases, sampling with replacement.
 
-#### Jacknife
+-   Bootstrap is a powerful statistical tool used to quantify the uncertainty of a given model.
 
-#### k-fold CV
+![](/Graphs/bootstrap_classify.png){fig-align="center"}
+
+![](/Graphs/Bootstrap_25_0.png){fig-align="center"}
+
+### Jacknife
+
+-   Jackknife is resampling without replacement
+
+-   Creates n samples of size n-1
+
+![](/Graphs/jackknife_estimate.jpg){fig-align="center"}
+
+### k-fold CV
+
+-   Splitting sample into k groups
+
+-   One group for testing,
+
+-   k-1 groups for training
+
+-   Repeated k times, no resampling
+
+![](/Graphs/8-Stratified-K-Fold-Cross-Validation.jpg){fig-align="center"}

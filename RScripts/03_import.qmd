@@ -28,10 +28,6 @@ rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |>
 saveRDS(rawdata,file = here("data/rawdata.rds"))
 ```
 
-### ODS files
-
-Package readODS provides similar functionality for OpenOffice/LibreOffice files.
-
 ### Excel file with units row
 
 1.  Import names section and data section separately
@@ -61,7 +57,11 @@ rawdata <- read_excel(path = here("data/Medtest_e.xlsx"),
 colnames(rawdata) <- cn_temp[1,]
 ```
 
-## Import from SPSS/SAS
+## ODS files
+
+Package readODS provides similar functionality for OpenOffice/LibreOffice files.
+
+### Import from SPSS/SAS
 
 Import from SPSS generic files is implemented in various packages:
 

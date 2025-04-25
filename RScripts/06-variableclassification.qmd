@@ -110,6 +110,8 @@ head(resulttable2)
 
 across() - Version:
 
+`across()` in R (from `dplyr`) is a powerful tool that lets you apply the same operation to multiple columns in your data frame, similar to using loops or list comprehensions with Pandas DataFrames in Python. `across()` (sort of) loops over variables / columns and applies function(s), it can be used inside summarize, mutate, filter.
+
 ```{r}
 resulttable1a <- 
    rawdata |> 
@@ -120,6 +122,7 @@ resulttable1a <-
                      pSh=~shapiro.test(.x) |> 
                        pluck("p.value") |> 
                        formatP(mark = TRUE)))) |> 
+  #change output structure to long form
   pivot_longer(everything(),
                names_to=c("Variable",".value"), 
                names_sep = "_")  
@@ -193,7 +196,11 @@ factvars <- ColSeeker(data = rawdata,
 rawdata <- mutate(rawdata,
                   across(all_of(factvars$names),
                          ~factor(.x)))
+```
+
+To make data accessible for other scripts, data can be saved:
+
+```{r}
 save(rawdata,list = ls(pattern = "vars"),
      file = here("data/bookdata1.RData"))
-
 ```

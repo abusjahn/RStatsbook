@@ -1,4 +1,4 @@
-# Cluster analysis 
+# Cluster analysis
 
 ```{r}
 pacman::p_load(conflicted, tidyverse,
@@ -10,8 +10,9 @@ pacman::p_load(conflicted, tidyverse,
 )
 
 # conflict_scout()
-conflict_prefer('select','dplyr')
-conflict_prefer("filter", "dplyr")
+conflicts_prefer(dplyr::slice, 
+                 dplyr::filter,
+                 palmerpenguins::penguins)
 rawdata <- penguins |> 
   na.omit()
 rawdata <- mutate(rawdata,
@@ -99,4 +100,3 @@ rawdata |>
   geom_point()
 
 ```
-

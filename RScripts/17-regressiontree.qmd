@@ -12,8 +12,9 @@ pacman::p_load(conflicted,
                caret)
 
 # conflict_scout()
-conflict_prefer('slice','dplyr')
-conflict_prefer("filter", "dplyr")
+conflicts_prefer(dplyr::slice, 
+                 dplyr::filter,
+                 palmerpenguins::penguins)
 rawdata <- penguins |> 
   na.omit()
 rawdata <- mutate(rawdata,

@@ -73,7 +73,7 @@ rename_with(
 
 ```{r}
 testset1 <- c("Meier","Mayer","Maier","Meyer","Mayr","Maya","Mayor")
-# find all variations of the name "Meier"
+# find all variations of the name "Meier" (not Maya or Mayor)
 
 testset2 <- c("weight_mm","height_cm","age_yr","temp_c")
 #replace _ with space

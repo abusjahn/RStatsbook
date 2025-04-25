@@ -1,16 +1,16 @@
 # *Syntax rules / basic things to know about R*
 
-*This is going to be the boring technical stuff... We'll get to the more interesting topics in the next chapters.*
+This is going to be the boring technical stuff... We'll get to the more interesting topics in the next chapters.
 
 ## *Script preparation / basic setup*
 
-*At the beginning of (almost) every script we define packages to be used. This could be done by either*
+At the beginning of (almost) every script we define packages to be used. This could be done by either
 
--   *checking if packages needed are installed and otherwise do so, followed by function `library(packagename)`*
+-   checking if packages needed are installed and otherwise do so, followed by function `library(packagename)`
 
-*OR*
+OR
 
--   *simplifying this using function p_load() from package pacman; if you want to create fool-proof scripts, check for pacman and install if needed.*
+-   simplifying this using function p_load() from package pacman; if you want to create fool-proof scripts, check for pacman and install if needed.
 
 ```{r}
 # ↑ this is the head of a code chunk
@@ -46,19 +46,19 @@ conflicts_prefer(dplyr::filter,
 
 ### *Variable names*
 
-*Naming things is harder than you may expect. Try to be verbose and consistent in language and style. Commonly used are snake_case_style and CamelCaseStyle.*
+Naming things is harder than you may expect. Try to be verbose and consistent in language and style. Commonly used are snake_case_style and CamelCaseStyle.
 
-*Decide about computer-friendly (syntactical) or human-friendly names, illegal names can be used inside backticks: \`measure \[unit\]\`. My preference is syntactical for script variables and humane for data variables, e.g. column names, print labels etc.*
+Decide about computer-friendly (syntactical) or human-friendly names, illegal names can be used inside backticks: \`measure \[unit\]\`. My preference is syntactical for script variables and humane for data variables, e.g. column names, print labels etc.
 
-*There are rules for valid syntactical names:*
+There are rules for valid syntactical names:
 
--   *UPPERCASE and lowercase are distinguished*
+-   UPPERCASE and lowercase are distinguished
 
--   *start with letter or symbols as **.\_** , but not with a number*
+-   start with letter or symbols as **.\_** , but not with a number
 
--   *no mathematical symbols or brackets allowed*
+-   no mathematical symbols or brackets allowed
 
-*To store some value into a variable, use the assignment operator **\<-** ; while it possible to use **=** or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).*
+To store some value into a variable, use the assignment operator **\<-** ; while it possible to use **=** or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
 
 ```{r}
 ### Variable names ####
@@ -78,13 +78,13 @@ here_are_filtered_data <- "test" #snake_case
 
 ### *Basic classes of data*
 
-*R is 'guessing' the suitable type of data from input. This should be checked after e.g. importing data! If elements of different classes are found, the more inclusive is used. There are functions to change / force a type if needed.*
+R is 'guessing' the suitable type of data from input. This should be checked after e.g. importing data! If elements of different classes are found, the more inclusive is used. There are functions to change / force a type if needed.
 
-*The **`class()`** function returns the class of an object, which determines how it behaves with respect to functions like **`print()`**. The class of an object can be changed by using generic functions and methods.*
+The **`class()`** function returns the class of an object, which determines how it behaves with respect to functions like **`print()`**. The class of an object can be changed by using generic functions and methods.
 
-*The **`typeof()`** function returns the basic data type of an object, which determines how it is stored in memory. The basic data type of an object cannot be changed.*
+The **`typeof()`** function returns the basic data type of an object, which determines how it is stored in memory. The basic data type of an object cannot be changed.
 
-*The **`str()`** function shows class and examples of an object.*
+The **`str()`** function shows class and examples of an object.
 
 #### *Guessed classes*
 
@@ -118,8 +118,9 @@ int_num < float_num
 as.logical(c(0,1,5,-7.45678)) # c() combines values into a vector
 ```
 
-*Factor: categorical variables with limited set of distinct values, internally stored as integers. Everything intended to group subjects or representing categories should be stored as factor.\
-Package forcats provides nice tools for factors!*
+Factor: categorical variables with limited sets of distinct values (called levels), internally stored as integers. Everything intended to group subjects or representing categories (like species, tissue type, treatment) should be stored as factor for efficient storage and proper statistical handling in R. In Python, Pandas Categorical and dictionaries are related constructs.
+
+Package forcats provides nice tools for factors!
 
 ```{r}
 factor_var <- factor(c("m","m","f","m","f","f","?"))
@@ -145,6 +146,8 @@ class(Sys.time())
 
 *Mixed classes:*
 
+If the data that goes into a variable has more than 1 class, the more general class is selected.
+
 ```{r}
 test2 <- c(1,2,"a","b")
 class(test2)
@@ -153,7 +156,7 @@ test2
 
 #### *Forcing / casting classes*
 
-*Casting functions usually start with `as.` , when creating variables filled with NA, use casting functions or specific variants of NA to force type!*
+If the assigned class is not correct or appropriate, it can be changed. Casting functions usually start with `as.` When creating variables filled with NA, use casting functions or specific variants of NA to force type!
 
 ```{r}
 (test <- c(1,2,3,"a","b","c")) 
@@ -174,7 +177,7 @@ class(NA_Date_) # from package lubridate
 
 ### *Indexing variables*
 
-*The most general kind of indexing is by position, starting with **1**. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can (and usually will) be a variable instead of hard coded numbers.*
+The most general kind of indexing is by position, starting with **1**. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can (and usually will) be a variable instead of hard coded numbers.
 
 ```{r}
 (numbers1 <- c(5,3,6,8,2,1))
@@ -186,7 +189,7 @@ numbers1[numbers2]
 # numbers1[1,2] #Error: incorrect number of dimensions
 ```
 
-*To get first or last entries, head() and tail() can be used. By default 6 entries are returned.*
+To get first or last entries, head() and tail() can be used. By default 6 entries are returned.
 
 ```{r}
 tail(x = numbers1, n = 1)
@@ -196,14 +199,14 @@ nth(x = numbers1,n=-2) # 2nd to last
 
 ### *Usage of variables*
 
-*Variables are like placeholders for their content, so that you don't have to remember where you left things. Operations on variables are operations on their content. Changing the content of a variable does not automatically save those changes back to the variable, this needs to be done explicitly!*
+Variables are like placeholders for their content, so that you don't have to remember where you left things. Operations on variables are operations on their content. Changing the content of a variable does not automatically save those changes back to the variable, this needs to be done explicitly!
 
 ```{r}
 numbers1 + 100 # not stored anywhere, just printed
 numbers1 + numbers2 # why does this even work?
 ```
 
-*When combining variables of different length, the short one is recycled, so the numbers2 is added to the first 3 elements of numbers2, then is reused and added to the remaining 3 elements. If the length of the longer is not a multiple of the shorter, there will be a warning.*
+When combining variables of different length, the short one is recycled, so the numbers2 is added to the first 3 elements of numbers2, then is reused and added to the remaining 3 elements. If the length of the longer is not a multiple of the shorter, there will be a warning.
 
 ```{r}
 c(2,4,6,8) + 1 
@@ -215,11 +218,11 @@ c(2,4,6,8) + c(1,2,3)
 
 ### *Function usage*
 
-*Functions have the same naming rules as variables, but the name is always followed by opening/closing round brackets, within those brackets function parameters/arguments can be specified to provide input or control behavior:*
+Functions have the same naming rules as variables, but the name is always followed by opening/closing round brackets, within those brackets function parameters/arguments can be specified to provide input or control behavior:
 
 *FunctionName(parameter1=x1,parameter2=x2,x3,...)*
 
-*Most functions have named arguments, those argument names may be omitted as long as parameter values are supplied in the defined order. Arguments may have predefined default values, see help! Some functions like `c()` use unnamed arguments.*
+Most functions have named arguments, those argument names may be omitted as long as parameter values are supplied in the defined order. Arguments may have predefined default values, see help! Some functions like `c()` use unnamed arguments.
 
 ```{r}
 c("my", "name") # unnamed
@@ -245,7 +248,7 @@ paste("mean", "SD", sep = " \u00b1 ")
 
 ### *Functions combined*
 
-*Functions often just solve one problem or task, so usually we need to combine them. This can be done by nesting or piping. Piping makes reading/understanding scripts easier, as it shows order of functions:*
+Functions often just solve one problem or task, so usually we need to combine them to, for instance, filter our data, then calculate some statistics, and finally tabulize the results. This can be done by nesting or piping. Piping (creation of pipelines or production belts) makes reading/understanding scripts easier, as it shows order of information flowing from one function to the next, often visualized with a special symbol \|\>
 
 ![*Piping functions*](../Graphs/piping_complete.jpg){fig-pos="h"}
 
@@ -271,7 +274,7 @@ mtcars |>   # inbuild example data, use F1!
               values_from = value)
 ```
 
-*If a sequence of functions is used often, combining them into a new function is advisable, e.g. this combination of descriptive and test statistics:*
+If a sequence of functions is used often, combining them into a new function is advisable, e.g. this function is a combination of descriptive and test statistics:
 
 ```{r}
 # can be combined into higher order functions:
@@ -283,6 +286,8 @@ compare2numvars(data = mtcars,
 ```
 
 ### *Writing functions*
+
+Functions can be thought of as blocks/chunks of code with defined in- and output. Functions intended for general use (e.g. published in a package) should be enhanced by error prevention / handling and documentation.
 
 ```{r}
 #FunctionName<-function(parameters...){definition}
@@ -346,7 +351,7 @@ markSign0(SignIn = "p=3,5%")   #wrong input
 
 ### *Matrix*
 
-*A matrix is a 2-dimensional data structure, where all elements are of the same class.*
+A matrix is a 2-dimensional data structure, where all elements are of the same class.
 
 #### *Creation*
 
@@ -374,7 +379,7 @@ my2.Matrix
 
 #### *Indexing*
 
-*Addressing a matrix is done with \[row_index, column_index\]*
+Addressing a matrix is done with \[row_index, column_index\]
 
 ```{r}
 my1.Matrix[2, 3] # Index:[row,column]
@@ -386,11 +391,11 @@ my1.Matrix[1,1]<-NA # Index can be used for writing as well
 
 ### *Data frame*
 
-*A data frame has 2 dimensions, it can handle various data types (1 per columns). This structure is rather superseded by tibbles (see below).*
+A data frame has 2 dimensions, it can handle various data types (1 per columns). This structure is rather superseded by tibbles (see below).
 
 #### *Creation*
 
-*Data frames are defined by creating and filling columns, functions can be used (and piped) to create content.*
+Data frames are defined by creating and filling columns, functions can be used (and piped) to create content.
 
 ```{r}
 patientN<-15
@@ -412,7 +417,7 @@ head(myTable)
 
 #### *Indexing*
 
-*Beside the numeric index, columns can be addressed by name. This can be done by either dfname\$colname (for the content of a single column) or dfname\[,"colname"\] for 1 or more columns.*
+Beside the numeric index, columns can be addressed by name. This can be done by either dfname\$colname (for the content of a single column) or dfname\[,"colname"\] for 1 or more columns.
 
 ```{r}
 myTable[1:5,1]
@@ -428,7 +433,7 @@ myTable[,1]<-paste0("Code", 1:patientN)
 
 ### *Tibble*
 
-*Tibbles are a modern and efficient data structure that extends data frames, providing enhanced features and performance for data manipulation and analysis.*
+Tibbles are a modern and efficient data structure that extends data frames, providing enhanced features and performance for data manipulation and analysis.
 
 #### *Creation*
 
@@ -482,7 +487,7 @@ ggplot(rawdata,aes(x = Treatment,y = `sysRR (mmHg)`))+
 
 #### *Indexing*
 
-*The same rules as for the data frame, but more consistent behavior.*
+The same rules as for the data frame, but more consistent behavior.
 
 ```{r}
 rawdata[1:5,1:2]
@@ -492,15 +497,15 @@ rawdata[[6]]
 rawdata$`Family name`
 ```
 
-*Differences in addressing data frames and tibbles:*
+Differences in addressing data frames and tibbles:
 
--   *tibble and `[` always returns tibble*
+-   tibble and `[` always returns tibble
 
--   *tibble and `[[` always returns vector*
+-   tibble and `[[` always returns vector
 
--   *data.frame and `[` may return data.frame (if \>1 column) or vector*
+-   data.frame and `[` may return data.frame (if \>1 column) or vector
 
--   *data.frame and `[[` always returns vector*
+-   data.frame and `[[` always returns vector
 
 ```{r}
 rawdata_df <- as.data.frame(rawdata)
@@ -514,7 +519,7 @@ rawdata_df[,2] #returns vector
 rawdata_df[,2:3] #returns DF with 2 columns
 ```
 
-*There are specific functions for picking columns or rows, especially useful in pipes.*
+There are specific functions for 'picking' columns or rows, especially useful in pipes.
 
 ```{r}
 rawdata |> select(PatID:Ethnicity,`sysRR (mmHg)`:HR)
@@ -529,23 +534,23 @@ rawdata |> pull(`sysRR (mmHg)`)
 
 ```
 
-*Exercise: Think of a cruet_stand / Gewürzmenage*
+Exercise: Think of a cruet_stand / Gewürzmenage
 
--   *define n_elements \<- 5\*10\^3*
+-   define n_elements \<- 5\*10\^3
 
--   *create a tibble "menage" with columns saltshaker, peppercaster and n_elements each for saltgrain and pepperflake*
+-   create a tibble "menage" with columns saltshaker, peppercaster and n_elements each for saltgrain and pepperflake
 
--   *print saltshaker*
+-   print saltshaker
 
--   *print salt*
+-   print salt
 
--   *print 100 saltgrains*
+-   print 100 saltgrains
 
 ![](../Graphs/menage.jpg)
 
 ### *List*
 
-*While matrix, data.frames, and tibbles always have the same number of rows for each column, sometimes different lengths are required. A list can handle all kinds of data with different number of elements for each sublist. This is a typical output format for statistical functions and is useful for collecting e.g. result tables or figures. Package rlist provides useful tools.*
+While matrix, data.frames, and tibbles always have the same number of rows for each column, sometimes different lengths are required. A list can handle all kinds of data with different number of elements for each sublist. This is a typical output format for statistical functions and is useful for collecting e.g. result tables or figures. Package rlist provides useful tools.
 
 #### *Creation*
 
@@ -583,15 +588,15 @@ t_out |> pluck("p.value")
 
 ### *Loops*
 
-*Repetitive tasks like computation of descriptive statistics over many variables or repeated simulations of data can be declared inside of a loop. There are functions (like summarize(across(...))) that create those repetitions internally, but often doing this explicitly improves readability or helps solving various tasks like describing AND plotting data.*
+Repetitive tasks like computation of descriptive statistics over many variables or repeated simulations of data can be declared inside of a loop. There are functions (like summarize(across(...))) that create those repetitions internally, but often doing this explicitly improves readability or helps solving various tasks like describing AND plotting data.
 
 #### *for-loop*
 
-*In a for-loop, we can define the number of runs in advance, e.g. by the number of variables to describe. There are 2 ways/styles, how to define this number:*
+In a for-loop, we can define the number of runs in advance, e.g. by the number of variables to describe. There are 2 ways/styles, how to define this number:
 
-1.  *by creating an index variable with an integer vector 1,2,3, ... number of runs/variables*
+1.  by creating an index variable with an integer vector 1,2,3, ... number of runs/variables
 
-2.  *by creating an index containing e.g. colnames*
+2.  by creating an index containing e.g. colnames
 
 ```{r}
 # integer index
@@ -626,7 +631,7 @@ for(col_i in seq_len(0)){
 
 #### *while-loops*
 
-*If not number of repetitions is know, but a condition.*
+If not number of repetitions is know, but a condition.
 
 ```{r}
 test <- 0
@@ -640,7 +645,7 @@ while(test<10){
 
 #### *if else*
 
-*We can run code if condition(s) are true:*
+We can run code if condition(s) are true:
 
 ```{r}
 sex<-"female"
@@ -682,7 +687,7 @@ any(all(sex=="female",age<=12),
 
 #### *ifelse*
 
-*We can get text conditionally:*
+We can get text conditionally:
 
 ```{r}
 test <- "female"
@@ -708,7 +713,7 @@ paste0("That is ",
 
 #### *case_when / case_match*
 
-*When there are many tests to do, case_when or case_match are nice replacements for ifelse. While case_when allows complex conditions, case_match is used for for simple comparisons:*
+When there are many tests to do, case_when or case_match are nice replacements for ifelse. While case_when allows complex conditions, case_match is used for for simple comparisons:
 
 ```{r}
 rawdata <- mutate(.data = rawdata,

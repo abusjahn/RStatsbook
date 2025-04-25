@@ -1,8 +1,6 @@
 # Linear discriminant analysis LDA
 
-LDAs are used to find a linear combination of features that characterizes or separates two or more classes of objects or events. The resulting combination may be used as a linear classifier, or, more commonly, for dimensionality reduction before later classification.
-LDA is comparable to PCA, but instead of finding the component axes that maximize the variance of our data (PCA), we are interested in the axes that maximize the separation between multiple classes (LDA).
-
+LDAs are used to find a linear combination of features that characterizes or separates two or more classes of objects or events. The resulting combination may be used as a linear classifier, or, more commonly, for dimensionality reduction before later classification. LDA is comparable to PCA, but instead of finding the component axes that maximize the variance of our data (PCA), we are interested in the axes that maximize the separation between multiple classes (LDA).
 
 ```{r}
 pacman::p_load(conflicted,
@@ -16,7 +14,9 @@ pacman::p_load(conflicted,
 )
 
 # conflict_scout()
-conflicts_prefer(dplyr::select,dplyr::filter)
+conflicts_prefer(dplyr::select,
+                 dplyr::filter,
+                 palmerpenguins::penguins)
 rawdata <- penguins |> 
   na.omit()
 rawdata <- mutate(rawdata,
@@ -108,4 +108,3 @@ lda_pred <- predict(lda_out)
 confusionMatrix(lda_pred$class,bordeaux$quality)
 
 ```
-

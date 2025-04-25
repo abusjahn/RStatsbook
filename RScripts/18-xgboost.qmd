@@ -11,8 +11,10 @@ pacman::p_load(conflicted,
                easystats, 
                yardstick,# model performance
                xgboost)  # XGBoost
-conflicts_prefer(dplyr::filter,
-                 dplyr::lag)
+conflicts_prefer(dplyr::slice, 
+                 dplyr::filter,
+                 dplyr::lag,
+                 palmerpenguins::penguins)
 
 rawdata <- penguins |> 
   na.omit() |> 

@@ -1,6 +1,12 @@
 # Principal Components Analysis
 
 ```{r}
+if(!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+if(!requireNamespace("PCAtools", quietly = TRUE)) {
+  BiocManager::install("PCAtools")
+}
 # BiocManager::install("PCAtools")
 pacman::p_load(conflicted,
                tidyverse,
@@ -14,8 +20,11 @@ pacman::p_load(conflicted,
                caret)
 
 # conflict_scout()
-conflicts_prefer(dplyr::slice, dplyr::filter, 
-stats::screeplot,stats::biplot)
+conflicts_prefer(dplyr::slice, 
+                 dplyr::filter, 
+                 stats::screeplot,
+                 stats::biplot,
+                 palmerpenguins::penguins)
 rawdata <- penguins |> 
   na.omit()
 rawdata <- mutate(rawdata,

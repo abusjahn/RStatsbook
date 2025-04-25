@@ -16,7 +16,8 @@ conflicts_prefer(
   dplyr::filter(),
   ggplot2::alpha,
   dplyr::combine,
-  dplyr::slice)
+  dplyr::slice,
+  palmerpenguins::penguins)
 rawdata <- penguins |> 
   na.omit()
 predvars <- ColSeeker(namepattern = c('_mm','_g'))

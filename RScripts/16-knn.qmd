@@ -26,8 +26,9 @@ pacman::p_load(conflicted,
                yardstick)  # model performance
 
 # conflict_scout()
-conflict_prefer('slice','dplyr')
-conflict_prefer("filter", "dplyr")
+conflicts_prefer(dplyr::slice, 
+                 dplyr::filter,
+                 palmerpenguins::penguins)
 
 ```
 

@@ -2,6 +2,12 @@
 
 Descriptive statistics are used to summarize and organize data in a manner that is meaningful and useful. They provide simple summaries about the sample and the measures, such as mean, median, standard deviation, or frequencies. Furthermore, they allow for the presentation of quantitative descriptions in a manageable form, aiding in understanding the data distribution and central tendency. For group comparisons, they will inform about direction and magnitude of differences.
 
+## Typical descriptives
+
+-   *mean() / sd() / meansd()*
+-   *median() / quantile() / median_quart()*
+-   *table() / prop.table() / cat_desc_stats()*
+
 ## Reading in data
 
 ```{r}
@@ -27,6 +33,25 @@ ggplot(rawdata,aes(`sysBP V0`, `diaBP V0`))+
 ```
 
 ## Gaussian variables
+
+
+## A little theory
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Sample size n:** per variable, if there are NAs |  |
+| **Mean**: central tendency, the expected *typical* value | $$\frac{\sum{x}}{n}$$ |
+| **Variance**: measure for variability/heterogeneity of data | $$\frac{\sum{(x-mean)^2}}{n-1}$$ |
+| **Standard deviation SD**: the *typical* weighted deviation from the mean | $$\sqrt{Var}$$ |
+
+ 
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Standard error of the mean SEM**: how reliable is the mean *estimate*, what would be the expected SD of means from repeated experiments? | $$\frac{SD}{\sqrt{n}}$$ |
+| **Median**: Split between lower/upper 50% of data |  |
+| **Quartiles**: Split at 25%/50%/75% of data (more general: **Quantiles**, e.g.**Percentiles**), used in boxplot | various computational approaches |
+
 
 ### Simple function calls
 
@@ -60,6 +85,7 @@ meanse(rawdata$`Size (cm)`, roundDig = 4)
 \newpage
 
 ## Ordinal variables
+Mean and SD describe symmetric distributions, but are not appropriate for ordinal data. For non-gaussian measurements, median and quartiles are more appropriate. When the distribution is known (e.g. Poisson for count data, other descriptives like lambda may be more informative).
 
 ```{r}
 median(rawdata$`Size (cm)`)
@@ -107,7 +133,7 @@ rawdata |>
 
 ## Summarize data
 
-When creating tables with descriptive statistics, you usually report on more than just 1 variable in more than just 1 subgroup, and there may be more than 1 statistics to report. `Summarize()`, often in combination with `across()`, makes that task easier, usually in a pipeline:
+When creating tables with descriptive statistics, you usually report on more than just 1 variable in more than just 1 subgroup, and there may be more than 1 statistics to report. `Summarize()`, often in combination with `across()`, makes that task easier, usually in a pipeline. As the output will contain (n variables) * (n functions), wide to long pivoting often will be used. (More on this in the next chapter):
 
 ```{r}
 # we pipe the data
@@ -133,7 +159,6 @@ rawdata |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit") 
 ```
-
 
 ```{r}
 rawdata |> 

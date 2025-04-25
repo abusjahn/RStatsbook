@@ -1,5 +1,13 @@
 # Changing structure wide \<--\> long
 
+There are many examples and explanations in the tidyR cheatsheet
+
+[https://rstudio.github.io/cheatsheets/html/tidyr.html](https://rstudio.github.io/cheatsheets/html/tidyr.html){target="_blank"}
+
+and the vignette:
+
+[https://tidyr.tidyverse.org/articles/pivot.html](https://tidyr.tidyverse.org/articles/pivot.html){target="_blank"}
+
 When working with repeated measures (e.g. follow-ups or changes over shorter periods of time) there are two typical formats:
 
 1.  wide data:
@@ -22,10 +30,6 @@ When working with repeated measures (e.g. follow-ups or changes over shorter per
     | P3  | 2    |      |      |
 
 While long data can be seen as the tidier version and is necessary for many statistical procedures, the wide format makes computation of differences and procedures as the t-test for dependent samples easier. Package tidyr provides the functions pivot_wider and pivot_longer for conversations between those forms. Another use-case is the plotting of several variables into ggplot facets, which can be achieved by combining those variables into a single column. Summarizing several variables and grouped data may result in a wide table with groups as rows and variables as columns, contrary to the common opposite form, another use-case.
-
-There are many examples and explanations in the vignette:
-
-[https://tidyr.tidyverse.org/articles/pivot.html](https://tidyr.tidyverse.org/articles/pivot.html){target="_blank"}
 
 ```{r}
 pacman::p_load(conflicted,tidyverse, wrappedtools)
@@ -71,8 +75,10 @@ long_data <- pivot_wider(very_long_data,
                          names_from = Variable,
                          values_from = Value)
 long_data
+```
 
-# alternatively in 1 step:
+Alternatively in 1 step, value column names will be extracted from parts of the wide colnames. This requires eiter a name pattern or a separator: 
+```{r}
 long_data <- pivot_longer(
   data=wide_data,
   cols=contains("Time"),

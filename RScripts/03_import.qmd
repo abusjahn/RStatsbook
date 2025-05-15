@@ -11,6 +11,11 @@ There are base functions like read.csv() and tidyverse-based updated ones like r
 
 ```{r}
 rawdata <- read_csv2(here("data/Medtest_e.csv"))
+Medtest_e <- read_delim("data/Medtest_e.csv", 
+    delim = ";", escape_double = FALSE, locale = locale(date_names = "de", 
+        decimal_mark = ",", grouping_mark = "."), 
+    trim_ws = TRUE)
+View(Medtest_e)
 ```
 
 ## Import from Excel
@@ -82,7 +87,7 @@ import1 <- read.spss(file = here("data/Zellbeads.sav"),
                      to.data.frame = TRUE,
                      use.value.labels = TRUE)
 str(import1)
-
+as_tibble(import1)
 import2 <- read_sav(file = here("data/Zellbeads.sav"))
 str(import2$Bedingung)
 attr(import2$Bedingung,"labels")

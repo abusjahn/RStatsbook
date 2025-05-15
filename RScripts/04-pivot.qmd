@@ -77,7 +77,8 @@ long_data <- pivot_wider(very_long_data,
 long_data
 ```
 
-Alternatively in 1 step, value column names will be extracted from parts of the wide colnames. This requires eiter a name pattern or a separator: 
+Alternatively in 1 step, value column names will be extracted from parts of the wide colnames. This requires eiter a name pattern or a separator:
+
 ```{r}
 long_data <- pivot_longer(
   data=wide_data,

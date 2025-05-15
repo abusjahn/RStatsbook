@@ -12,7 +12,8 @@ pacman::p_load(conflicted, tidyverse,here,
                wrappedtools,
                emojifont,
                patchwork)
-conflicts_prefer(dplyr::filter) # solves name conflict 
+conflicts_prefer(dplyr::filter,
+                 ggplot2::mean_cl_boot) # solves name conflict 
 ```
 
 ```{r}
@@ -370,7 +371,7 @@ plot_tmp + facet_grid(rows = vars(gear),
                    cols = vars(cyl))
 cat("facet labeling improved:\n")
 plot_tmp + facet_grid(rows = vars(gear),
-                   cols = vars(cyl),
+                   cols = vars(cyl,am),
                    labeller=label_both,margins="gear")
 # options(warn=-1) 
 plot_tmp + geom_smooth(method="lm")+
@@ -379,6 +380,12 @@ plot_tmp + geom_smooth(method="lm")+
              labeller=label_both, margins=TRUE)
 # options(warn=0)
 
+ggplot(diamonds,aes(carat,price))+
+  geom_point(alpha=.2)+
+  geom_smooth()+
+  facet_grid(rows = vars(clarity),
+             cols = vars(cut),
+             margins=TRUE)
 ```
 
 ### facet_wrap
@@ -390,7 +397,7 @@ plot_tmp + facet_wrap(facets = vars(cyl))
 plot_tmp + facet_wrap(facets = vars(cyl), ncol=2)
 
 # empty combination is dropped
-plot_tmp + facet_wrap(facets=vars(cyl,gear),labeller=label_both) 
+plot_tmp + facet_wrap(facets=vars(cyl,gear,am),labeller=label_both) 
 
 #combining variables
 mtcars |> 
@@ -445,7 +452,7 @@ plottemp+stat_summary(fun.data="mean_cl_boot",
                       fun.args=list(B=10^4),
                       color="red")+
   geom_label(data=means,
-             aes(factor(gear),mean,label=mean),
+             aes(factor(gear),mean,label=round(mean)),
              hjust=1.2)+
   ylab("mpg (mean \u00b1 95% CI)")+
   xlab("Gear")
@@ -468,7 +475,7 @@ Package ggsign makes it easier to add significance brackets (no more photoshoppi
 ```{r}
 # ggsign ####
 p <- round(
-  wilcox.test(mtcars$mpg~mtcars$am)$p.value,
+  wilcox.test(mtcars$mpg~mtcars$am, exact = FALSE)$p.value,
   5)
 (plottemp <- ggplot(mtcars,aes(as.factor(am),mpg))+
     geom_boxplot())
@@ -507,7 +514,8 @@ ggplot(diamonds,aes(clarity, price))+
               map_signif_level = TRUE,
               extend_line = -.005)+
   ggtitle("nominal p-values!!")+
-  scale_y_continuous(expand = expansion(mult=c(0.05,.1)))
+  scale_y_continuous(expand = expansion(mult=c(0.05,.1)))+
+  labs(caption = "+ \u226410%, * \u22645%, ** \u22641%, *** \u22640.1%")
 
 ```
 
@@ -586,10 +594,28 @@ p3 <- ggplot(mtcars) +
   
 ```
 
+## ggplots in loops
+
+inside aes(), ggplot expects variables referring to columns in the data. In a loop, the loop index is often a character representation of a column name. So inside aes(), there is a variable containing a variable name. To make that work, we use .data as a reference to the data ggplot is working on, and the loop index inside double square brackets as its index:
+
+```{r}
+for(var_i in c("mpg","wt", "qsec")){
+  plot_temp <-
+    mutate(mtcars, am = factor(am)) |> 
+    ggplot(aes(x = am, y = .data[[var_i]]))+
+    geom_boxplot()
+  print(plot_temp)
+}
+```
+
+The function aes_str(), which expected a character representantion instead of a variable name, is deprecated, but may still be suggested by chatbots
+
 [more facets...](https://www.data-imaginist.com/2019/a-flurry-of-facets/)
 
 [animations...](https://github.com/thomasp85/gganimate)
 
 ```{r}
 GGally::ggpairs(mtcars)
+GGally::ggpairs(mtcars)
+
 ```

@@ -57,9 +57,9 @@ ggpairs(rawdata |> select(species, sex,
         aes(color=species,alpha=.5))
 ```
 
-## two variable example
+[Video on PCA](https://www.youtube.com/watch?v=FgakZw6K1QQ&t=1s&ab_channel=StatQuestwithJoshStarmer)
 
-https://www.youtube.com/watch?v=FgakZw6K1QQ&t=1s&ab_channel=StatQuestwithJoshStarmer
+## Two variable example
 
 ```{r}
 predvars2 <- ColSeeker(namepattern = c('body','flipper'))
@@ -192,7 +192,7 @@ autoplot(pca_out, data=rawdata, colour='species',
 
 pca_out$x |> 
   as_tibble() |> 
-  cbind(rawdata) |> 
+  bind_cols(rawdata) |> 
   ggplot(aes(PC1,PC3,color=species))+
   geom_point()
 
@@ -233,7 +233,7 @@ pca_out$x |>
                        name = "Loading",
                        breaks = seq(-3,10,1)/2.5))+
   scale_x_continuous(expand=expansion(
-    mult = c(.1,.75)),
+    mult = c(.1,.25)),
     breaks=seq(-10,10,1),
     sec.axis = sec_axis(
       ~(./2.5), name = "Loading",

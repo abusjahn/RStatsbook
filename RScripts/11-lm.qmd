@@ -238,6 +238,8 @@ glht_out <-
   summary(glht(model=lmOut_additive,
                linfct=mcp(Treatment='Dunnett')))
 glht_out$test$pvalues
+tidy(glht_out) |> 
+  select(-null.value)
 summary(glht(model=lmOut_additive,
              linfct=mcp(Treatment='Tukey')))
 DescTools::DunnettTest(Growth~Passage_F,data=rawdata)

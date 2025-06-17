@@ -38,7 +38,7 @@ In the penguin data set, the four numerical variables related to body are `bill_
 
 ```{r}
 rawdata <- penguins |> 
-  na.omit()
+  drop_na()
 rawdata <- mutate(rawdata,
                   ID=paste('P', 1:nrow(rawdata))) |> 
   select(ID, everything())
@@ -57,13 +57,13 @@ rawplot <-
              color=species))+
   geom_point()  
 rawplot
-# cat("<br\n\n")
+
 rawplot+
   geom_mark_hull(expand = unit(2.5,'mm'))
-# cat("<br\n\n")
+
 rawplot+
   geom_mark_ellipse(expand = unit(2.5,'mm'))
-# cat("<br\n\n")
+
 rawplot+
   geom_hline(yintercept = 206)+
   geom_vline(xintercept = 44)
@@ -201,9 +201,9 @@ pred_all <- predict(knn_out,newdata = rawdata) |>
   as_tibble() |> 
   bind_cols(rawdata) |> 
   mutate(predicted= case_when(
-    Adelie>Chinstrap & Adelie>Gentoo ~ 'Adelie', 
+    Adelie>=Chinstrap & Adelie>=Gentoo ~ 'Adelie', 
     Chinstrap>Adelie & Chinstrap>Gentoo ~ 'Chinstrap',
-    Gentoo>Adelie & Gentoo>Chinstrap ~ 'Gentoo') |> 
+    Gentoo>=Adelie & Gentoo>=Chinstrap ~ 'Gentoo') |> 
       factor())
 
 # Alternative approach to prediction
@@ -240,7 +240,7 @@ ggplot(rawdata, aes(bill_length_mm_std,flipper_length_mm_std, color=sex,shape=sp
 
 ### Adding predictor variables
 
-Now we'll try to predict the sex based on body measures and species.
+Now we'll try to predict the sex based on body measures and species. Species will be automatically recoded using one-hot encoding.
 
 ```{r}
 knn_out <- 
@@ -255,8 +255,8 @@ rawdata <-
 rawdata |> 
   pivot_longer(c(female,male), 
                values_to = 'p sex', 
-               names_to = 'Sex') |> 
-  ggplot(aes(Sex,`p sex`))+ 
+               names_to = 'Sex predicted') |> 
+  ggplot(aes(`Sex predicted`,`p sex`))+ 
   geom_violin()+ 
   geom_beeswarm(cex = .25, alpha=.25)+ 
   facet_grid(rows = vars(sex))

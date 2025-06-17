@@ -13,8 +13,8 @@ pacman::p_load(car, # Anova()
 
 ## Odds vs. probability
 
-Probabilities are usually expressed xx%, 20% risk for rain means that on 20 out of 100 days like this it rains.  Odds are expressed as xx:yy, 20:80 means that on 20 out of 100 days like this it rains, while on 80 days it does not. The odds are calculated as p/(1-p), where p is the probability. The log odds are calculated as log(odds).   
-For many traits it is reasonable to assume a sigmoidal relationship between a risk (like LDL cholesterol) and the probability of an outcome like myocardial infarction. Those probabilities are restrained between 0 and 1. The odds are restrained at 0 but have not upper bound. The log odds are not restrained and are linearly related to the risk increase. While this may cause mental knots, it is useful mathematically and forms the basis for logistic regression, a generalized linear model for outcomes with binomial distribution.  
+Probabilities are usually expressed xx%, 20% risk for rain means that on 20 out of 100 days like this it rains. Odds are expressed as xx:yy, 20:80 means that on 20 out of 100 days like this it rains, while on 80 days it does not. The odds are calculated as p/(1-p), where p is the probability. The log odds are calculated as log(odds).\
+For many traits it is reasonable to assume a sigmoidal relationship between a risk (like LDL cholesterol) and the probability of an outcome like myocardial infarction. Those probabilities are restrained between 0 and 1. The odds are restrained at 0 but have not upper bound. The log odds are not restrained and are linearly related to the risk increase. While this may cause mental knots, it is useful mathematically and forms the basis for logistic regression, a generalized linear model for outcomes with binomial distribution.
 
 ```{r}
 #| echo: false
@@ -90,7 +90,7 @@ logreg_out
     mutate(p.value=formatP(p.value,ndigits = 5))) 
 ## test each OR 
 (sum_out <- summary(logreg_out))
-
+# broom::tidy(logreg_out)
 ```
 
 ## Create structure for ggplot
@@ -173,20 +173,51 @@ rawdata |>
 ```
 
 ```{r}
-ORhuman <- 
-  paste0(map_chr(ORs,roundR),' (', 
-         apply(CIs,MARGIN = 1, 
-               FUN=function(x){ 
-                 paste(roundR(x),collapse=' / ')}), ')') 
-ORreport <- tibble(Predictor=rownames(CIs)[-1], 
-                   OR=ORs[-1], 
-                   low=CIs[-1,1], 
-                   high=CIs[-1,2], 
-                   `OR (CI95)`=NA) 
-ORrounded <- apply(ORreport[,2:4],MARGIN = 1,roundR) 
-ORreport$`OR (CI95)` <-
-  paste0(ORrounded[1,],' (',ORrounded[2,],'/',
-         ORrounded[3,],')')
+# ORhuman <- 
+# tibble(
+#   Predictor=names(ORs),
+#   OR=ORs,
+#   OR_low=CIs[,1],
+#   OR_high=CIs[,2]) |> 
+#   rowwise() |> 
+#   mutate(across(-Predictor,
+#                 ~roundR(.x,level = 3)),
+#          `OR(CI)` = paste0(OR," (",OR_low," / ",OR_high,")")) |> 
+#   ungroup() |> 
+#   pull(`OR(CI)`)
+
+# ORhuman <- 
+#   paste0(map_chr(ORs,roundR),' (', 
+#          apply(CIs,MARGIN = 1, 
+#                FUN=function(x){ 
+#                  paste(roundR(x),collapse=' / ')}), ')') 
+ORreport <- 
+  tibble(
+  Predictor=names(ORs),
+  OR=ORs,
+  OR_low=CIs[,1],
+  OR_high=CIs[,2]) |> 
+  rowwise() |> 
+  mutate(across(-Predictor,
+                ~roundR(.x,level = 3)),
+         `OR(CI)` = paste0(OR," (",OR_low," / ",OR_high,")")) |> 
+  ungroup()
+  
+#   
+#   tibble(Predictor=rownames(CIs)[-1], 
+#                    OR=ORs[-1], 
+#                    low=CIs[-1,1], 
+#                    high=CIs[-1,2], 
+#                    `OR (CI95)`=NA) 
+# ORrounded <- apply(ORreport[,2:4],MARGIN = 1,roundR) 
+# ORreport$`OR (CI95)` <-
+#   paste0(ORrounded[1,],' (',ORrounded[2,],'/',
+#          ORrounded[3,],')')
+# 
+ORreport |>   
+  flextable::flextable() |> 
+  flextable::set_table_properties(width = 1,layout = 'autofit')
+cat('&nbsp;\n\n')
 ```
 
 ## Regression tree as alternative to glm

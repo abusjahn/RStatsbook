@@ -64,7 +64,7 @@ prediction <- predict(xgb_out,boostdata) |>
                        Gentoo>Chinstrap ~ 'Gentoo') |> 
            factor())
 
-slice_sample(prediction, n=10)
+slice_sample(prediction, n=20)
 ```
 
 ```{r}

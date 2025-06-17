@@ -134,7 +134,7 @@ resamps <- resamples(list(knn = knnfit,
                           bayes=bayesfit,
                           nn=nnfit))
 summary(resamps)
-resamps$values |> head()
+resamps$values |> head(10)
 resamps$values |> 
   pivot_longer(contains('~'),
                names_to = c('Model','Measure'),

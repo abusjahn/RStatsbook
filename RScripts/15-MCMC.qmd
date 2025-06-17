@@ -159,7 +159,7 @@ ggplot(moves_from_to_stay,aes(County,count, fill=move))+
   geom_col()+
   scale_fill_manual(values=c('red','blue','green'))+
   ggtitle('Moves from, to, and stay')
-# cat("<br\n\n")
+
 
 ggplot(visits,aes(.data[[pop_selected]],Visits))+
   geom_smooth(method='lm')+
@@ -172,7 +172,7 @@ ggplot(visits,aes(.data[[pop_selected]],Visits))+
   scale_x_continuous(breaks=seq(0,10^5,10^4))+
     scale_y_continuous(breaks=seq(0,10^5,10^3))+
   ggtitle('Only moves after burn-in analyzed')
-# cat("<br\n\n")
+
 
 ```
 
@@ -243,7 +243,7 @@ arrow_data <-
 #        caption = "inner arrows: moves to left neighbor,\nouter arrows: moves to right neighbor") +  # Add title and remove axis labels
 #   guides(size="none", linewidth="none")+
 #   theme_void()  # Remove background gridlines
-# # cat("<br\n\n")
+
 
 # Create ggplot with circle and labels
 ggplot(circle_data, aes(x = x, y = y)) +

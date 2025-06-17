@@ -2,7 +2,7 @@
 
 ```{r}
 pacman::p_load(conflicted,tidyverse,car,multcomp,wrappedtools, broom)
-conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::select, dplyr::filter)
 ```
 
 For a better understanding, data with defined effect size and interactions will be simulated and analyzed.
@@ -49,7 +49,7 @@ summary(glht(model=lmout,
 ## Age effect, no treatment effect, interaction treatment\*agegroup
 
 ```{r}
-set.seed(101)
+set.seed(1010)
 rawdata <- tibble(
   Agegroup=factor(
     rep(c('young','middle','old'),each=40),
@@ -62,6 +62,21 @@ rawdata <- tibble(
     (Agegroup=='middle')*20+
     (Agegroup=='old')*20)
 ggplot(rawdata,aes(x=Agegroup,y=Outcome,
+                   fill=Treatment))+
+  # geom_boxplot()+
+  ggbeeswarm::geom_beeswarm(dodge.width = .75, alpha=.5)+
+  stat_summary(aes(color=Treatment), fun.data= mean_cl_normal,
+               position=position_dodge(width = .75))+
+  ylab("Outcome (mean \u00b1 95% CI)")
+rawdata |> filter(Agegroup == "young") |> 
+  ggplot(aes(x=Agegroup,y=Outcome,
+                   fill=Treatment))+
+  ggbeeswarm::geom_beeswarm(dodge.width = .75, alpha=.5)+
+  stat_summary(aes(color=Treatment), fun.data= mean_cl_normal,
+               position=position_dodge(width = .75))+
+  ylab("Outcome (mean \u00b1 95% CI)")
+rawdata |> filter(Treatment== "sham") |> 
+  ggplot(aes(x=Agegroup,y=Outcome,
                    fill=Treatment))+
   # geom_boxplot()+
   ggbeeswarm::geom_beeswarm(dodge.width = .75, alpha=.5)+

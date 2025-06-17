@@ -37,14 +37,14 @@ ggplot(rawdata,aes(`sysBP V0`, `diaBP V0`))+
 ## A little theory
 
 |  |  |
-|----|----|
+|------------------------------------|------------------------------------|
 | **Sample size n:** per variable, if there are NAs |  |
 | **Mean**: central tendency, the expected *typical* value | $$\frac{\sum{x}}{n}$$ |
 | **Variance**: measure for variability/heterogeneity of data | $$\frac{\sum{(x-mean)^2}}{n-1}$$ |
 | **Standard deviation SD**: the *typical* weighted deviation from the mean | $$\sqrt{Var}$$ |
 
 |  |  |
-|----|----|
+|------------------------------------|------------------------------------|
 | **Standard error of the mean SEM**: how reliable is the mean *estimate*, what would be the expected SD of means from repeated experiments? | $$\frac{SD}{\sqrt{n}}$$ |
 | **Median**: Split between lower/upper 50% of data |  |
 | **Quartiles**: Split at 25%/50%/75% of data (more general: **Quantiles**, e.g.**Percentiles**), used in boxplot | various computational approaches |
@@ -125,7 +125,7 @@ rawdata |>
   align(i = ~`n (%)`!=" ",j = 1,align = "right") |> 
   width(j = c(1,2),width = c(3,4),unit = "cm") |> 
   bg(~`n (%)`==" ", bg='lightgrey')
-# cat("&nbsp;\n\n")
+
 ```
 
 ## Summarize data
@@ -161,9 +161,9 @@ rawdata |>
 rawdata |> 
   group_by(Testmedication,Sex) |> 
   summarise(WeightSummary=meansd(`Weight (kg)`,add_n = TRUE),
-            .groups="keep") |> 
+            .groups="drop") |> 
   flextable()
-# # cat("<br\n\n")
+
 
 rawdata |> 
   group_by(Sex) |> 
@@ -173,7 +173,7 @@ rawdata |>
                names_to="Measure") |> 
   pivot_wider(names_from=Sex) |> 
   flextable()
-# # cat("<br\n\n")
+
 rawdata |> 
   group_by(Sex) |> 
   summarize(across(gaussvars$names,
@@ -196,14 +196,18 @@ rawdata |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit") 
 
-# # cat("<br\n\n")
+
 
 compare2numvars(data = rawdata,
                 dep_vars = c( "Size (cm)","Weight (kg)",
                               "sysBP V0","diaBP V0"),
                 indep_var = "Sex",
                 gaussian = TRUE) |> 
+  # select(-desc_all, -p) |>
+  rename(overall = desc_all) |>
+  rename_with(.fn = ~str_remove(.x,"Sex ")) |>
+  rename_with(.cols = "p", .fn = ~paste(.x,"- value")) |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
-# cat("<br\n\n")
+
 ```

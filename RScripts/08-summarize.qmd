@@ -28,17 +28,19 @@ summarize(MeanSD=meansd(mpg),
           .groups = 'drop') |>
   pivot_wider(names_from = am,
               values_from = MeanSD,
-              names_glue = "am: {am}\n{.value}") |>
-  flextable()
+              names_glue = "am ({.value}): {am}") |>
+  flextable() |> 
+  separate_header(split = ": ")
 ```
 
 1 variable / 2 functions / no groups
 
 ```{r}
 summarize(.data = mtcars,
-          `MeanSD mpg`=meansd(mpg),
-          `MedianQuartiles mpg`=median_quart(mpg)) |> 
-  flextable()
+          `MeanSD mpg`=meansd(mpg,roundDig = 3),
+          `MedianQuartiles mpg`=median_quart(mpg,roundDig = 3)) |> 
+  flextable() |> 
+  set_table_properties(width=.7, layout="autofit") 
 ```
 
 1 variable / 2 functions / subgroups
@@ -74,12 +76,14 @@ summarize(`MeanSD mpg`=meansd(mpg),
 mtcars |> 
   summarize(across(.cols = c(mpg,disp),
                    .fns=meansd)) |> 
-  flextable()
+  flextable() |> 
+  set_table_properties(width=.7, layout="autofit") 
 # with function arguments
 mtcars |> 
   summarize(across(.cols=c(mpg,disp),
-                   .fns=~meansd(.x,add_n = TRUE))) |> 
-  flextable()
+                   .fns=~meansd(.x,add_n = TRUE,range = TRUE))) |> 
+  flextable() |> 
+  set_table_properties(width=.7, layout="autofit") 
 
 # Variables in rows
 mtcars |> 
@@ -101,7 +105,8 @@ mtcars |>
   summarize(across(c(mpg,disp),
                    ~meansd(.x,add_n = TRUE)),
             .groups = 'drop') |> 
-  flextable()
+  flextable() |> 
+  set_table_properties(width=.7, layout="autofit") 
 
 # Variables in rows
 mtcars |> 

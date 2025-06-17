@@ -89,10 +89,10 @@ bordeaux <- readxl::read_excel(here('Data/bordeaux.xlsx')) |>
 lda_formula <- paste('quality',
                      paste(c('temperature', 'sun',
                              'heat', 'rain'), collapse='+'),
-                     sep='~') |> 
-  as.formula()
+                     sep='~') #|> 
+  # as.formula()
 
-lda_out <- lda(lda_formula, data=bordeaux)
+lda_out <- lda(as.formula(lda_formula), data=bordeaux)
 lda_out$prior
 lda_out$svd^2 / sum(lda_out$svd^2) # explained var
 lda_out$scaling

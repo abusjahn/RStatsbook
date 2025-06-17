@@ -71,7 +71,7 @@ ggplot(importance, aes(x=Variable,y=Importancescore))+
 To make model more interesting, we add 2 more variables.
 
 ```{r}
-predvars <- ColSeeker(namepattern = c('_mm','_g'))
+predvars <- ColSeeker(namepattern = c('_mm','_g',"sex"))
 rpart_formula_4 <- paste('species',
                          paste(predvars$names,
                                collapse='+'),
@@ -83,12 +83,12 @@ traindata <- rawdata |>
   select(ID,species,sex,predvars$names) |>
   group_by(species, sex) |>
   slice_sample(prop = 2/3) |>
-  ungroup() |>
-  select(-sex)
+  ungroup() #|>
+#  select(-sex)
 
 testdata <- filter(rawdata,
                    !ID %in% traindata$ID) |>
-  select(ID,species,predvars$names)
+  select(ID,species,sex,predvars$names)
 # tree for training sample
 rpart_out_tr <- rpart(formula = rpart_formula_4,
                       data = traindata)
@@ -110,7 +110,8 @@ test_predicted <-
   mutate(predicted=
            case_when(Adelie>Chinstrap &
                        Adelie>Gentoo ~ 'Adelie',
-                     Chinstrap>max(Adelie,Gentoo) ~ 'Chinstrap',
+                     Chinstrap>Adelie &
+                       Chinstrap>Gentoo ~ 'Chinstrap',
                      Gentoo>Adelie &
                        Gentoo>Chinstrap ~ 'Gentoo') |> 
            factor())
@@ -124,7 +125,39 @@ confusionMatrix(test_predicted$predicted,
                 test_predicted$species)
 ```
 
-## Random forrests
+## RT for continuous outcomes
+
+```{r}
+rpart_out_cont <- rpart(body_mass_g~species+sex+
+                          flipper_length_mm+bill_length_mm+
+                          bill_depth_mm, 
+                        control = list(minsplit=3), 
+                        data=rawdata)
+prp(rpart_out_cont,
+       fallen.leaves = TRUE)
+rawdata <- 
+  mutate(rawdata,
+         body_mass_g_pred = predict(rpart_out_cont))
+ggplot(rawdata,aes(body_mass_g, body_mass_g_pred))+
+  geom_point()+
+  geom_smooth(method="lm")
+lm_out_cont <- lm(body_mass_g~species+sex+
+                          flipper_length_mm+bill_length_mm+
+                          bill_depth_mm, 
+                        data=rawdata)
+rawdata <- 
+  mutate(rawdata,
+         body_mass_g_lmpred = predict(lm_out_cont))
+ggplot(rawdata,aes(body_mass_g, body_mass_g_lmpred))+
+  geom_point()+
+  geom_smooth(method="lm")
+
+
+ggplot(rawdata,aes(x=species,y=body_mass_g, fill=sex))+
+  geom_boxplot()
+```
+
+## Random forrest
 
 Random forrests are an ensemble method that builds multiple decision trees and averages their predictions. This reduces the risk of overfitting and increases the accuracy of the model. The random part comes from the fact that each tree is built on a random subset of the data and a random subset of the variables. The number of trees and the number of variables to consider at each split are hyper-parameters that need to be tuned. (more on tuning in chapter caret)
 

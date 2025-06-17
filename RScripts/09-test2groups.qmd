@@ -123,7 +123,7 @@ for(group_i in seq_len(groupvars$count)){
   flextable(resulttmp)  |> 
   set_table_properties(width=1, layout="autofit") |>
   flex2rmd() #|> print()
-  # cat("<br\n\n")
+  
   cat("\\newpage\n\n")
 }
 ```
@@ -209,5 +209,6 @@ rawdata |>
   rename_with(~str_remove(.x, "Testmedication")) |> 
   rename(`Total sample`=desc_all) |> 
   flextable() |> 
-  align(~p==" ",j = 1,align = "center")
+  align(~p==" ",j = 1,align = "center") |> 
+  bg(~p!=" ",bg = "lightgrey")
 ```

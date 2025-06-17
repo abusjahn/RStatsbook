@@ -20,8 +20,8 @@ book:
     - RScripts/04-pivot.qmd
     - RScripts/05-visualize.qmd
     - RScripts/06-variableclassification.qmd
-    - RScripts/07-describe.qmd
     - RScripts/08-summarize.qmd
+    - RScripts/07-describe.qmd
     # - flextable.qmd
     - RScripts/09-test2groups.qmd
     - RScripts/10-CovCor.qmd

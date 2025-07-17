@@ -211,3 +211,21 @@ compare2numvars(data = rawdata,
   set_table_properties(width=1, layout="autofit")
 
 ```
+
+# Exercises
+
+Analyze the penguins data using summarize, functions can be any of mean/sd/median/meansd/median_quart. Result tables should be pivoted if reasonable.
+
+-   1 function / 1 variable / no groups
+
+-   2 functions / 1 variable / no groups
+
+-   2 functions / 1 variable / subgroup species
+
+-   1 function / 4 variables / no groups
+
+-   1 function / 4 variables / subgroup species
+
+-   2 functions / 4 variables / no subgroups
+
+-   2 functions / 4 variables / subgroup species

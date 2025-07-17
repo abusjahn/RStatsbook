@@ -203,28 +203,19 @@ rawdata <- rawdata |>
 rawdata |> 
   ggplot(aes(species,fill=cluster))+
   geom_bar()
-sample(clue::cl_predict(kmeans_out),10)
 rawdata |> 
   ggplot(aes(fill=species,x=cluster))+
   geom_bar(position = 'fill')+
   scale_y_continuous(name = 'Frequency', labels=scales::percent)
-sample(clue::cl_predict(kmeans_out),10)
 
 rawdata |> 
   ggplot(aes(flipper_length_mm,bill_length_mm,
              shape=species,color=cluster))+
   geom_point()
-sample(clue::cl_predict(kmeans_out),10)
-rawdata |> 
-  ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=cluster))+
-  geom_point()
-sample(clue::cl_predict(kmeans_out),10)
 
 confusionMatrix(rawdata$cluster,reference = rawdata$species |> 
                   as.numeric() |> factor(levels=c(1,3,2),
                                          labels=c(1,2,3)))
-sample(clue::cl_predict(kmeans_out),10)
 # Visualize the Clusters on a Scatter Plot using factoextra
 #    `fviz_cluster()` helps to visualize the clusters formed on a scatter plot
 #    (using PCA for dimensionality reduction if data has > 2 dimensions).
@@ -237,7 +228,6 @@ fviz_cluster(list(data = penguins_scaled, cluster = clusters),
              # xlab = "Principal Component 1",
              # ylab = "Principal Component 2",
              ggtheme = theme_minimal())
-sample(clue::cl_predict(kmeans_out),10)
 
 
 
@@ -249,17 +239,16 @@ sample(clue::cl_predict(kmeans_out),10)
 easycluster1 <- cluster_analysis(penguins_scaled,
                                  standardize = FALSE)
 print(easycluster1)
-sample(clue::cl_predict(kmeans_out),10)
+
 plot(easycluster1)
-sample(clue::cl_predict(kmeans_out),10)
 
 easycluster2 <- cluster_analysis(penguins_scaled,
                                  standardize = FALSE,
                                  method = "hclust",
                                  n = 6)
 print(easycluster2)
-sample(clue::cl_predict(kmeans_out),10)
+
 plot(easycluster2)
-sample(clue::cl_predict(kmeans_out),10)
+
 
 ```

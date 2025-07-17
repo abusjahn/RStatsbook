@@ -31,6 +31,8 @@ head(diamonds)
 head(mtcars)
 ```
 
+Exercises will be using the penguins data set from package palmerpenguins. Beware that the same data is now part of datasets, but with different column names!
+
 ## Basic structure of a ggplot call
 
 To create a figure, we at least use 2 function calls:
@@ -212,6 +214,30 @@ ggplot(mtcars, aes(wt))+
     limits = c(mean(mtcars$wt)-3*sd(mtcars$wt),
                mean(mtcars$wt)+3*sd(mtcars$wt)))
 ```
+
+## Exercise 1
+
+Vizualize the following:
+
+-   count of sex within species
+
+-   boxplot+beeswarm for weight and species
+
+-   boxplot+beeswarm weight for species AND sex
+
+-   scatterplot for flipper length vs. body mass
+
+-   add a regression line to that plot
+
+-   do the same scatterplot and regression grouped by species and sex
+
+-   optionally, define your own colors for species (scale or name or rgb)
+
+-   distribution of body mass by species and sex
+
+    -   single plot
+
+    -   facetting
 
 ## Combining and finetuning aesthetics
 

@@ -176,6 +176,20 @@ head(resulttable3)
 rm(numvars)
 ```
 
+## Exercise: Distribution of penguin measures
+
+-    Using the penguin data, testing for which numerical measures a test for a ***gaussian*** distribution is meaningful
+
+-   For those measures, test Normality in the total sample as well as for subgroups defined by species and sex
+
+    1.  single measure, all penguins, plot and test
+
+    2.  single measure, by species/sex, plot and test
+
+    3.  all measures within species, plot and test
+
+    4.  all measures within species and sex, plot and test
+
 ## Picking column names and positions
 
 Based on data inspection, testing, and background knowledge, variables can be sorted into scale levels:

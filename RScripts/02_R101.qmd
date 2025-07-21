@@ -721,7 +721,7 @@ rawdata |> select(contains("r"), -contains("rr"))
 rawdata |> pull(`sysRR (mmHg)`)
 ```
 
-### *Exercise: tibble* 
+### *Exercise: tibble*
 
 Think of a cruet_stand / Gewürzmenage
 

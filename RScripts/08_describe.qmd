@@ -37,14 +37,14 @@ ggplot(rawdata,aes(`sysBP V0`, `diaBP V0`))+
 ## A little theory
 
 |  |  |
-|------------------------------------|------------------------------------|
+|----|----|
 | **Sample size n:** per variable, if there are NAs |  |
 | **Mean**: central tendency, the expected *typical* value | $$\frac{\sum{x}}{n}$$ |
 | **Variance**: measure for variability/heterogeneity of data | $$\frac{\sum{(x-mean)^2}}{n-1}$$ |
 | **Standard deviation SD**: the *typical* weighted deviation from the mean | $$\sqrt{Var}$$ |
 
 |  |  |
-|------------------------------------|------------------------------------|
+|----|----|
 | **Standard error of the mean SEM**: how reliable is the mean *estimate*, what would be the expected SD of means from repeated experiments? | $$\frac{SD}{\sqrt{n}}$$ |
 | **Median**: Split between lower/upper 50% of data |  |
 | **Quartiles**: Split at 25%/50%/75% of data (more general: **Quantiles**, e.g.**Percentiles**), used in boxplot | various computational approaches |

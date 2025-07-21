@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2025-04-06"
+  date: "2025-07-21"
   page-footer:
     left: |
       R Intro by Andreas Busjahn

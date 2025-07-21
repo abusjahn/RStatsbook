@@ -178,7 +178,7 @@ rm(numvars)
 
 ## Exercise: Distribution of penguin measures
 
--    Using the penguin data, testing for which numerical measures a test for a ***gaussian*** distribution is meaningful
+-   Using the penguin data, testing for which numerical measures a test for a ***gaussian*** distribution is meaningful
 
 -   For those measures, test Normality in the total sample as well as for subgroups defined by species and sex
 

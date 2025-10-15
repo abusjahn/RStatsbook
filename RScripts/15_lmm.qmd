@@ -1,19 +1,25 @@
+# Linear Mixed Models
+
+Linear Mixed-Effects Models (LMMs) are statistical tools used to analyze data where observations are grouped or repeated, allowing researchers to model both **fixed effects** (effects for which an estimate/prediction and a p-value are of interest, which represent population-level averages, like treatment type) and **random effects** (effects for which usually no prediction or p-value is required, which account for variation and non-independence among the groups, like individual subjects, families, or experimental batches). In biology, LMMs are essential for analyzing longitudinal studies (e.g., tracking an animal's growth over time), repeated measure experiments (e.g., measuring gene expression in the same tissue across different conditions, or exploring experimental variation between technical replicates), and ecological studies (e.g., accounting for variation between different field sites or populations).
+
+```{r}
 pacman::p_load(conflicted,wrappedtools,car,broom,
-               multcomp,tidyverse,foreign,DescTools,
+               multcomp,tidyverse, DescTools, haven, 
                ggbeeswarm,
                lme4, nlme,merTools,
-               easystats, patchwork,here)#conflicted,
-# rayshader,av)
-pacman::p_unload(DescTools, foreign)
-# conflict_scout()
-conflict_prefer('select','dplyr')
-conflict_prefer('filter','dplyr')
-conflicts_prefer(modelbased::standardize)
-base_dir <- here::here()
+               easystats, patchwork,here)
 
-rawdata<-foreign::read.spss(file=file.path(base_dir,'Data/Zellbeads.sav'),
-                            use.value.labels=T,to.data.frame=T) |>
-  as_tibble() |>
+conflicts_prefer(modelbased::standardize,
+                 dplyr::filter,
+                 dplyr::select)
+```
+## Import / Preparation
+
+The data are the same as for the lm analyses. This time, passage effect is modeled as a random effect, as we are not interested in the effect of each passage, but want to account for the variation between passages. Future experiments are not expected to have the exact same passage differences. Passage numbers are arbitrary anyway. The numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA. 
+
+```{r}
+rawdata<-read_sav(file=here('Data/Zellbeads.sav')) |>
+  as_factor() |>
   dplyr::select(-ZahlZellen) |>
   rename(Growth=Wachstum,Treatment=Bedingung) |>
   mutate(Passage_F=factor(Passage),
@@ -21,18 +27,36 @@ rawdata<-foreign::read.spss(file=file.path(base_dir,'Data/Zellbeads.sav'),
                               Control="Kontrolle"))
 
 ggplot(rawdata,aes(Passage_F,Growth, color=Treatment))+
-  stat_summary()
+  stat_summary(fun.data = mean_se)+
+  ylab("Growth (mean\u00b1SE)")
+```
 
+\newpage
+
+## Random intercept model
+### Package nlme
+```{r}
 lme_out <- nlme::lme(Growth~Treatment, data=rawdata,
                      random = ~1|Passage_F) # RIntercept
 lme_out
 Anova(lme_out)
+```
 
+### Package lme4
+```{r}
 lmer_out <- lme4::lmer(Growth~Treatment+(1|Passage_F),
                        data=rawdata)
 
 lmer_out
 Anova(lmer_out)
+```
+
+\newpage
+
+### Visualization of fixed and random effects
+Parameters can be conveniently extracted with `model_parameters()`. The intercept is the mean of the reference group (Control), the slopes are the differences to the reference group. The random effects are deviations from the overall intercept for each passage. The overall intercept and slope are shown as dashed line, the passage-specific intercepts with identical slopes as colored lines. 
+
+```{r}
 (lmer_out_param <- model_parameters(lmer_out, group_level = T))
 
 intercept_all <- lmer_out_param$Coefficient[1]
@@ -81,14 +105,25 @@ p2  <- rawdata |>
                      minor_breaks = NULL)
 
 p1/p2+plot_layout(guides = "collect")
+```
+The regression lines for the passages are parallel but shifted, reflecting the random intercept model.
 
-#random slope
+\newpage
+
+## Random slope model
+
+```{r}
 lmer_out2 <- lme4::lmer(Growth~Treatment+
                           (1+Treatment|Passage_F),
                         data=rawdata,
                         REML=FALSE)
 lmer_out2
 Anova(lmer_out2)
+```
+
+### Visualization of fixed and random effects
+
+```{r}
 (lmer_out_param2 <- model_parameters(lmer_out2, group_level = T))
 intercept_all <- lmer_out_param2$Coefficient[1]
 slope_Ang <- lmer_out_param2$Coefficient[2]
@@ -136,3 +171,6 @@ p2  <- rawdata |>
                      labels=c("Control","Whatever"))
 
 p1/p2+plot_layout(guides = "collect")
+```
+
+This time, the Passage-related lines have individual intercepts AND slopes, indicating that the treatment effects are not exactly identical within the passages.

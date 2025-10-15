@@ -28,16 +28,17 @@ book:
     - RScripts/12_lm.qmd
     - RScripts/13_lm_interaction.qmd
     - RScripts/14_glm.qmd
-    - RScripts/15_MLintro.qmd
-    - RScripts/16_MCMC.qmd
-    - RScripts/17_knn.qmd
-    - RScripts/18_regressiontree.qmd
-    - RScripts/19_xgboost.qmd
-    - RScripts/20_caret.qmd
-    - RScripts/21_PCA.qmd
-    - RScripts/22_LDA.qmd
-    - RScripts/23_cluster.qmd
-    - RScripts/24_caret.qmd
+    - RScripts/15_lmm.qmd
+    - RScripts/16_MLintro.qmd
+    - RScripts/17_MCMC.qmd
+    - RScripts/18_knn.qmd
+    - RScripts/19_regressiontree.qmd
+    - RScripts/20_xgboost.qmd
+    - RScripts/21_caret.qmd
+    - RScripts/22_PCA.qmd
+    - RScripts/23_LDA.qmd
+    - RScripts/24_cluster.qmd
+    - RScripts/25_caret.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

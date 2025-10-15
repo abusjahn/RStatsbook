@@ -225,7 +225,6 @@ Sometimes, you might want to see all the measurements for a single individual (e
 
     -   **Hint:** Think about `id_cols`, `names_from`, and `values_from`.
 
-
 3.  **Reflect:**
 
     -   What are the new column names?
@@ -239,7 +238,6 @@ Imagine you received data from a collaborator where each time point (e.g., Day 0
 **Instructions:**
 
 1.  **Start with the wide data:** We will use the `chick_weight_wide` tibble you created in Part 1.
-
 
 2.  **Transform to Long Format:**
 

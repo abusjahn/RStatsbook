@@ -149,7 +149,7 @@ rawdata |>
                        roundR(textout = F)))) |> 
   # the wide table with n vars * n functions columns is reshaped
   pivot_longer(
-    everything(), # transform all columns into long form
+    cols = everything(), # transform all columns into long form
     names_to=c("Variable",".value"), # .value is extracting names for values
                names_sep="_") |> 
   # pipe into formatted table
@@ -172,7 +172,8 @@ rawdata |>
   pivot_longer(cols=-Sex,
                names_to="Measure") |> 
   pivot_wider(names_from=Sex) |> 
-  flextable()
+  flextable()|> 
+  set_table_properties(width=1, layout="autofit") 
 
 rawdata |> 
   group_by(Sex) |> 
@@ -210,11 +211,19 @@ compare2numvars(data = rawdata,
   flextable() |> 
   set_table_properties(width=1, layout="autofit")
 
+compare2qualvars(data = rawdata,
+                 dep_vars = factvars$names[-2],
+                 indep_var = factvars$names[2])|>
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit")
+
 ```
 
 # Exercises
 
 Analyze the penguins data using summarize, functions can be any of mean/sd/median/meansd/median_quart. Result tables should be pivoted if reasonable.
+
+Describe species and sex with appropriate statistics as well.
 
 -   1 function / 1 variable / no groups
 

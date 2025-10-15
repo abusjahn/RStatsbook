@@ -1,0 +1,260 @@
+# caret package for machine learning
+
+The caret (**C**lassification **A**nd **RE**gression **T**raining) package is a suite of functions designed to streamline the process of model training and tuning for classification and regression problems. It provides a standardized interface that abstracts away the complexities of using numerous individual R packages for machine learning, making it easier to compare and select optimal models.
+
+Key Functionality:
+
+-   **Unified Interface**: Offers a consistent workflow using the primary function train() to fit, tune, and evaluate over 250 different machine learning models, regardless of the underlying R package.
+
+-   **Model Preprocessing**: Includes tools for common data preprocessing steps like centering, scaling, principal component analysis (PCA), and feature selection.
+
+-   **Resampling Methods**: Facilitates various resampling techniques such as cross-validation, bootstrap, and subsampling for robust model performance estimation.
+
+-   **Hyperparameter Tuning**: Automates the tuning of model hyperparameters over a grid of possible values to find the combination that maximizes performance.
+
+-   **Performance Evaluation**: Provides functions for calculating and visualizing performance metrics (e.g., accuracy, RMSE, ROC curves) and comparing multiple models.
+
+```{r}
+pacman::p_load(conflicted,
+               tidyverse, broom,
+               wrappedtools, flextable,
+               palmerpenguins, tictoc,
+               ggfortify, GGally, nnet,
+               caret, randomForest, kernlab, naivebayes,
+               mlbench,
+               doParallel, future, doFuture, future.mirai)
+# conflict_scout()
+conflicts_prefer(
+  dplyr::filter,
+  ggplot2::alpha,
+  dplyr::combine,
+  dplyr::slice,
+  palmerpenguins::penguins,
+  .quiet = TRUE)
+rawdata <- penguins |> 
+  na.omit()
+predvars <- ColSeeker(namepattern = c('_mm','_g'))
+rawdata <- select(rawdata,
+                  species, predvars$names)
+```
+
+## Parallel computing setup
+
+```{r}
+# Determine the number of cores to use (it's common to leave one core free for the operating system)
+cores <- parallel::detectCores() - 1
+if(cores < 1) {
+  cores <- 1 # Ensure at least one core is used
+}
+# Create the cluster
+# makePSOCKcluster works on all operating systems (Windows, macOS, Linux)
+cl <- makePSOCKcluster(cores)
+
+# Register the cluster as the parallel backend for the 'foreach' package (which caret uses)
+registerDoParallel(cl)
+
+# Optional: Check how many workers are registered
+getDoParWorkers()
+```
+
+```{r}
+#| execute: false
+#| include: false
+registerDoFuture()
+# Use mirai_multisession and specify the number of workers (e.g., all but one core)
+# plan(mirai_multisession, workers = future::availableCores() - 1)
+plan(multisession, workers = future::availableCores() - 1)
+```
+
+
+## Define global modelling options 
+This will be applied to all models. Here we use 5-fold cross-validation repeated 20 times. Thus 100 models will be trained for each tuning parameter combination.
+
+```{r}
+ctrl <- trainControl(method = "repeatedcv", 
+                     number=5,  
+                     repeats = 20)
+```
+
+Method-specific options will be defined below for each model (`tune`).
+\newpage
+
+
+## Model tuning and training
+
+### K-Nearest Neighbors (KNN)
+```{r}
+tune <- expand.grid(k=seq(1,9,2))
+knnfit <- train(form = species~.,
+                data = rawdata,
+                preProcess = c('center','scale'),
+                method='knn',
+                metric='Accuracy',
+                trControl = ctrl,
+                tuneGrid=tune)
+```
+
+### Extreme Gradient Boosting (XGBoost)
+```{r}
+tune <- expand.grid(nrounds=c(25,50,75),
+                    max_depth=seq(2,10,2),
+                    eta=1,
+                    gamma=c(.01,.005),
+                    colsample_bytree=1,
+                    min_child_weight=1,
+                    subsample=1)
+tictoc::tic("xgb")
+xgbfit <- train(form = species~.,
+                data = rawdata,
+                # preProcess = c('center','scale'),
+                method='xgbTree',
+                # objective = "multi:softprob", # set by train
+                metric='Accuracy',
+                trControl = ctrl,
+                tuneGrid=tune,
+                verbosity = 0)
+tictoc::toc()
+```
+
+\newpage
+
+
+### Random Forest (RF)
+```{r}
+tune <- expand.grid(mtry=seq(2,3,1))
+rffit <- train(form = species~.,
+                data = rawdata,
+                # preProcess = c('center','scale'),
+                method='rf',
+                metric='Accuracy',
+                trControl = ctrl,
+               tuneGrid=tune)
+```
+
+### Linear Discriminant Analysis (LDA)
+```{r}
+ldafit <- train(form = species~.,
+                data = rawdata,
+                preProcess = c('center','scale'),
+                method='lda',
+                metric='Accuracy',
+                trControl = ctrl)
+```
+
+
+### Support Vector Machine (SVM)
+```{r}
+svmfit <- train(form = species~.,
+                data = rawdata,
+                preProcess = c('center','scale'),
+                method='svmLinear',
+                metric='Accuracy',
+                trControl = ctrl)
+```
+
+### Naive Bayes
+```{r}
+bayesfit <- train(form = species~.,
+                data = rawdata,
+                preProcess = c('center','scale'),
+                method='naive_bayes',
+                metric='Accuracy',
+                trControl = ctrl)
+```
+\newpage
+
+
+### Neural Network (NN)
+```{r}
+nnfit <- train(form=species~.,
+               data=rawdata, 
+               method="nnet",
+               preProcess=c("center","scale"),
+               metric="Accuracy",
+               trControl=ctrl)
+```
+
+## Stopping parallel computing
+```{r}
+stopCluster(cl)
+registerDoSEQ() # Optional: reverts to sequential operation
+# plan(sequential) # for mirai
+```
+## Model comparison
+
+The 100 models trained for the selected optimal tuning parameter combination are compared below.
+```{r}
+resamps <- resamples(list(knn = knnfit, 
+                          lda = ldafit,
+                          rf=rffit,
+                          xgb=xgbfit,
+                          svm=svmfit,
+                          bayes=bayesfit,
+                          nn=nnfit))
+summary(resamps) |> 
+  pluck("statistics") |> 
+  pluck("Accuracy") |> 
+  as_tibble(rownames = "Model") |>
+  mutate(across(-Model, ~round(.x,3))) |>
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit") 
+
+resamps$values |>
+  head()|>
+  select(1:7) |> 
+  mutate(across(-Resample, round,3)) |>
+  flextable() |> 
+  set_table_properties(width=1, layout="autofit") 
+
+resamps$values |> 
+  pivot_longer(contains('~'),
+               names_to = c('Model','Measure'),
+               names_sep = '~') |> 
+  ggplot(aes(Model,value))+
+  geom_boxplot(outlier.alpha = .6)+
+  facet_wrap(facets = vars(Measure),scales = 'free')
+```
+If really deemed necessary, the differences between models can be tested statistically.
+
+```{r}
+diffs <- diff(resamps, adjustment = "fdr") 
+diffs$statistics <- 
+  diffs$statistics |> 
+  map_depth(.depth =2, \(x) {
+      if (is.list(x) && "p.value" %in% names(x)) {
+        x$p.value <- formatP(x$p.value, ndigits = 2, textout = F)
+      }
+      return(x)
+    })
+diffs$statistics <- 
+  diffs$statistics |> 
+  map_depth(.depth =2, function(x) {
+      if (is.list(x) && "estimate" %in% names(x)) {
+        x$estimate <- round(x$estimate, 4)
+      }
+      return(x)
+    })
+summary(diffs)
+```
+
+## Using the best model for prediction
+While it may be advisable to rebuild the model(s) of choice with optimal tuning paramters, the results from train() can be used directly. Here we use the XGBoost model as an example.
+```{r}
+xgbfit
+xgbfit[["bestTune"]]
+
+xgbpred <- predict(xgbfit, newdata = rawdata)
+confusionMatrix(xgbpred, rawdata$species)
+# Importance
+importance_xgb <- 
+  xgboost::xgb.importance(model=xgbfit[["finalModel"]]) |> 
+  arrange(Gain) |> 
+  mutate(Feature=fct_inorder(Feature))
+importance_xgb
+importance_xgb |> 
+  ggplot(aes(Feature,Gain))+
+  geom_col(aes(fill=Gain))+
+  coord_flip()+
+  guides(fill="none")
+
+```

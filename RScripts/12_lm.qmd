@@ -8,7 +8,7 @@ Output is not optimized for print, but rather for interactive use.
 All packages necessary will be invoked by p_load. Packages with only a single function call or potential for name conflicts can be unloaded, this way we still checked for their existence and installed them if need be.
 
 ```{r}
-pacman::p_load(conflicted,wrappedtools,car,nlme,broom,
+pacman::p_load(conflicted,wrappedtools,car,nlme,broom, flextable,
                multcomp,tidyverse,foreign,DescTools, ez,
                ggbeeswarm,
                lme4, nlme,merTools,
@@ -76,7 +76,7 @@ ggplot(rawdata,aes(x=Passage,y=Growth))+
 
 ### Linear regression
 
-We will analyse the relation between independent variable (IV) Passage and dependent variable (DV) Growth.
+We will analyse the relation between dependent variable (DV) Growth and CONTINUOUS NUMERICAL independent variable (IV) Passage. This is traditionally called regression, here it is rather a regression-like linear model.
 
 #### Graphical exploration
 
@@ -122,6 +122,10 @@ summarise(rawdata,
           across(contains('growth'),
                  ~meansd(.x,roundDig =4)))
 
+summarise(rawdata,
+          across(contains('growth'),
+                 ~meanse(.x,roundDig =4)))
+
 ggplot(rawdata,aes(Passage,growthAdj))+
   geom_point()+
   geom_smooth(method = 'lm')
@@ -130,7 +134,7 @@ lm(growthAdj~Passage,data=rawdata) |> tidy()
 
 ### ANOVA
 
-In the linear regression, we had Passage as a continuous IV, estimating a global 'universal' effect supposed to be constant. Now we look at Passage_F and model a discrete IV, allowing for specific effects, and thereby comparing means between groups.
+In the linear regression, we had Passage as a continuous IV, estimating a global 'universal' effect supposed to be constant. Now we look at Passage_F and thus model a discrete IV, allowing for specific effects, and thereby comparing means between groups. So this is an ANOVA-like linear model.
 
 #### Graphical exploration
 
@@ -255,9 +259,29 @@ summary(lmOut_additive)
 broom::tidy(aOut)
 ```
 
+## compare_n_numvars() as reporting option
+
+```{r}
+raw_out <- compare_n_numvars(rawdata,
+                             dep_vars = c("Growth","growthAdj"),
+                             indep_var = "Treatment",
+                             gaussian = TRUE,add_n = TRUE)
+
+
+raw_out$results |> 
+  select(Variable, `p(ANOVA)` = multivar_p,contains("fn")) |> 
+  rename_with(~str_replace_all(.x,
+                               c(" fn"="",
+                                 "Treatment "=""))) |> 
+  flextable() |>  
+  add_footer_lines("Symbols b,c indicate significance in post-hoc test vs. group 2 or 3") |> 
+  set_table_properties(width=1, layout="autofit") 
+
+```
+
 \newpage
 
-### Model exploration with package performance
+## Model exploration with package performance
 
 ```{r}
 #| fig-width: 6
@@ -270,3 +294,23 @@ check_model(lmOut_additive)
 check_model(lmOut_interaction)
 # dev.off()
 ```
+
+# Exercise
+
+In the penguin data, model relationship between
+
+-   DV flipper length and IV body weight
+
+-   DV bill depth and IV body weight
+
+-   DV flipper length and IV species
+
+-   DV flipper length and IV species and sex
+
+-   DV bill depth and IV species and sex
+
+-   DV flipper length and IV species and sex and body weight
+
+When appropriate, do post-hoc analyses as well.
+
+Vizualize results indicating significances.

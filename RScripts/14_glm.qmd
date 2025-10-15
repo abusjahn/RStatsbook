@@ -225,7 +225,7 @@ cat('&nbsp;\n\n')
 ```{r}
 cn() 
 predvars <- ColSeeker(namepattern = 
-                        c("penta","edu","_grp","_f"))
+                        c("age$","edu","_grp","_f"))
 rtformula <- paste("case~",
                    paste(predvars$bticked,collapse = "+"))
 regtree_out<-rpart(rtformula, 

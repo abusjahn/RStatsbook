@@ -24,7 +24,8 @@ View(Medtest_e)
 
 ```{r}
 rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |> 
-  rename_with(.fn = ~str_replace_all(.x,pattern="_",replacement=" ")) |>
+  rename_with(.fn = ~str_replace_all(.x,pattern="_",
+                                     replacement=" ")) |>
   rename_with(.fn=str_to_title,
               .cols = !contains(c("BP","BMI","NY"))) |> 
   rename(`Size (cm)`=Size, #newname=oldname
@@ -50,10 +51,10 @@ cn_temp <- read_excel(path = here("data/Medtest_e.xlsx"),
                       range = "A1:Y2",col_names = FALSE,
                       sheet = 2)
 for(col_i in colnames(cn_temp)){
-  if(!is.na(cn_temp |> slice(2) |> pull(col_i))){
+   if(!is.na(cn_temp |> slice(2) |> pull(col_i))){
     cn_temp[1,col_i] <- 
       paste0(cn_temp[1,col_i], " [", cn_temp[2,col_i], "]")
-  }
+   }
 }
 
 rawdata <- read_excel(path = here("data/Medtest_e.xlsx"),

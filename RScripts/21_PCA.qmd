@@ -67,7 +67,7 @@ ggplot(rawdata, aes(.data[[predvars2$names[1]]], .data[[predvars2$names[2]]]))+
   geom_point(aes(color=species))
 v2data <- predict(preProcess(rawdata |> 
                                select(predvars2$names),
-                             method = c("center", "scale")),
+                             method = c("YeoJohnson","center", "scale")),
                   rawdata) |> 
                     select(species,predvars2$names)
 ggplot(v2data, aes(.data[[predvars2$names[1]]], .data[[predvars2$names[2]]]))+

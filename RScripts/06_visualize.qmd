@@ -31,7 +31,7 @@ head(diamonds)
 head(mtcars)
 ```
 
-Exercises will be using the penguins data set from package palmerpenguins. Beware that the same data is now part of datasets, but with different column names!
+Exercises will be using the penguins data set from package palmerpenguins. Beware that the same data is now part of package datasets, but with different column names!
 
 ## Basic structure of a ggplot call
 
@@ -42,6 +42,24 @@ To create a figure, we at least use 2 function calls:
 2.  geom_xxx() to define the geometry to be used to show the data, e.g. bar, boxplot, point
 
 When mapping data to aesthetics, the class of data matters: Numerical data are interpreted as continuous, so a color heatmap is mapped rather than discrete colors, grouping of data requires factors / characters.
+
+Extensive example:
+
+```{r}
+ggplot(
+  data = mtcars,   
+  aes(x = wt, y = mpg))+  
+  geom_point()+  
+  scale_y_continuous(breaks = seq(0,50,2))+  
+  theme(legend.position = "bottom")  
+```
+
+***ggplot***( #base definition of plot\
+***data*** = mtcars, \# what data set to use\
+aes(*x* = **wt**, *y* = **mpg**))+ \# which **variables** bound to *aesthetics*\
+***geom_point***()+ \# which geometric form to show the data (bar, boxplot ...)\
+***scale\_***y_continuous(breaks = seq(0,50,2))+ \# tuning of translation of data into aesthetics\
+***theme***(legend.position = "bottom") \# all non-data aspects of a plot
 
 Minimal example:
 
@@ -233,12 +251,6 @@ Vizualize the following:
 
 -   optionally, define your own colors for species (scale or name or rgb)
 
--   distribution of body mass by species and sex
-
-    -   single plot
-
-    -   facetting
-
 ## Combining and finetuning aesthetics
 
 ```{r}
@@ -254,7 +266,7 @@ ggplot(data=mtcars,aes(wt, mpg,color=qsec, size=carb))+
                         mid="white",
                         limits=c(13,23),midpoint=18)+
   geom_point()+
-  scale_x_continuous(breaks = seq(-10^3,10^3,),
+  scale_x_continuous(breaks = seq(-10^3,10^3,5),
                      minor_breaks=seq(-10^3,10^3,1),
                      limits = c(0,10))+
   scale_y_log10(
@@ -325,7 +337,7 @@ p+geom_bar(position="fill")+
 p+geom_bar(position="identity") # bad idea!
 p+geom_bar(position="identity",alpha=.5) # even worse!!
 ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
-  geom_freqpoly(stat="count",position="identity",lwd=1.5)+
+  geom_line(stat="count",position="identity",lwd=1.5)+
   geom_point(stat="count",size=5)+
   scale_color_manual(values = c("green","lightblue",
                                 "darkblue",
@@ -397,7 +409,7 @@ plot_tmp + facet_grid(rows = vars(gear),
                    cols = vars(cyl))
 cat("facet labeling improved:\n")
 plot_tmp + facet_grid(rows = vars(gear),
-                   cols = vars(cyl,am),
+                   cols = vars(cyl),
                    labeller=label_both,margins="gear")
 # options(warn=-1) 
 plot_tmp + geom_smooth(method="lm")+
@@ -447,6 +459,12 @@ plot_tmp + facet_grid(rows=vars(gear),cols=vars(cyl),
                    labeller=label_both, scales="free_y")
 ```
 
+## Exercise 2
+
+-   distribution of body mass by species and sex (density, histogram)
+
+-   without / with facetting
+
 ## Showing summaries
 
 While plotting underlying rawdata is pretty informative, adding summary statistics guides the viewer. Error bars help to evaluate differences visible, but need to be labelled!!
@@ -465,6 +483,9 @@ plottemp+stat_summary(fun.data="mean_sdl",
   ylab("mpg (mean \u00b1 SD)")
 
  ggplot(mtcars,aes(factor(gear),mpg))+
+   stat_summary(geom = "line", aes(group="all"),
+                size=2.5, 
+                fun = "mean",color="green")+
    stat_summary(geom = "point", shape="-",
                 size=50, 
                 fun = "mean",color="red")+
@@ -521,13 +542,15 @@ plottemp + geom_signif(
   scale_y_continuous(expand = expansion(mult=c(0.05,.2)))
 
 ggplot(diamonds,aes(clarity, price))+
-  stat_summary(fun.data=mean_sdl)+
+  geom_boxplot()+
+  # stat_summary(fun.data=mean_sdl)+
   geom_signif(comparisons=list(c(1,2),c(1,3),c(1,4),c(1,5),
                                c(1,6),c(1,7),c(1,8)),
               step_increase = 0.15)+
   ggtitle("nominal p-values!!")
 ggplot(diamonds,aes(clarity, price))+
   stat_summary(fun.data=mean_sdl)+
+  ylab("Price (mean \u00b1 95% CI)")+
   geom_signif(comparisons=list(c(1,2),c(2,3),c(3,4),c(4,5),
                                c(5,6),c(6,7),c(7,8)),
               step_increase = 0.15)+
@@ -535,6 +558,7 @@ ggplot(diamonds,aes(clarity, price))+
 
 ggplot(diamonds,aes(clarity, price))+
   stat_summary(fun.data=mean_sdl)+
+  ylab("Price (mean \u00b1 95% CI)")+
   geom_signif(comparisons=list(c(1,2),c(2,3),c(3,4),c(4,5),
                                c(5,6),c(6,7),c(7,8)),
               map_signif_level = TRUE,
@@ -548,6 +572,8 @@ ggplot(diamonds,aes(clarity, price))+
 ## Theme definitions / changes
 
 Themes define everything not-data-related in your figures, like margins, fonts, background color etc. There are many predefined themes, and all can be customized. You can change a theme for all plots to come (theme_update()) or just a single plot ( +theme())
+
+There is an informative blog post [Styling plots](https://www.tidyverse.org/blog/2025/10/ggplot2-styling/){target="_blank"} that is a good starter.
 
 ```{r}
 old <- theme_set(theme_wsj())
@@ -585,9 +611,18 @@ plottemp+theme_excel()+
   theme(axis.title.x =  element_text(face="bold", hjust=0.95))
 plottemp+theme_minimal()
 plottemp+theme_void()
-plottemp+theme_base()
-plottemp+theme_bw()+
-  theme(panel.grid.major.x = element_blank())
+## install from Github
+# devtools::install_github("jespermaag/gganatogram")
+# gganatogram::gganatogram(
+#   organism = "human", fill = "color",
+#   data=tibble(organ = c("nerve", "brain"),
+#  type = c("nervous system", "nervous system"),
+#  colour = c("purple", "orange"),
+#  value = c(1, 1)))+
+#   theme_void()
+# plottemp+theme_base()
+# plottemp+theme_bw()+
+#   theme(panel.grid.major.x = element_blank())
 
 # https://www.data-imaginist.com/2019/a-flurry-of-facets/
 
@@ -634,14 +669,13 @@ for(var_i in c("mpg","wt", "qsec")){
 }
 ```
 
-The function aes_str(), which expected a character representantion instead of a variable name, is deprecated, but may still be suggested by chatbots
+The function aes_str(), which expected a character representation instead of a variable name, is deprecated, but may still be suggested by chatbots
 
 [more facets...](https://www.data-imaginist.com/2019/a-flurry-of-facets/)
 
 [animations...](https://github.com/thomasp85/gganimate)
 
 ```{r}
-GGally::ggpairs(mtcars)
 GGally::ggpairs(mtcars)
 
 ```

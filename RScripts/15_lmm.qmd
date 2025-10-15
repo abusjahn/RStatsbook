@@ -1,0 +1,138 @@
+pacman::p_load(conflicted,wrappedtools,car,broom,
+               multcomp,tidyverse,foreign,DescTools,
+               ggbeeswarm,
+               lme4, nlme,merTools,
+               easystats, patchwork,here)#conflicted,
+# rayshader,av)
+pacman::p_unload(DescTools, foreign)
+# conflict_scout()
+conflict_prefer('select','dplyr')
+conflict_prefer('filter','dplyr')
+conflicts_prefer(modelbased::standardize)
+base_dir <- here::here()
+
+rawdata<-foreign::read.spss(file=file.path(base_dir,'Data/Zellbeads.sav'),
+                            use.value.labels=T,to.data.frame=T) |>
+  as_tibble() |>
+  dplyr::select(-ZahlZellen) |>
+  rename(Growth=Wachstum,Treatment=Bedingung) |>
+  mutate(Passage_F=factor(Passage),
+         Treatment=fct_recode(Treatment,
+                              Control="Kontrolle"))
+
+ggplot(rawdata,aes(Passage_F,Growth, color=Treatment))+
+  stat_summary()
+
+lme_out <- nlme::lme(Growth~Treatment, data=rawdata,
+                     random = ~1|Passage_F) # RIntercept
+lme_out
+Anova(lme_out)
+
+lmer_out <- lme4::lmer(Growth~Treatment+(1|Passage_F),
+                       data=rawdata)
+
+lmer_out
+Anova(lmer_out)
+(lmer_out_param <- model_parameters(lmer_out, group_level = T))
+
+intercept_all <- lmer_out_param$Coefficient[1]
+slope_Ang <- lmer_out_param$Coefficient[2]
+slope_What <- lmer_out_param$Coefficient[3]
+plotdata <- tibble(
+  Passage_F=lmer_out_param$Level[-(1:3)],
+  intercept=lmer_out_param$Coefficient[-(1:3)]+
+    intercept_all)
+
+
+p1 <- rawdata |>
+  filter(Treatment!="Whatever") |>
+  mutate(Treatment_n=case_match(Treatment, "Control" ~ 0,
+                                .default =1)) |>
+  ggplot(aes(Treatment_n, Growth, color=Passage_F))+
+  geom_beeswarm(alpha=.2, dodge.width = .2)+
+  geom_abline(data = plotdata,
+              aes(color=Passage_F,
+                  intercept=intercept,
+                  slope=slope_Ang))+
+  geom_abline(color='black',linetype=3,
+              aes(intercept=intercept_all,
+                  slope=slope_Ang))+
+  scale_x_continuous(breaks=0:1,
+                     limits = c(-.5,1.5),
+                     labels=c("Control","AngII"),
+                     minor_breaks = NULL)
+
+p2  <- rawdata |>
+  filter(Treatment!="AngII") |>
+  mutate(Treatment_n=case_match(Treatment, "Control" ~ 0,
+                                .default =1)) |>
+  ggplot(aes(Treatment_n, Growth, color=Passage_F))+
+  geom_beeswarm(alpha=.2, dodge.width = .2)+
+  geom_abline(data = plotdata,
+              aes(color=Passage_F,
+                  intercept=intercept,
+                  slope=slope_What))+
+  geom_abline(color='black',linetype=3,
+              aes(intercept=intercept_all,
+                  slope=slope_What))+
+  scale_x_continuous(breaks=0:1,
+                     limits = c(-.5,1.5),
+                     labels=c("Control","Whatever"),
+                     minor_breaks = NULL)
+
+p1/p2+plot_layout(guides = "collect")
+
+#random slope
+lmer_out2 <- lme4::lmer(Growth~Treatment+
+                          (1+Treatment|Passage_F),
+                        data=rawdata,
+                        REML=FALSE)
+lmer_out2
+Anova(lmer_out2)
+(lmer_out_param2 <- model_parameters(lmer_out2, group_level = T))
+intercept_all <- lmer_out_param2$Coefficient[1]
+slope_Ang <- lmer_out_param2$Coefficient[2]
+slope_What <- lmer_out_param2$Coefficient[3]
+interceptdata <-
+  tibble(Passage_F=lmer_out_param2$Level[4:9],
+         intercept=lmer_out_param2$Coefficient[4:9]+intercept_all,
+         slopeAng=lmer_out_param2$Coefficient[10:15]+
+           slope_Ang,
+         slopeWhat=lmer_out_param2$Coefficient[16:21]+
+           slope_What)
+
+p1 <- rawdata |>
+  filter(Treatment!="Whatever") |>
+  mutate(Treatment_n=case_match(Treatment, "Control" ~ 0,
+                                .default =1)) |>
+  ggplot(aes(Treatment_n, Growth, color=Passage_F))+
+  geom_beeswarm(alpha=.2, dodge.width = .2)+
+  geom_abline(data = interceptdata,
+              aes(color=Passage_F,
+                  intercept=intercept,
+                  slope=slopeAng))+
+  geom_abline(color='black',
+              aes(intercept=intercept_all,
+                  slope=slope_Ang))+
+  scale_x_continuous(breaks=0:1,
+                     limits = c(-.5,1.5),
+                     labels=c("Control","AngII"))
+
+p2  <- rawdata |>
+  filter(Treatment!="AngII") |>
+  mutate(Treatment_n=case_match(Treatment, "Control" ~ 0,
+                                .default =1)) |>
+  ggplot(aes(Treatment_n, Growth, color=Passage_F))+
+  geom_beeswarm(alpha=.2, dodge.width = .2)+
+  geom_abline(data = interceptdata,
+              aes(color=Passage_F,
+                  intercept=intercept,
+                  slope=slopeWhat))+
+  geom_abline(color='black',
+              aes(intercept=intercept_all,
+                  slope=slope_What))+
+  scale_x_continuous(breaks=0:1,
+                     limits = c(-.5,1.5),
+                     labels=c("Control","Whatever"))
+
+p1/p2+plot_layout(guides = "collect")

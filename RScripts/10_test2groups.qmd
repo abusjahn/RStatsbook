@@ -69,6 +69,7 @@ tOut$p.value
 # equal variances assumption?
 vartestOut<-var.test(rawdata$`Size (cm)`~rawdata$Sex)
 vartestOut
+# car::leveneTest(rawdata$`Size (cm)`~rawdata$Sex)
 # manual entry
 t.test(rawdata$`Size (cm)`~rawdata$Sex,
               var.equal = vartestOut$p.value>.05)
@@ -212,3 +213,11 @@ rawdata |>
   align(~p==" ",j = 1,align = "center") |> 
   bg(~p!=" ",bg = "lightgrey")
 ```
+
+# Exercise
+
+Compare the 4 measurements in the penguin data between the sex as well as between 2 species (e.g Adelie vs. Gentoo). Treat the measures first as gaussian, then as ordinal.
+
+Use the basic functions first for at least one phenotype before trying out compare2numvars().
+
+Look at the categorical data year, island, species and sex and run some tests on their independence.

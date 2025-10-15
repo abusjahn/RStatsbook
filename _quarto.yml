@@ -37,6 +37,7 @@ book:
     - RScripts/21_PCA.qmd
     - RScripts/22_LDA.qmd
     - RScripts/23_cluster.qmd
+    - RScripts/24_caret.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd

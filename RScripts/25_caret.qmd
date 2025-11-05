@@ -66,8 +66,8 @@ registerDoFuture()
 plan(multisession, workers = future::availableCores() - 1)
 ```
 
+## Define global modelling options
 
-## Define global modelling options 
 This will be applied to all models. Here we use 5-fold cross-validation repeated 20 times. Thus 100 models will be trained for each tuning parameter combination.
 
 ```{r}
@@ -76,13 +76,12 @@ ctrl <- trainControl(method = "repeatedcv",
                      repeats = 20)
 ```
 
-Method-specific options will be defined below for each model (`tune`).
-\newpage
-
+Method-specific options will be defined below for each model (`tune`). \newpage
 
 ## Model tuning and training
 
 ### K-Nearest Neighbors (KNN)
+
 ```{r}
 tune <- expand.grid(k=seq(1,9,2))
 knnfit <- train(form = species~.,
@@ -95,6 +94,7 @@ knnfit <- train(form = species~.,
 ```
 
 ### Extreme Gradient Boosting (XGBoost)
+
 ```{r}
 tune <- expand.grid(nrounds=c(25,50,75),
                     max_depth=seq(2,10,2),
@@ -118,8 +118,8 @@ tictoc::toc()
 
 \newpage
 
-
 ### Random Forest (RF)
+
 ```{r}
 tune <- expand.grid(mtry=seq(2,3,1))
 rffit <- train(form = species~.,
@@ -132,6 +132,7 @@ rffit <- train(form = species~.,
 ```
 
 ### Linear Discriminant Analysis (LDA)
+
 ```{r}
 ldafit <- train(form = species~.,
                 data = rawdata,
@@ -141,8 +142,8 @@ ldafit <- train(form = species~.,
                 trControl = ctrl)
 ```
 
-
 ### Support Vector Machine (SVM)
+
 ```{r}
 svmfit <- train(form = species~.,
                 data = rawdata,
@@ -153,6 +154,7 @@ svmfit <- train(form = species~.,
 ```
 
 ### Naive Bayes
+
 ```{r}
 bayesfit <- train(form = species~.,
                 data = rawdata,
@@ -161,10 +163,11 @@ bayesfit <- train(form = species~.,
                 metric='Accuracy',
                 trControl = ctrl)
 ```
+
 \newpage
 
-
 ### Neural Network (NN)
+
 ```{r}
 nnfit <- train(form=species~.,
                data=rawdata, 
@@ -175,14 +178,17 @@ nnfit <- train(form=species~.,
 ```
 
 ## Stopping parallel computing
+
 ```{r}
 stopCluster(cl)
 registerDoSEQ() # Optional: reverts to sequential operation
 # plan(sequential) # for mirai
 ```
+
 ## Model comparison
 
 The 100 models trained for the selected optimal tuning parameter combination are compared below.
+
 ```{r}
 resamps <- resamples(list(knn = knnfit, 
                           lda = ldafit,
@@ -214,6 +220,7 @@ resamps$values |>
   geom_boxplot(outlier.alpha = .6)+
   facet_wrap(facets = vars(Measure),scales = 'free')
 ```
+
 If really deemed necessary, the differences between models can be tested statistically.
 
 ```{r}
@@ -238,7 +245,9 @@ summary(diffs)
 ```
 
 ## Using the best model for prediction
+
 While it may be advisable to rebuild the model(s) of choice with optimal tuning paramters, the results from train() can be used directly. Here we use the XGBoost model as an example.
+
 ```{r}
 xgbfit
 xgbfit[["bestTune"]]

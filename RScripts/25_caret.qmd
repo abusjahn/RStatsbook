@@ -76,7 +76,9 @@ ctrl <- trainControl(method = "repeatedcv",
                      repeats = 20)
 ```
 
-Method-specific options will be defined below for each model (`tune`). \newpage
+Method-specific options will be defined below for each model (`tune`).
+
+\newpage
 
 ## Model tuning and training
 

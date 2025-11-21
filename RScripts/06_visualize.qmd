@@ -121,7 +121,9 @@ ggplot(data=mtcars,aes(factor(cyl),color=factor(cyl)))+
 
 ## Color systems
 
-ggplot2 comes with various color definitions, many external packages extend that. Manual definition of colors is possible as well. Redefining the mapping between data and aesthetics can be done with scale\_... functions
+ggplot2 comes with various color definitions, many external packages extend that. Manual definition of colors is possible as well. Redefining the mapping between data and aesthetics can be done with scale\_... functions.
+
+[comprehensive overview for color palettes](https://pmassicotte.github.io/paletteer_gallery/){target="_blank"}
 
 For the demonstration, I store a plot into a variable, this includes all data and plot definitions, nothing like jpg!
 

@@ -5,12 +5,9 @@ pacman::p_load(
   palmerpenguins, # data
   ggforce, # for cluster plots, hulls, zoom etc
   ggbeeswarm,
-  flextable,
   caret, # Classification and Regression Training
   tidymodels, # modeling framework #
-  gmodels, # tools for model fitting
   kknn, # KNN engine for tidymodels
-  yardstick, # model performance
   waldo # for result comparisons
 )
 # conflict_scout()
@@ -29,6 +26,28 @@ penguins <- penguins |>
 predvars <- ColSeeker(penguins, "_")
 
 predvars$names
+
+# exploratory plots ####
+rawplot <-
+  ggplot(
+    penguins,
+    aes(.data[[predvars$names[1]]],
+      .data[[predvars$names[3]]],
+      color = species
+    )
+  ) +
+  geom_point()
+rawplot
+
+rawplot +
+  geom_mark_hull(expand = unit(2.5, "mm"))
+
+rawplot +
+  geom_mark_ellipse(expand = unit(2.5, "mm"))
+
+rawplot +
+  geom_hline(yintercept = 206) +
+  geom_vline(xintercept = 44)
 
 # preprocessing ####
 ## caret ####

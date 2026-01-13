@@ -53,5 +53,5 @@ wrappedtools::ggcormat(cor_mat = cor_out$corout,
 ```
 
 ```{r}
-GGally::ggpairs(rawdata |>  |> select(contains("BP"))
+GGally::ggpairs(rawdata |> select(contains("BP")))
 ```

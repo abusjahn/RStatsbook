@@ -19,42 +19,44 @@ conflicts_prefer(dplyr::slice,
 rawdata <- penguins |> 
   na.omit() |> 
   mutate(ID = paste('P', row_number()),
-         species_n = as.numeric(species)-1) |> 
+         species_n = as.numeric(species)-1
+         ) |> 
   select(ID, everything())
 ```
 
 ```{r}
-#one-hot-encoding sex + island
-tmp <- dummyVars(~sex+island, rawdata,fullRank = F)
-#predict(tmp,rawdata) |> view()
-rawdata <- bind_cols(rawdata,
-                     predict(tmp,rawdata))
-cn()
+#one-hot-encoding sex + island ##2026: no longer needed!
+# tmp <- dummyVars(~sex+island, rawdata,fullRank = F)
+# #predict(tmp,rawdata) |> view()
+# rawdata <- bind_cols(rawdata,
+#                      predict(tmp,rawdata))
+# cn()
+# predvars_n <- ColSeeker(rawdata,
+#                       c('_.+_','sex.+',
+#                         "island.+","year"))
+# predvars_n$names
 predvars <- ColSeeker(rawdata,
-                      c('_.+_','sex.+',
-                        "island.+","year"))
+                      c('_.+_','sex$',
+                        "island$","year"))
 predvars$names
-boostdata <- rawdata |> 
-  select(predvars$names) |> 
-  as.matrix()
+
+# boostdata <- rawdata |> 
+#   select(predvars_n$names) |> 
+#   as.matrix()
 ```
 
 ```{r}
 xgb_out <- xgboost(
-  data = boostdata,
-  label = rawdata$species_n,
-  num_class=3,
+  x = rawdata |> select(predvars$names),#boostdata,
+  y = rawdata$species,
+  # num_class=3,
   nrounds = 100,
   objective = "multi:softprob")#, # requests class probabilities
   #nthread=1) 
-prediction <- predict(xgb_out,boostdata) |> 
-  as_tibble() |> # just 1 col, 3 rows per penguin
+prediction <- predict(xgb_out,rawdata) |> 
+  as_tibble() |> 
   mutate(
-    ID=rep(rawdata$ID, each=3), # 3 rows per penguin
-    species_pred=rep(levels(rawdata$species), # 1 row per species
-                     times=nrow(rawdata))) |> 
-  pivot_wider(names_from=species_pred, # 1 col per species prob
-              values_from=value) |> 
+    ID=rawdata$ID) |> 
   mutate(predicted= # find highest prob
            case_when(Adelie>Chinstrap &
                        Adelie>Gentoo ~ 'Adelie',
@@ -139,20 +141,20 @@ watchlist = list(train=trainobject,
 # preliminary fitting to find nrounds
 xgb.Train0 <- xgb.train(
   data = trainobject, 
-  max.depth = 5,
-  objective = "multi:softprob",  # requests class probabilities
-  num_class=3,
-  watchlist=watchlist, #objects used in eval
+  params = list(max.depth = 5,
+                num_class=3,
+                objective = "multi:softprob"),  # requests class probabilities
+  evals=watchlist, #objects used in eval
   nrounds = 10^3) # set high, best will be checked afterwards
 bestround <- 
-  xgb.Train0$evaluation_log |> 
+  attr(xgb.Train0,"evaluation_log") |> 
   as_tibble() |> 
   filter(test_mlogloss==min(test_mlogloss)) |> 
   pull(iter)
 bestround
 # v2 with threshold for improvement
 bestround <- 
-  xgb.Train0$evaluation_log |> 
+  attr(xgb.Train0,"evaluation_log") |> 
   as_tibble() |> 
   filter(test_mlogloss-lead(test_mlogloss)>.001) |> 
   pull(iter)|> 
@@ -164,19 +166,19 @@ bestround
 # modelling
 xgb.Train <- xgb.train(
   data = trainobject, 
-  max.depth = 5,
-  objective = "multi:softprob", 
-  num_class=3,
+  params = list(objective = "multi:softprob", 
+                max.depth = 5,
+                num_class=3),
   # watchlist=watchlist, 
   nrounds = bestround)
 prediction <- predict(xgb.Train,testobject) |> 
-  as_tibble() |> 
+  as_tibble() |>
+  rename(Adelie = V1,
+         Chinstrap = V2,
+         Gentoo = V3) |> 
   mutate(
-    ID=rep(testdata$ID, each=3),
-    species_pred=rep(levels(rawdata$species),
-                     times=nrow(testdata))) |> 
-  pivot_wider(names_from=species_pred,
-              values_from=value) |> 
+    ID=testdata$ID
+) |> 
   mutate(predicted=
            case_when(
              Adelie>Chinstrap &
@@ -251,13 +253,13 @@ ggplot(rawdata,aes(.data[[plotfeatures[1]]],
 
 # importance per species
 xgb.importance(model = xgb.Train, 
-               trees = seq(from=0, by=3, 
-                           length.out=bestround))
-xgb.importance(model = xgb.Train, 
                trees = seq(from=1, by=3, 
                            length.out=bestround))
 xgb.importance(model = xgb.Train, 
                trees = seq(from=2, by=3, 
+                           length.out=bestround))
+xgb.importance(model = xgb.Train, 
+               trees = seq(from=3, by=3, 
                            length.out=bestround))
 
 

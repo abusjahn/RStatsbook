@@ -11,7 +11,8 @@ pacman::p_load(conflicted, tidyverse,here,
                ggbeeswarm,
                wrappedtools,
                emojifont,
-               patchwork)
+               patchwork,
+               GGally)
 conflicts_prefer(dplyr::filter,
                  ggplot2::mean_cl_boot) # solves name conflict 
 ```
@@ -589,7 +590,7 @@ theme_update(legend.position="bottom",
                                       face = "bold"),
              axis.title=element_text(size=25,
                                      color="darkred"),
-             plot.margin=unit(c(3,4,.5,.3),"lines"),    #N,E,S,W
+             plot.margin=unit(c(3,4,0.5,0.3),"lines"),    #N,E,S,W
              axis.title.y=element_text(vjust=0.4,angle=45,
                                        face="bold"),
              legend.key.size=unit(2.5, "lines"),
@@ -652,7 +653,7 @@ p3 <- ggplot(mtcars) +
 
 (p1 | p2) / 
   (p3  + guides(color = "none")) +
-  plot_annotation(tag_levels = "A") +
+  plot_annotation(tag_levels = "I") +
   plot_layout(guides = "collect")
   
 ```
@@ -662,16 +663,20 @@ p3 <- ggplot(mtcars) +
 inside aes(), ggplot expects variables referring to columns in the data. In a loop, the loop index is often a character representation of a column name. So inside aes(), there is a variable containing a variable name. To make that work, we use .data as a reference to the data ggplot is working on, and the loop index inside double square brackets as its index:
 
 ```{r}
-for(var_i in c("mpg","wt", "qsec")){
-  plot_temp <-
-    mutate(mtcars, am = factor(am)) |> 
-    ggplot(aes(x = am, y = .data[[var_i]]))+
-    geom_boxplot()
-  print(plot_temp)
+for(group_i in c("am", "vs")){
+  for(var_i in c("mpg","wt", "qsec")){
+    plot_temp <-
+      mutate(mtcars, 
+             am = factor(am),
+             vs = factor(vs)) |> 
+      ggplot(aes(x = .data[[group_i]], y = .data[[var_i]]))+
+      geom_boxplot()
+    print(plot_temp)
+}
 }
 ```
 
-The function aes_str(), which expected a character representation instead of a variable name, is deprecated, but may still be suggested by chatbots
+The function aes_string(), which expected a character representation instead of a variable name, is deprecated, but may still be suggested by chatbots
 
 [more facets...](https://www.data-imaginist.com/2019/a-flurry-of-facets/)
 

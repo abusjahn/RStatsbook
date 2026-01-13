@@ -13,9 +13,10 @@ conflicts_prefer(modelbased::standardize,
                  dplyr::filter,
                  dplyr::select)
 ```
+
 ## Import / Preparation
 
-The data are the same as for the lm analyses. This time, passage effect is modeled as a random effect, as we are not interested in the effect of each passage, but want to account for the variation between passages. Future experiments are not expected to have the exact same passage differences. Passage numbers are arbitrary anyway. The numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA. 
+The data are the same as for the lm analyses. This time, passage effect is modeled as a random effect, as we are not interested in the effect of each passage, but want to account for the variation between passages. Future experiments are not expected to have the exact same passage differences. Passage numbers are arbitrary anyway. The numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA.
 
 ```{r}
 rawdata<-read_sav(file=here('Data/Zellbeads.sav')) |>
@@ -34,7 +35,9 @@ ggplot(rawdata,aes(Passage_F,Growth, color=Treatment))+
 \newpage
 
 ## Random intercept model
+
 ### Package nlme
+
 ```{r}
 lme_out <- nlme::lme(Growth~Treatment, data=rawdata,
                      random = ~1|Passage_F) # RIntercept
@@ -43,6 +46,7 @@ Anova(lme_out)
 ```
 
 ### Package lme4
+
 ```{r}
 lmer_out <- lme4::lmer(Growth~Treatment+(1|Passage_F),
                        data=rawdata)
@@ -54,7 +58,8 @@ Anova(lmer_out)
 \newpage
 
 ### Visualization of fixed and random effects
-Parameters can be conveniently extracted with `model_parameters()`. The intercept is the mean of the reference group (Control), the slopes are the differences to the reference group. The random effects are deviations from the overall intercept for each passage. The overall intercept and slope are shown as dashed line, the passage-specific intercepts with identical slopes as colored lines. 
+
+Parameters can be conveniently extracted with `model_parameters()`. The intercept is the mean of the reference group (Control), the slopes are the differences to the reference group. The random effects are deviations from the overall intercept for each passage. The overall intercept and slope are shown as dashed line, the passage-specific intercepts with identical slopes as colored lines.
 
 ```{r}
 (lmer_out_param <- model_parameters(lmer_out, group_level = T))
@@ -106,6 +111,7 @@ p2  <- rawdata |>
 
 p1/p2+plot_layout(guides = "collect")
 ```
+
 The regression lines for the passages are parallel but shifted, reflecting the random intercept model.
 
 \newpage

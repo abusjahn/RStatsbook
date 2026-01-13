@@ -49,7 +49,7 @@ conflicts_prefer(
 
 ### *Variable names*
 
-Naming things is harder than you may expect. Try to be verbose and consistent in language and style. Commonly used are snake_case_style and CamelCaseStyle.
+Naming things is harder than you may expect. Try to be verbose and consistent in language and style. Commonly used are snake_case_style, CamelCaseStyle, and kebab-case-style.
 
 Decide about computer-friendly (syntactical) or human-friendly names, illegal names can be used inside backticks: \`measure \[unit\]\`. My preference is syntactical for script variables and humane for data variables, e.g. column names, print labels etc.
 

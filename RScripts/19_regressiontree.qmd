@@ -131,7 +131,7 @@ confusionMatrix(test_predicted$predicted,
 rpart_out_cont <- rpart(body_mass_g~species+sex+
                           flipper_length_mm+bill_length_mm+
                           bill_depth_mm, 
-                        control = list(minsplit=3), 
+                        minsplit=3, 
                         data=rawdata)
 prp(rpart_out_cont,
        fallen.leaves = TRUE)

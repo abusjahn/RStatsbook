@@ -76,8 +76,10 @@ rawdata <- rawdata |>
 The model is built using glm() and the output is extracted and transformed. The model is tested using Anova() and summary(). The results are then prepared for plotting.
 
 ```{r}
-logreg_out <-glm(case~`age [pentayears]`+education+parity_grp+ induced_f+spontaneous_f, 
-                 family=binomial(), data=rawdata) 
+logreg_out <-
+  glm(case~`age [pentayears]`+education+parity_grp+ 
+        induced_f+spontaneous_f, 
+      family=binomial(), data=rawdata) 
 logreg_out 
 
 #extract/transform model parameters 
@@ -103,7 +105,8 @@ OR_plotdata <- tibble(
     str_replace_all(c(
       '(grp)(.)'='\\1: \\2',
       '(f)(.)'='\\1: \\2',
-      '(n)(\\d)'='\\1: \\2')) |>
+      '(n)(\\d)'='\\1: \\2',
+      "`" = "")) |>
     str_to_title(),
   OR=ORs[-1],
   CI_low=CIs[-1,1],
@@ -119,7 +122,7 @@ OR_plotdata <- tibble(
 baseplot <- 
   ggplot(OR_plotdata, aes(x = Label,y=OR))+
   geom_pointrange(aes(ymin=CI_low, ymax=CI_high))+ 
-  geom_hline(yintercept = 1,linewidth=.2,linetype=2)+ 
+  geom_hline(yintercept = 1,linewidth=.5,linetype=2)+ 
   coord_flip() 
 baseplot 
 baseplot+ 
@@ -219,6 +222,17 @@ ORreport |>
   flextable::set_table_properties(width = 1,layout = 'autofit')
 cat('&nbsp;\n\n')
 ```
+
+
+```{r}
+rawdata |> 
+  filter(spontaneous_f != "0") |> 
+  ggplot(aes(x = age, fill = case))+
+  geom_histogram(position = "fill")+
+  scale_y_continuous(labels = scales::percent)#+
+  # facet_grid(rows = vars(spontaneous_f))
+```
+
 
 ## Regression tree as alternative to glm
 

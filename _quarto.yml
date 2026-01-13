@@ -34,7 +34,7 @@ book:
     - RScripts/18_knn.qmd
     - RScripts/19_regressiontree.qmd
     - RScripts/20_xgboost.qmd
-    - RScripts/21_caret.qmd
+    # - RScripts/21_caret.qmd
     - RScripts/22_PCA.qmd
     - RScripts/23_LDA.qmd
     - RScripts/24_cluster.qmd

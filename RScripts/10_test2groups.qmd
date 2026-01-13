@@ -72,6 +72,8 @@ vartestOut
 # car::leveneTest(rawdata$`Size (cm)`~rawdata$Sex)
 # manual entry
 t.test(rawdata$`Size (cm)`~rawdata$Sex,
+              var.equal = TRUE)
+t.test(rawdata$`Size (cm)`~rawdata$Sex,
               var.equal = vartestOut$p.value>.05)
 # picked from test
 t.test(rawdata$`Size (cm)`~rawdata$Sex,

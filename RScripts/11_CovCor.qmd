@@ -51,3 +51,7 @@ wrappedtools::ggcormat(cor_mat = cor_out$corout,
                        p_mat = cor_out$pout,
                        maxpoint = 20)
 ```
+
+```{r}
+GGally::ggpairs(rawdata |>  |> select(contains("BP"))
+```

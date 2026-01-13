@@ -44,7 +44,8 @@ rawdata |>
   summarize(
     n=n(),
     p_KS = ksnormal(`Size (cm)`,lillie = FALSE),
-    `pGauss (Shapiro)` = shapiro.test(`Size (cm)`)$p.value)
+    `pGauss (Shapiro)` = shapiro.test(`Size (cm)`) |> 
+      pluck("p.value"))
 ```
 
 ### Testing several variables

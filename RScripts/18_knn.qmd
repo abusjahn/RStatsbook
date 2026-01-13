@@ -93,6 +93,18 @@ rawdata <- predict(scaled,rawdata) |>
             by='ID') 
 ```
 
+```{r}
+scaled2 <- rawdata |> 
+  select(predvars$names) |> 
+  caret::preProcess(method = c('range'))
+rawdata <- predict(scaled2,rawdata) |> 
+  select(ID,all_of(predvars$names)) |>
+  rename_with(.cols=predvars$names,
+                     ~paste0(.x,"_rng")) |> 
+  full_join(select(rawdata,-contains("_rng")),
+            by='ID') 
+```
+
 ### preprocessCore function normalize.quantiles
 
 For ...omics data, bioconductor provides functions for ML including preprocessing. Here we use the `normalize.quantiles` function from the `preprocessCore` package.
@@ -115,7 +127,7 @@ rawdata |>
   pivot_longer(everything()) |> 
   ggplot(aes(value,fill=name))+
   geom_density()+
-  facet_wrap(facets = vars(name), scales='free')+
+  facet_wrap(facets = vars(name), scales='free', nrow = 2)+
   guides(fill="none")
 
 rawdata |> 
@@ -124,7 +136,9 @@ rawdata |>
 rawdata |> 
   ggplot(aes(bill_length_mm,bill_length_mm_qnorm))+ 
   geom_point()
-
+rawdata |> 
+  ggplot(aes(bill_length_mm,bill_length_mm_rng))+ 
+  geom_point()
 ```
 
 ## Modelling
@@ -281,4 +295,6 @@ CrossTable(rawdata$pred_sex,
            rawdata$sex, prop.chisq = F, prop.t = F, 
            format = 'SPSS')
 
+confusionMatrix(rawdata$pred_sex, rawdata$sex,
+                positive = "male")
 ```

@@ -15,6 +15,14 @@ Key Functionality:
 -   **Performance Evaluation**: Provides functions for calculating and visualizing performance metrics (e.g., accuracy, RMSE, ROC curves) and comparing multiple models.
 
 ```{r}
+# remove.packages("xgboost")
+# 
+# install.packages(
+#   "https://cran.r-project.org/src/contrib/Archive/xgboost/xgboost_1.7.11.1.tar.gz",
+#   repos = NULL,
+#   type = "source"
+# )
+
 pacman::p_load(conflicted,
                tidyverse, broom,
                wrappedtools, flextable,
@@ -30,6 +38,7 @@ conflicts_prefer(
   dplyr::combine,
   dplyr::slice,
   palmerpenguins::penguins,
+  caret::lift,
   .quiet = TRUE)
 rawdata <- penguins |> 
   na.omit()
@@ -48,7 +57,7 @@ if(cores < 1) {
 }
 # Create the cluster
 # makePSOCKcluster works on all operating systems (Windows, macOS, Linux)
-cl <- makePSOCKcluster(cores)
+ cl <- makePSOCKcluster(cores)
 
 # Register the cluster as the parallel backend for the 'foreach' package (which caret uses)
 registerDoParallel(cl)
@@ -203,7 +212,8 @@ summary(resamps) |>
   pluck("statistics") |> 
   pluck("Accuracy") |> 
   as_tibble(rownames = "Model") |>
-  mutate(across(-Model, ~round(.x,3))) |>
+  mutate(across(-Model,
+                .fns =  ~round(.x,3))) |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit") 
 
@@ -248,7 +258,7 @@ summary(diffs)
 
 ## Using the best model for prediction
 
-While it may be advisable to rebuild the model(s) of choice with optimal tuning paramters, the results from train() can be used directly. Here we use the XGBoost model as an example.
+While it may be advisable to rebuild the model(s) of choice with optimal tuning parameters, the results from train() can be used directly. Here we use the XGBoost model as an example.
 
 ```{r}
 xgbfit

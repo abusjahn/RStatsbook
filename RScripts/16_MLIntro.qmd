@@ -56,6 +56,58 @@
 
 ![](/Graphs/Bootstrap_25_0.png){fig-align="center"}
 
+```{r}
+pacman::p_load(wrappedtools, boot, Hmisc, tidyverse)
+```
+
+```{r}
+n_subjects <- 50
+real_mean <- 170
+real_sd <- 10
+n_boot <- 10^4
+set.seed(12345)
+experimental_data <- 
+  rnorm(n = n_subjects, mean = real_mean, sd = real_sd)
+meansd(experimental_data,roundDig = 4)
+meanse(experimental_data,roundDig = 4)
+smean.cl.normal(experimental_data)
+smean.cl.boot(experimental_data,B = n_boot)
+#looped bootstraping
+boot_means <- tibble(Mean = NA_real_, .rows = 0)
+for (run_i in seq_len(n_boot)){
+  boot_means <- 
+    add_row(boot_means,
+            Mean = mean(sample(x = experimental_data,
+                               size = n_subjects,
+                               replace = TRUE)))
+}
+
+cl_boot <- quantile(boot_means$Mean,probs = c(.025, .975))
+ggplot(boot_means, aes(Mean))+
+  geom_histogram(binwidth = .5, fill = "lightblue", color = "darkgrey")+
+  geom_vline(xintercept = cl_boot, linetype = 2)
+
+# package boot
+# Custom function to calculate the mean for each resample
+boot_mean <- function(d, i) {
+  d[i] |> mean()
+}
+# Sample data
+# Execute n_boot bootstrap replicates
+boot_results <- boot(
+  data = experimental_data, 
+  statistic = boot_mean, 
+  R = n_boot
+)
+
+# View the result
+boot_results
+# Get multiple types of CIs
+boot_ci <- boot.ci(boot_results, type = "basic")
+
+print(boot_ci)
+```
+
 ### Jacknife
 
 -   Jackknife is resampling without replacement

@@ -19,7 +19,8 @@ pacman::p_load(conflicted,
                ggforce, # for cluster plots, hulls, zoom etc
                ggbeeswarm,
                flextable,
-               caret, # Classification and Regression Training
+               caret, # Classification and Regression Training Framework
+               tidymodels, # alternative to caret
                preprocessCore,  # pre-processing functions
                gmodels, # tools for model fitting
                easystats, 
@@ -105,6 +106,30 @@ rawdata <- predict(scaled2,rawdata) |>
             by='ID') 
 ```
 
+### tidymodel approach
+
+```{r}
+# Build recipe for scaling
+model_formula <- 
+  paste("~", paste(predvars$names, collapse = "+")) |> 
+  as.formula()
+rec_normalized <- recipe(model_formula, data = rawdata) |>
+  step_normalize(all_of(predvars$names)) 
+
+# Fit recipe and apply to data
+penguins_normalized <- rec_normalized |>
+  prep() |>
+  bake(new_data = rawdata)
+
+rec_ranged <- recipe(model_formula, data = rawdata) |>
+  step_range(all_of(predvars$names), min = 0, max = 1)
+
+penguins_ranged_tidy <- rec_ranged |>
+  prep() |>
+  bake(new_data = rawdata)
+
+```
+
 ### preprocessCore function normalize.quantiles
 
 For ...omics data, bioconductor provides functions for ML including preprocessing. Here we use the `normalize.quantiles` function from the `preprocessCore` package.
@@ -151,8 +176,10 @@ predvars_std <- ColSeeker(namepattern = '_std')
 
 ### Data splitting
 
+tidyverse approach:
+
 ```{r}
-set.seed(2025)
+set.seed(2026)
 traindata <- rawdata |> 
   select(ID,species,sex,predvars_std$names) |>
   group_by(species, sex) |>
@@ -163,6 +190,19 @@ traindata <- rawdata |>
 testdata <- filter(rawdata,
                    !ID %in% traindata$ID) |>
   select(ID,species,predvars_std$names)
+```
+
+tidymodels approach:
+
+```{r}
+set.seed(2026)
+data_split <- initial_split(
+  rawdata,
+  prop = 2/3,
+  strata = species
+)
+traindata_tidy <- training(data_split)
+testdata_tidy <- testing(data_split)
 ```
 
 ### Model fitting
@@ -190,6 +230,33 @@ train_res |>
   geom_violin()+ 
   geom_beeswarm(cex = .5, alpha=.25)+ 
   facet_grid(rows = vars(species), labeller='label_both')
+```
+
+```{r}
+model_formula <- 
+  paste("species ~", paste(predvars_std$names, collapse = "+")) |> 
+  as.formula()
+
+knn_spec <- nearest_neighbor(neighbors = 5) |> 
+  set_engine("kknn") |> 
+  set_mode("classification")
+
+knn_workflow <- workflow() |> 
+  add_model(knn_spec)|> 
+  add_formula(model_formula)
+
+# Fit the model to the training data
+knn_fit <- knn_workflow |> 
+  fit(data = traindata)
+# Predict classes
+predictions <- knn_fit |> 
+  predict(new_data = testdata)
+prob_preds <- knn_fit |> 
+  predict(new_data = testdata, type = "prob")
+# Combine with original data to check accuracy
+results <- testdata |> 
+  select(species) |> 
+  bind_cols(predictions,prob_preds)
 ```
 
 \newpage

@@ -14,7 +14,7 @@ Basic functions like `grep()` or `gsub()` are difficult to use in pipelines and 
 
 -   **.** (period): Matches any single character except a newline. For example, "A.T" would match "AAT", "AGT", "ACT", etc.
 
--   \+ means 1 ore more occurrences (.+), ? means zer0 or 1 ocurrence
+-   \+ means 1 ore more occurrences (.+), ? means zero or 1 ocurrence
 
 -   **\[\]** (square brackets): Defines a character class. Any character within the brackets will match. For example, "\[ATGC\]" matches any DNA nucleotide.
 
@@ -32,6 +32,7 @@ starttext <- "Did grandma eat all the pizza?"
 str_detect(string = starttext, pattern = "pizza")
 str_detect(string = starttext, pattern = "pasta")
 str_detect(string = starttext, pattern = "e.+a\\?$")
+str_view(string = starttext, pattern = "e.+a\\?$")
 str_view(string = starttext, pattern = "e.+a\\?$")
 str_detect(string = starttext, pattern = "grand[mp]a")
 str_view(string = starttext, pattern = "grand[mp]a")

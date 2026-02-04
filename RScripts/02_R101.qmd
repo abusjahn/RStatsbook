@@ -557,7 +557,7 @@ my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 
 ## Exercise: Matrix
 
-**Scenario:** Imagine you are a field biologist studying plant distribution. You've set up several quadrats (square frames) in your study area and counted the number of individuals for three different plant species in each quadrat.
+**Scenario:** Imagine you are a field biologist studying plant distribution. You've set up several quadrants (square frames) in your study area and counted the number of individuals for three different plant species in each quadrant.
 
 **Instructions:**
 
@@ -565,19 +565,19 @@ my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 
     -   You have the following counts:
 
-        -   **Species A:** Quadrat 1: 12, Quadrat 2: 8, Quadrat 3: 15
+        -   **Species A:** Quadrant 1: 12, Quadrant 2: 8, Quadrant 3: 15
 
-        -   **Species B:** Quadrat 1: 5, Quadrat 2: 10, Quadrat 3: 7
+        -   **Species B:** Quadrant 1: 5, Quadrant 2: 10, Quadrant 3: 7
 
-        -   **Species C:** Quadrat 1: 20, Quadrat 2: 14, Quadrat 3: 18
+        -   **Species C:** Quadrant 1: 20, Quadrant 2: 14, Quadrant 3: 18
 
     -   Create a numeric vector for each species' counts (e.g., `species_A_counts <- c(12, 8, 15)`).
 
 2.  **Create a Matrix:**
 
-    -   Combine these three vectors into a single matrix. Name this matrix `quadrat_data`.
+    -   Combine these three vectors into a single matrix. Name this matrix `quadrant_data`.
 
-    -   Make sure each row represents a species and each column represents a quadrat.
+    -   Make sure each row represents a species and each column represents a quadrant.
 
     -   Set the number of rows (`nrow`) to 3 and the number of columns (`ncol`) to 3.
 
@@ -585,19 +585,19 @@ my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 
     -   Assign row names to your matrix: `"SpeciesA"`, `"SpeciesB"`, `"SpeciesC"`.
 
-    -   Assign column names to your matrix: `"Quadrat1"`, `"Quadrat2"`, `"Quadrat3"`.
+    -   Assign column names to your matrix: `"Quadrant1"`, `"Quadrant2"`, `"Quadrant3"`.
 
 4.  **Index Your Matrix (Access Data):**
 
-    -   **Access a single element:** Get the count of `Species B` in `Quadrat 2`.
+    -   **Access a single element:** Get the count of `Species B` in `Quadrant 2`.
 
     -   **Access a full row:** Get all counts for `Species A`.
 
-    -   **Access a full column:** Get all counts from `Quadrat 3`.
+    -   **Access a full column:** Get all counts from `Quadrant 3`.
 
     -   **Access multiple elements/rows/columns:**
 
-        -   Get the counts for `Species A` and `Species C` in `Quadrat 1` and `Quadrat 2`.
+        -   Get the counts for `Species A` and `Species C` in `Quadrant 1` and `Quadrant 2`.
 
 ### *Data frame*
 
@@ -654,7 +654,7 @@ Tibbles are a modern and efficient data structure that extends data frames, prov
 
 ```{r}
 patientN <- 25
-set.seed(3105)
+set.seed(2901)
 rawdata <- tibble(
   PatID = paste("P", 1:patientN), # as in  data.frame
   Sex = sample(
@@ -853,6 +853,7 @@ for (season_i in 1:3) {
 # content index
 ## names of elements
 for (col_i in colnames(rawdata)) {
+  cat(col_i,"\n")
   print(str(rawdata |> pull(col_i)))
 }
 ## content of elements

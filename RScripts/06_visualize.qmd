@@ -326,6 +326,7 @@ p+geom_bar(position="dodge")
 p+geom_bar(position=position_dodge(width = 0.7), alpha=.75)
 p+geom_bar(position="fill") #y-axis labeling needs tuning
 p+geom_bar(position="fill")+
+  xlab("Clarity")+
   scale_y_continuous(name = "Frequency (%)",
                      breaks=seq(0,1,.2), #steps
                      labels=seq(0,100,20))
@@ -339,7 +340,9 @@ p+geom_bar(position="fill")+
   geom_hline(yintercept = .5, linetype=2) # e.g. for reference lines
 p+geom_bar(position="identity") # bad idea!
 p+geom_bar(position="identity",alpha=.5) # even worse!!
-ggplot(data=diamonds,aes(clarity,color=cut, group=cut))+
+diamonds |> 
+  mutate(cut=fct_rev(cut)) |> 
+ggplot(aes(clarity,color=cut, group=cut))+
   geom_line(stat="count",position="identity",lwd=1.5)+
   geom_point(stat="count",size=5)+
   scale_color_manual(values = c("green","lightblue",
@@ -385,10 +388,10 @@ ggplot(data=mtcars,aes(wt, mpg,
 ```{r}
 #? lm for all?
 ggplot(data=mtcars,aes(wt, mpg))+
-  geom_smooth(size=1,color="black",fill="yellow")+
+  geom_smooth(linewidth=1,color="black",fill="yellow")+
   geom_point(size=3,aes(color=factor(cyl),shape=factor(am))) #aes for geom only
 ggplot(data=mtcars,aes(wt, mpg,color=factor(cyl)))+
-  geom_smooth(size=1,color="black",fill="yellow")+ # global color overwritten
+  geom_smooth(linewidth=1,color="black",fill="yellow")+ # global color overwritten
   geom_point(size=3, aes(shape=factor(am))) 
 ```
 
@@ -409,11 +412,11 @@ Margins (taking all elements together) can be shown for rows and/or columns.
 (plot_tmp <- ggplot(mtcars, aes(wt, mpg)) +
     geom_point())
 plot_tmp + facet_grid(rows = vars(gear),
-                   cols = vars(cyl))
+                      cols = vars(cyl))
 cat("facet labeling improved:\n")
 plot_tmp + facet_grid(rows = vars(gear),
-                   cols = vars(cyl),
-                   labeller=label_both,margins="gear")
+                      cols = vars(cyl),
+                      labeller=label_both,margins="gear")
 # options(warn=-1) 
 plot_tmp + geom_smooth(method="lm")+
   facet_grid(rows = vars(gear),

@@ -26,8 +26,9 @@ plotdata <- tibble(position = 1:1000,
                    `p [%]`= paste(p*100,"%"),
                    p_txt = paste(p*100,100,
                                        sep = " in "),
-                   odds_txt = paste(p*1000,1000,
-                                sep = " over ")
+                   odds_txt = paste(p*100,
+                                    (1-p)*100,
+                                sep = " to ")
                    )
 plotdata |> 
   select(where(is.numeric)) |> 
@@ -63,7 +64,7 @@ rawdata <- rawdata |>
                      labels = (c('none','one','two or more'))),
     spontaneous_f=factor(spontaneous), 
     `age [pentayears]`=age/5, 
-    education=forcats::fct_rev(education), 
+    education=forcats::fct_rev(education),
     parity_grp=forcats::fct_lump_n(as.character(parity),
                                  n = 2, other_level = '>2') |>
       fct_rev()) 
@@ -149,6 +150,23 @@ ggroc(roc_out,legacy.axes = T)+
   geom_point(x=1-youden$specificity,
              y=youden$sensitivity, color='red', size=2 ) 
 # plot predictions 
+tempdata <- 
+  rawdata |> 
+  mutate(`prediction`=
+           case_when(case=="1" &
+                       pGLM<youden$threshold ~ 
+                       "false negative",
+                     case=="0" & 
+                       pGLM>=youden$threshold 
+                     ~ "false positive",
+                     case == "1" & pGLM>=youden$threshold ~
+                       "correct positive",
+                     .default = 'correct negative' )) 
+prediction_counts <- 
+  tempdata |> 
+  group_by(prediction) |> 
+  count()
+  
 rawdata |> 
   mutate(`prediction quality`=
            case_when(case=="1" &
@@ -157,7 +175,7 @@ rawdata |>
                      case=="0" & 
                        pGLM>=youden$threshold 
                      ~ "false positive", 
-                     .default = 'correct' )) |>
+                     .default = 'correct' )) |> 
   ggplot(aes(case,pGLM))+ 
   geom_boxplot(outlier.alpha = 0)+ 
   scale_y_continuous(breaks=seq(0,1,.1))+ 
@@ -172,7 +190,11 @@ rawdata |>
            label=paste("Youden-cutoff:",
                        roundR(youden$threshold)),
            hjust=1.2,vjust=0.25)+
-  theme(legend.position="bottom")
+  theme(legend.position="bottom")+
+  labs(caption = 
+         paste(prediction_counts$prediction, 
+               prediction_counts$n,
+               collapse = "\n"))
 ```
 
 ```{r}
@@ -223,7 +245,6 @@ ORreport |>
 cat('&nbsp;\n\n')
 ```
 
-
 ```{r}
 rawdata |> 
   filter(spontaneous_f != "0") |> 
@@ -232,7 +253,6 @@ rawdata |>
   scale_y_continuous(labels = scales::percent)#+
   # facet_grid(rows = vars(spontaneous_f))
 ```
-
 
 ## Regression tree as alternative to glm
 

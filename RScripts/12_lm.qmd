@@ -9,7 +9,7 @@ All packages necessary will be invoked by p_load. Packages with only a single fu
 
 ```{r}
 pacman::p_load(conflicted,wrappedtools,car,nlme,broom, flextable,
-               multcomp,tidyverse,foreign,DescTools, ez,
+               multcomp,tidyverse,foreign,DescTools, #ez,
                ggbeeswarm,
                lme4, nlme,merTools,
                easystats, patchwork,here)#conflicted,
@@ -86,9 +86,9 @@ ggplot(rawdata,aes(Passage,Growth))+
   geom_smooth(method=lm)
 ggplot(rawdata,aes(Passage,Growth))+
   geom_point()+
-  scale_x_continuous(breaks=seq(0,10,1))+
+  scale_x_continuous(breaks=seq(0,10,1), limits = c(0,6))+
   geom_smooth(linewidth=2)+
-  geom_smooth(method=lm,se=F,color='red')
+  geom_smooth(method=lm,se=F,color='red', fullrange = TRUE)
 ```
 
 #### Modelling
@@ -160,6 +160,12 @@ t$`Pr(>F)`
 tidy(t)
 ```
 
+#### Model comparison ANOVA-like against regression-like
+
+```{r}
+anova(regressionOut, AnovaOut)
+```
+
 #### Post-hoc analyses
 
 The p-value from our model only tests the global Null hypothesis of no differences between any group (all means are the same / all groups come from the same population). Post-hoc tests are used to figure out which groups are different. Those tests need to take multiple testing into account. Try to limit selection of tests!
@@ -228,7 +234,6 @@ Anova_out$`Pr(>F)`
 tidy(Anova_out)
 # for comparison, here is the univariable model
 lmOut_uni<-lm(Growth~Treatment,data=rawdata)
-aOut<-Anova(lmOut_uni,type=3)
 a_uni <- anova(lmOut_uni)
 a_uni$`Pr(>F)`
 ```
@@ -254,9 +259,9 @@ pairwise.t.test(rawdata$Growth,rawdata$Treatment,p.adjust.method = 'n')
 anova_out$'Pr(>F)' 
 #aOut$`Sum Sq` 
 summary(lmOut_additive) 
-(result<-tibble(predictor=rownames(aOut), 
-                    p=formatP(aOut$'Pr(>F)',ndigits=5))) 
-broom::tidy(aOut)
+(result<-tibble(predictor=rownames(anova_out), 
+                    p=formatP(anova_out$'Pr(>F)',ndigits=5))) 
+broom::tidy(anova_out)
 ```
 
 ## compare_n_numvars() as reporting option

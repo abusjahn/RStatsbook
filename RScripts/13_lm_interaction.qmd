@@ -118,9 +118,15 @@ rawdata <- tibble(
            (Agegroup!='old')*20+
            (Agegroup=='old')*20)
 ggplot(rawdata,aes(x=Agegroup,y=Outcome,
-                   fill=Treatment))+
-  geom_boxplot()+
-  ggbeeswarm::geom_beeswarm(dodge.width = .75)
+                   color=Treatment))+
+  # geom_boxplot()+
+  ggbeeswarm::geom_beeswarm(dodge.width = .75, alpha = .25)+
+  stat_summary(fun=mean,  
+               aes(group = Treatment))+ 
+               # position = position_dodge(width = .75))+
+    stat_summary(fun=mean,geom = "line",  
+               aes(group = Treatment))
+
 suppressWarnings(
   ggplot(rawdata,aes(x=as.numeric(Agegroup),y=Outcome,fill=Treatment))+
   ggbeeswarm::geom_beeswarm(aes(shape=Treatment),
@@ -161,6 +167,12 @@ anova(lmout) |>  # this is WRONG!!!
 Anova(lmout,type = 2) |> 
   tidy() |> slice(1:2) |> 
   mutate(p.value=formatP(p.value,ndigits=3, mark=TRUE))
+
+lmout_add <- lm(Outcome~Agegroup+Treatment,
+             data = rawdata |> filter(Agegroup!="old"))
+tidy(lmout_add) |> 
+  select(1:2)
+
 ```
 
 \newpage
@@ -169,7 +181,7 @@ Anova(lmout,type = 2) |>
 
 ```{r}
 # all possible interactions
-(lm_out <- lm(mpg~(wt*gear*factor(am)*cyl),
+(lm_out <- lm(mpg~wt*gear*factor(am)*cyl,
               data=mtcars))
 (lm_out <- lm(mpg~(wt*factor(gear)*factor(am)*factor(cyl)),
               data=mtcars))

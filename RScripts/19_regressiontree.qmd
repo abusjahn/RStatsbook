@@ -9,7 +9,11 @@ pacman::p_load(conflicted,
                palmerpenguins,
                rpart, rpart.plot,
                randomForest,
-               caret)
+               caret, gmodels,
+               tidymodels,
+               future.mirai,
+               flextable,
+               ggbeeswarm)
 
 # conflict_scout()
 conflicts_prefer(dplyr::slice, 
@@ -40,7 +44,7 @@ rawplot+
 
 ### Modelling
 
-A regression tree is following the same logic as the classification rule we defined above, but in a more systematic way. It is a recursive partitioning algorithm that splits the data into subsets that are as homogeneous as possible with respect to the target variable. The algorithm is greedy, meaning that it makes the best split at each step, without considering the impact of the split on future steps. This can lead to overfitting, so we need to be careful with the depth of the tree. As each split is testing each variable separately, there is no need for scaling. Accordingly, the results are easily comprehensible as they relate to the actual measurements. Beside the actual classification rules, the output contains information on variable importance as well.
+A regression tree is following the same logic as the classification rule we defined above, but in a more systematic way. It is a recursive partitioning algorithm that splits the data into subsets that are as homogeneous as possible with respect to the target variable. The algorithm is greedy, meaning that it makes the best split at each step, without considering the impact of the split on future steps. This can lead to over-fitting, so we need to be careful with the depth of the tree. As each split is testing each variable separately, there is no need for scaling. Accordingly, the results are easily comprehensible as they relate to the actual measurements. Beside the actual classification rules, the output contains information on variable importance as well.
 
 ```{r}
 rpart_formula <- paste('species',
@@ -68,33 +72,86 @@ ggplot(importance, aes(x=Variable,y=Importancescore))+
 # prp(rpart_out_c, extra=100)
 ```
 
-To make model more interesting, we add 2 more variables.
+To make model more interesting, we add 2 more variables. Furthermore, data is split into training and test sets. We'll switch from the direct call to rpart to the tidy-models approach, as this will allow tuning and better validation strategies.
 
 ```{r}
 predvars <- ColSeeker(namepattern = c('_mm','_g',"sex"))
-rpart_formula_4 <- paste('species',
-                         paste(predvars$names,
-                               collapse='+'),
-                         sep='~') |> 
-  as.formula()
 
-set.seed(2023)
-traindata <- rawdata |> 
-  select(ID,species,sex,predvars$names) |>
-  group_by(species, sex) |>
-  slice_sample(prop = 2/3) |>
-  ungroup() #|>
-#  select(-sex)
+tree_folds <- vfold_cv(rawdata, v = 5, strata = species,repeats = 5 )
 
-testdata <- filter(rawdata,
-                   !ID %in% traindata$ID) |>
-  select(ID,species,sex,predvars$names)
-# tree for training sample
-rpart_out_tr <- rpart(formula = rpart_formula_4,
-                      data = traindata)
-rpart_out$variable.importance
-rpart_out_tr$variable.importance
-prp(rpart_out_tr,
+tree_recipe <- recipe(rawdata) |>
+  update_role(species, new_role = "outcome") |>
+  update_role(all_of(predvars$names), new_role = "predictor")
+
+tree_grid <- expand.grid(tree_depth = seq(2, 6, by = 2),
+                         cost_complexity = c(0.01, 0.001),
+                         min_n = seq(5, 20, by = 5)) |> 
+  as_tibble()
+tree_spec <- decision_tree(cost_complexity = tune(),
+                           tree_depth = tune(),
+                           min_n = tune()) |>
+  set_engine("rpart", model = TRUE) |>
+  set_mode("classification")
+tree_workflow <- workflow() |> 
+  add_recipe(tree_recipe) |>
+  add_model(tree_spec)
+
+# Fit the model to the data
+plan(mirai_multisession, workers = availableCores()-2) # Use all but 2 cores for parallel processing
+tree_results <- tree_workflow |> 
+  tune_grid(
+    resamples = tree_folds,
+    grid = tree_grid,
+    metrics = metric_set(roc_auc, accuracy)
+  )
+plan(sequential)
+
+# See the top performing models
+tree_results |> 
+  show_best(metric = "accuracy") |> 
+  flextable()
+
+# Select the best parameters based on your preferred metric
+best_tree <- tree_results |> 
+  select_best(metric = "accuracy")
+
+# Visualize the tuning results
+tree_results |> 
+  collect_metrics() |>
+  ggplot(aes(x = tree_depth, y = mean, color = as.factor(cost_complexity))) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ .metric, scales = "free", nrow = 2) +
+  theme_minimal()
+
+tree_results |> 
+  collect_metrics(summarize = FALSE) |>
+  filter(.metric == "accuracy") |> 
+  ggplot(aes(x = factor(tree_depth), y = .estimate)) +
+  geom_boxplot(outlier.alpha = 0) +
+  geom_beeswarm(alpha = 0.3,
+                aes(color = .config == best_tree$.config)) +
+  facet_grid(rows = vars(min_n), cols = vars(cost_complexity), #scales = "free",
+             labeller = "label_both") +
+  scale_color_manual(
+    "best model", 
+    values = c("darkgrey", "orange"),
+    labels = c("no", "yes")) +
+  theme_bw()
+
+# Update the workflow with those best parameters
+final_workflow <- tree_workflow |> 
+  finalize_workflow(best_tree)
+
+# Fit to the entire dataset (or use last_fit if you have a train/test split)
+final_fit <- final_workflow |> 
+  fit(data = rawdata)
+
+test_predicted <- final_fit |> 
+  augment(new_data = rawdata) |>
+  rename_with(~str_remove(.x, "^.pred_"), starts_with(".pred_"))
+
+prp(extract_fit_engine(final_fit),
     type = 4,
     extra = 104,
     fallen.leaves = T)
@@ -102,59 +159,34 @@ prp(rpart_out_tr,
 
 ### Model evaluation
 
-```{r}
-test_predicted <- 
-  bind_cols(testdata,
-            as_tibble(
-              predict(rpart_out_tr, testdata))) |>   
-  mutate(predicted=
-           case_when(Adelie>Chinstrap &
-                       Adelie>Gentoo ~ 'Adelie',
-                     Chinstrap>Adelie &
-                       Chinstrap>Gentoo ~ 'Chinstrap',
-                     Gentoo>Adelie &
-                       Gentoo>Chinstrap ~ 'Gentoo') |> 
-           factor())
+class-based metrics: 
+Metric / Function / Meaning
+Accuracy / accuracy() / The percentage of total predictions that were correct. Simple, but can be misleading if classes are imbalanced.
+Kappa / kap() / Similar to accuracy, but accounts for the possibility of the agreement occurring by chance.
+Sensitivity (Recall) / sens() /  Out of all actual positives, how many did the model find? (True Positive Rate).
+Specificity / spec() / "Out of all actual negatives, how many did the model correctly identify? (True Negative Rate).
+Precision (PPV )/ precision(),"Out of all rows the model claimed were positive, how many actually were?
+F-Measure / f_meas() / The harmonic mean of Precision and Recall. Great for finding a balance between the two.
 
-gmodels::CrossTable(test_predicted$predicted,
+probability-based metrics:
+ROC AUC / roc_auc() / Measures the model's ability to distinguish between classes across all possible thresholds.
+PR AUC / pr_auc() / Area under the Precision-Recall curve. Preferred over ROC AUC when the ""Positive"" class is very rare.
+Log Loss / mn_log_loss() / Measures how ""close"" the predicted probability is to the actual binary label (0 or 1). Heavily penalizes being ""confidently wrong.
+Brier Score / brier_class() / The mean squared error of the probability predictions. A lower score is better.
+
+```{r}
+CrossTable(test_predicted$class,
            test_predicted$species,
            prop.chisq = F, prop.t = F,
            format = 'SPSS')
 
-confusionMatrix(test_predicted$predicted,
+confusionMatrix(test_predicted$class,
                 test_predicted$species)
-```
 
-## RT for continuous outcomes
-
-```{r}
-rpart_out_cont <- rpart(body_mass_g~species+sex+
-                          flipper_length_mm+bill_length_mm+
-                          bill_depth_mm, 
-                        minsplit=3, 
-                        data=rawdata)
-prp(rpart_out_cont,
-       fallen.leaves = TRUE)
-rawdata <- 
-  mutate(rawdata,
-         body_mass_g_pred = predict(rpart_out_cont))
-ggplot(rawdata,aes(body_mass_g, body_mass_g_pred))+
-  geom_point()+
-  geom_smooth(method="lm")
-lm_out_cont <- lm(body_mass_g~species+sex+
-                          flipper_length_mm+bill_length_mm+
-                          bill_depth_mm, 
-                        data=rawdata)
-rawdata <- 
-  mutate(rawdata,
-         body_mass_g_lmpred = predict(lm_out_cont))
-ggplot(rawdata,aes(body_mass_g, body_mass_g_lmpred))+
-  geom_point()+
-  geom_smooth(method="lm")
-
-
-ggplot(rawdata,aes(x=species,y=body_mass_g, fill=sex))+
-  geom_boxplot()
+tidy_metrics <- metric_set(accuracy, kap, f_meas,roc_auc, mn_log_loss)
+tidy_metrics(test_predicted, truth = species, estimate = class,
+             Adelie, Chinstrap, Gentoo) |> 
+  flextable()
 ```
 
 ## Random forrest
@@ -164,6 +196,14 @@ Random forrests are an ensemble method that builds multiple decision trees and a
 ### Modelling
 
 ```{r}
+set.seed(2026)
+data_split <- initial_split(
+  rawdata,
+  prop = 2/3,
+  strata = species
+)
+traindata <- training(data_split)
+testdata <- testing(data_split)
 forrest_formula <- 
   paste('species',
         paste(predvars$names, collapse='+'),

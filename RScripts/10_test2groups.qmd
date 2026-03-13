@@ -69,6 +69,7 @@ tOut$p.value
 # equal variances assumption?
 vartestOut<-var.test(rawdata$`Size (cm)`~rawdata$Sex)
 vartestOut
+
 # car::leveneTest(rawdata$`Size (cm)`~rawdata$Sex)
 # manual entry
 t.test(rawdata$`Size (cm)`~rawdata$Sex,

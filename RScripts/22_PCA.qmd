@@ -90,7 +90,6 @@ slope_pc1 <- pc1_loadings[2] / pc1_loadings[1]
 # Create the plot
 ggplot(v2data, aes(.data[[predvars2$names[1]]], 
                    .data[[predvars2$names[2]]])) +
-  geom_point(aes(0,0))+
   geom_point(aes(color = species)) +
   geom_abline(intercept = 0, slope = slope_pc1,
               color = "black", linetype = "dashed") +
@@ -100,6 +99,7 @@ ggplot(v2data, aes(.data[[predvars2$names[1]]],
                  .data[[predvars2$names[2]]])/2), 
                color = "grey", 
                arrow = arrow(length = unit(0.2, "cm")))+
+  geom_point(aes(0,0))+
   coord_fixed(ratio = 1, xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5))
 pc1plot <- 
   ggplot(v2data |> slice(1,101, 201,301), aes(.data[[predvars2$names[1]]], 

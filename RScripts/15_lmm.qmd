@@ -39,7 +39,7 @@ ggplot(rawdata,aes(Passage_F,Growth, color=Treatment))+
 ### Package nlme
 
 ```{r}
-lme_out <- nlme::lme(Growth~Treatment, data=rawdata,
+lme_out <- nlme::lme(Growth~ Treatment, data=rawdata,
                      random = ~1|Passage_F) # RIntercept
 lme_out
 Anova(lme_out)
@@ -48,7 +48,7 @@ Anova(lme_out)
 ### Package lme4
 
 ```{r}
-lmer_out <- lme4::lmer(Growth~Treatment+(1|Passage_F),
+lmer_out <- lme4::lmer(Growth~ Treatment+(1|Passage_F),
                        data=rawdata)
 
 lmer_out

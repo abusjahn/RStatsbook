@@ -10,7 +10,8 @@ pacman::p_load(conflicted,
                gmodels, # tools for model fitting
                easystats, 
                yardstick,# model performance
-               xgboost)  # XGBoost
+               xgboost,
+               tidymodels)  # XGBoost
 conflicts_prefer(dplyr::slice, 
                  dplyr::filter,
                  dplyr::lag,
@@ -18,22 +19,29 @@ conflicts_prefer(dplyr::slice,
 
 rawdata <- penguins |> 
   na.omit() |> 
-  mutate(ID = paste('P', row_number()),
-         species_n = as.numeric(species)-1
-         ) |> 
-  select(ID, everything())
+  mutate(year = factor(year)
+         )
 ```
 
+## Preprocessing
+one_hot encoding transforms factors in dummy columns for EVERY level, recommended for tree-based models as they can handle the resulting collinearity, and it is more intuitive to interpret the importance of each level. The `recipe` package provides a convenient way to do this, but it can also be done manually with `dummyVars()` from the `caret` package. The resulting columns are added to the original data frame, and the original factor columns can be removed if desired.
+For linear models, one-hot encoding is not recommended as it can lead to multicollinearity issues.
 ```{r}
 # one-hot-encoding sex + island 
-tmp <- dummyVars(~sex+island, rawdata,fullRank = F)
+# tmp <- dummyVars(~sex+island, rawdata,fullRank = F)
 #predict(tmp,rawdata) |> view()
-rawdata <- bind_cols(rawdata,
-                     predict(tmp,rawdata))
+# rawdata <- bind_cols(rawdata,
+#                      predict(tmp,rawdata))
+
+rawdata <- 
+  recipe(species ~ ., data = rawdata) |>
+  step_dummy(all_nominal_predictors(),one_hot = TRUE) |> 
+  prep() |>
+  bake(new_data = rawdata)
 cn()
 predvars <- ColSeeker(rawdata,
                       c('_.+_','sex.+',
-                        "island.+","year"))
+                        "island.+","year_"))
 predvars$names
 
 boostdata <- rawdata |>
@@ -43,33 +51,25 @@ boostdata <- rawdata |>
 
 ```{r}
 xgb_out <- xgboost(
-  data = boostdata,
-  label = rawdata$species_n,
-  num_class=3,
+  x = boostdata,
+  y = rawdata$species,
   nrounds = 100,
   objective = "multi:softprob") # requests class probabilities
 prediction <- predict(xgb_out,boostdata) |> 
   as_tibble() |> 
-  mutate(
-    ID=rep(rawdata$ID, each =3),
-    species_pred=rep(levels(rawdata$species), # 1 row per species
-                     times=nrow(rawdata))) |>
-  pivot_wider(names_from=species_pred, # 1 col per species prob
-              values_from=value) |> 
-    mutate(predicted= # find highest prob
-           case_when(Adelie>Chinstrap &
-                       Adelie>Gentoo ~ 'Adelie',
-                     Chinstrap>Adelie &
-                       Chinstrap>Gentoo ~ 'Chinstrap',
-                     Gentoo>Adelie &
-                       Gentoo>Chinstrap ~ 'Gentoo') |> 
+  mutate(predicted= # find highest prob
+           case_when(Adelie>=Chinstrap &
+                       Adelie>=Gentoo ~ 'Adelie',
+                     Gentoo>=Chinstrap ~ 'Gentoo',
+                     !is.na(Chinstrap) ~ 'Chinstrap'
+           ) |> 
            factor())
 
 slice_sample(prediction, n=20)
 ```
 
 ```{r}
-train_res <- full_join(rawdata,prediction)
+train_res <- bind_cols(rawdata,prediction)
 train_res |> 
   pivot_longer(c(Adelie,Chinstrap,Gentoo),
                values_to = 'p species',
@@ -105,33 +105,29 @@ xgb.importance(model = xgb_out) |>
 
 ```{r}
 # splitting ####
-set.seed(1958)
-# splitted tibble
-traindata <- 
-  rawdata |> 
-  select(ID,species,species_n,
-         predvars$names) |> 
-  group_by(species_n) |> 
-  slice_sample(prop = 2/3) |> 
-  ungroup()
-testdata <- filter(rawdata,
-                   !ID %in% traindata$ID) |> 
-  select(ID,species,species_n,
-         predvars$names) 
-
+set.seed(2026)
+data_split <- initial_split(
+  rawdata,
+  prop = 2/3,
+  strata = species
+)
+traindata <- training(data_split)
+testdata <- testing(data_split)
 # splitted matrix-objects
 trainobject <- 
   xgb.DMatrix(
     data=traindata |> 
-      select(-ID, -contains("species")) |> 
+      select( -contains("species")) |> 
       data.matrix(),
-    label=traindata$species_n)
+    label=traindata$species |> 
+      as.numeric() -1)
 testobject <- 
   xgb.DMatrix(
     data=testdata |>
-      select(-ID,-contains("species")) |> 
+      select(-contains("species")) |> 
       data.matrix(),
-    label=testdata$species_n)
+    label=testdata$species |> 
+      as.numeric() -1)
 ```
 
 ```{r}
@@ -143,17 +139,17 @@ xgb.Train0 <- xgb.train(
   params = list(max.depth = 5,
                 num_class=3,
                 objective = "multi:softprob"),  # requests class probabilities
-  watchlist = watchlist, #objects used in eval
+  evals = watchlist, #objects used in eval
   nrounds = 10^2) # set high, best will be checked afterwards
 bestround <- 
-  xgb.Train0$evaluation_log |> 
+  attr(xgb.Train0, "evaluation_log") |> 
   as_tibble() |> 
   filter(test_mlogloss==min(test_mlogloss)) |> 
   pull(iter)
 bestround
 # v2 with threshold for improvement
 bestround <- 
-  xgb.Train0$evaluation_log |> 
+  attr(xgb.Train0, "evaluation_log") |> 
   as_tibble() |> 
   filter(test_mlogloss-lead(test_mlogloss)>.001) |> 
   pull(iter)|> 
@@ -168,26 +164,18 @@ xgb.Train <- xgb.train(
   params = list(objective = "multi:softprob", 
                 max.depth = 5,
                 num_class=3),
-  # watchlist=watchlist, 
   nrounds = bestround)
 prediction <- predict(xgb.Train,testobject) |> 
   as_tibble() |>
-  mutate(
-    ID=rep(testdata$ID, each = 3),
-    species_pred=rep(levels(rawdata$species),
-                     times=nrow(testdata))) |>
-  pivot_wider(names_from=species_pred,
-              values_from=value) |>
-  mutate(predicted=
-           case_when(
-             Adelie>Chinstrap &
-               Adelie>Gentoo ~ 'Adelie',
-             Chinstrap>Adelie &
-               Chinstrap>Gentoo ~ 'Chinstrap',
-             Gentoo>Adelie &
-               Gentoo>Chinstrap ~ 'Gentoo') |> 
+  rename("Adelie"=V1,"Chinstrap"=V2,"Gentoo"=V3) |>
+  mutate(predicted= # find highest prob
+           case_when(Adelie>=Chinstrap &
+                       Adelie>=Gentoo ~ 'Adelie',
+                     Gentoo>=Chinstrap ~ 'Gentoo',
+                     !is.na(Chinstrap) ~ 'Chinstrap'
+           ) |> 
            factor())
-train_res <- full_join(testdata,prediction)
+train_res <- bind_cols(testdata,prediction)
 ```
 
 ```{r}
@@ -252,12 +240,12 @@ ggplot(rawdata,aes(.data[[plotfeatures[1]]],
 
 # importance per species
 xgb.importance(model = xgb.Train, 
-               trees = seq(from=0, by=3, 
-                           length.out=bestround))
-xgb.importance(model = xgb.Train, 
                trees = seq(from=1, by=3, 
                            length.out=bestround))
 xgb.importance(model = xgb.Train, 
                trees = seq(from=2, by=3, 
+                           length.out=bestround))
+xgb.importance(model = xgb.Train, 
+               trees = seq(from=3, by=3, 
                            length.out=bestround))
 ```

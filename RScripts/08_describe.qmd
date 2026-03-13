@@ -142,11 +142,11 @@ rawdata |>
                      n=~n(),
                      # .x is the placeholder for the actual values
                      Mean=~mean(.x,na.rm=TRUE) |> 
-                       roundR(textout = F),
+                       roundR(textout = FALSE),
                      Median=~median(.x,na.rm=TRUE) |> 
-                       roundR(textout = F),
+                       roundR(textout = FALSE),
                      SD=~sd(.x,na.rm=TRUE) |> 
-                       roundR(textout = F)))) |> 
+                       roundR(textout = FALSE)))) |> 
   # the wide table with n vars * n functions columns is reshaped
   pivot_longer(
     cols = everything(), # transform all columns into long form
@@ -193,7 +193,7 @@ rawdata |>
               # names_sep=" ",
               names_glue="{stat} ({Sex})",
               values_from=value) |> 
-  select(-starts_with("n")) |>
+#  select(-starts_with("n")) |>
   flextable() |> 
   set_table_properties(width=1, layout="autofit") 
 
@@ -215,6 +215,7 @@ compare2qualvars(data = rawdata,
                  dep_vars = factvars$names[-2],
                  indep_var = factvars$names[2])|>
   flextable() |> 
+  bg(~p!=" ",bg = 'lightgrey')|> 
   set_table_properties(width=1, layout="autofit")
 
 ```

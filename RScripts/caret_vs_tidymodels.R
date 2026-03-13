@@ -10,6 +10,7 @@ pacman::p_load(
   kknn, # KNN engine for tidymodels
   waldo # for result comparisons
 )
+
 # conflict_scout()
 conflicts_prefer(
   dplyr::slice,

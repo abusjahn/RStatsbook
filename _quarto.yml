@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2026-01-13"
+  date: "2026-03-15"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -32,13 +32,14 @@ book:
     - RScripts/16_MLintro.qmd
     - RScripts/17_MCMC.qmd
     - RScripts/18_knn.qmd
-    - RScripts/19_regressiontree.qmd
+    - RScripts/19a_regressiontree.qmd
+    - RScripts/19b_randomforrest.qmd
     - RScripts/20_xgboost.qmd
-    # - RScripts/21_caret.qmd
+    - RScripts/21_tidymodels.qmd
     - RScripts/22_PCA.qmd
     - RScripts/23_LDA.qmd
     - RScripts/24_cluster.qmd
-    - RScripts/25_caret.qmd
+    # - RScripts/25_caret.qmd
     # - lmm-qmd
     # - summary.qmd
     # - references.qmd
@@ -54,8 +55,18 @@ format:
     latex-auto-mk: true
     documentclass:  scrreprt #book
     papersize: a4
+    link-citations: true
+    linkcolor: black      # Targets internal links (TOC, Figures)
+    urlcolor: blue       # Targets web links
+    citecolor: black      # Targets bibliography links
     code-block-bg: ffffdf
     # include-in-header:
+    #   text: |
+    #     \hypersetup{
+    #       colorlinks=true,
+    #       linkcolor=black,
+    #       urlcolor=black
+    #     }  
       # \usepackage{graphbox}
       # \usepackage{wrapfig}
       # \usepackage{float}

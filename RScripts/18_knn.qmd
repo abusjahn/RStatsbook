@@ -29,9 +29,6 @@ In the penguin data set, the four numerical variables related to anatomy are `bi
 ```{r}
 rawdata <- penguins |> 
   drop_na()
-# rawdata <- mutate(rawdata,
-#                   ID=paste('P', 1:nrow(rawdata))) |> 
-#   select(ID, everything())
 predvars <- ColSeeker(rawdata,'length')
 ```
 
@@ -53,21 +50,13 @@ rawplot+
 
 rawplot+
   geom_mark_ellipse(expand = unit(2.5,'mm'))
-
-# rawplot+
-#   geom_hline(yintercept = 206)+
-#   geom_vline(xintercept = 44)
-# rawplot+
-#   facet_zoom(xlim = c(45,48),
-#              ylim = c(190,200))
-# rawplot+
-#   facet_zoom(xlim = c(41,50),
-#              ylim = c(205,215))
 ```
 
 ## Scaling
 
-To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame.
+To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame.  
+
+### Center + scale (z-score normalization)
 
 ```{r}
 # Build recipe for scaling
@@ -82,7 +71,11 @@ penguins_normalized <- rec_normalized |>
   prep() |>
   bake(new_data = rawdata) |> 
   rename_with(~paste0(.x, "_norm"))
+```
 
+### Range transformation
+
+```{r}
 rec_ranged <- recipe(model_formula, data = rawdata) |>
   step_range(all_predictors(), min = 0, max = 1)
 
@@ -90,7 +83,10 @@ penguins_ranged <- rec_ranged |>
   prep() |>
   bake(new_data = rawdata) |> 
   rename_with(~paste0(.x, "_range"))
+```
 
+### Percentile transformation
+```{r}
 rec_quantiled <- recipe(model_formula, data = rawdata) |>
   step_percentile(all_predictors())
 
@@ -137,8 +133,6 @@ predvars_std <- ColSeeker(namepattern = '_norm')
 
 ### Data splitting
 
-tidymodels approach:
-
 ```{r}
 set.seed(2026)
 data_split <- initial_split(
@@ -154,10 +148,12 @@ testdata <- testing(data_split)
 
 For the training data, a model is created and used to (re-)predict the species of the test data. The `k` parameter specifies the number of neighbors to consider. Two calls to predict return classes as well as probabilities of the species.
 
+#### Model specification and workflow
+
 ```{r}
-model_formula <- 
-  paste("species ~", paste(predvars_std$names, collapse = "+")) |> 
-  as.formula()
+knn_recipe <- recipe(rawdata) |>
+  update_role(species, new_role = "outcome") |>
+  update_role(all_of(predvars$names), new_role = "predictor")
 
 knn_spec <- nearest_neighbor(neighbors = 5) |> 
   set_engine("kknn") |> 
@@ -165,12 +161,17 @@ knn_spec <- nearest_neighbor(neighbors = 5) |>
 
 knn_workflow <- workflow() |> 
   add_model(knn_spec)|> 
-  add_formula(model_formula)
+  add_recipe(knn_recipe)
+```
 
-# Fit the model to the training data
+#### Fit the model to the training data
+```{r}
 knn_fit <- knn_workflow |> 
   fit(data = traindata)
-# Predict classes
+```
+#### Predict classes
+
+```{r}
 predictions <- knn_fit |> 
   predict(new_data = testdata)
 prob_preds <- knn_fit |> 
@@ -206,7 +207,7 @@ ggplot(rawdata, aes(bill_length_mm_norm,flipper_length_mm_norm, color=sex,shape=
   geom_point()
 ```
 
-### Adding predictor variables
+## More complex model
 
 Now we'll try to predict the sex based on body measures and species. Species will be automatically recoded using one-hot encoding.
 
@@ -219,6 +220,10 @@ penguins_preped <- recipe(model_formula, data = rawdata) |>
   step_dummy(all_nominal_predictors(), one_hot = TRUE) |> 
   prep() |>
   bake(new_data = rawdata) 
+knn_spec <- nearest_neighbor(neighbors = 5) |> 
+  set_engine("kknn") |> 
+  set_mode("classification")
+
 knn_workflow2 <- workflow() |> 
   add_model(knn_spec) |> 
   add_formula(sex ~ .)

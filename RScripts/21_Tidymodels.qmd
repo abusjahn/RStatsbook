@@ -1,0 +1,446 @@
+
+# tidymodels framework
+
+In the **tidymodels** framework, the `parsnip` package provides a unified interface for model specification. This abstraction allows researchers to switch between radically different mathematical engines without altering their data processing pipeline.
+
+```{r}
+pacman::p_load(conflicted,
+               tidyverse,
+               palmerpenguins,
+               tidymodels,
+               kernlab, # SVM engines
+               rpart,   # Decision Trees
+               klaR,    # Naive Bayes
+               nnet,    # Neural Networks and Multinomial Regression
+               ranger,  # Fast Random Forest
+               xgboost, # Gradient Boosting
+               kknn,    # Weighted KNN
+               discrim, # For LDA and Naive Bayes engines
+               C50,
+               glmnet,
+               ggbeeswarm,
+               workflowsets, 
+               vip,
+               future.mirai, mirai)
+
+conflicts_prefer(dplyr::filter,
+                 dplyr::slice,
+                 palmerpenguins::penguins,
+                 vip::vi)
+```
+
+```{r}
+rawdata <- penguins |>
+  drop_na()
+```
+
+## Building the tidymodel framework
+
+Following the steps from the introduction chapter to build the main framework and work flow
+
+### Step 1: Pre-processing
+
+A base_recipe is defined to handle missing data, on-hot-encoding, and zero-variance. This is extended in norm_recipe with normalization.
+
+```{r}
+base_recipe <- recipe(species ~ ., data = rawdata) |>
+  # 1. Fix missing values (use with care!!) 
+  step_impute_median(all_numeric_predictors()) |>
+  step_impute_mode(all_nominal_predictors()) |>
+  # 2. Turn words into numbers 
+  # This performs one-hot encoding, converting a single nominal column into multiple binary (0/1) columns. For example, the island column becomes island_Biscoe and island_Dream.
+  step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
+  # 3. Remove Zero Variance predictors 
+  # It identifies columns that contain only a single unique value. Such variables are computationally problematic and provide no information gain for distinguishing between penguin species.
+  step_zv(all_predictors())
+
+norm_recipe <-  
+  base_recipe |>
+  # 4. Centering and Scaling transformation 
+  # For every numeric predictor, it subtracts the mean and divides by the standard deviation
+  # -all_outcomes() ensures the target variable (species) remains a factor and is not mathematically transformed.
+  step_normalize(all_predictors())
+```
+
+### Step 2: Defining the model using Parsnip package
+
+Here we will explore multiple machine learning approaches to implement in the work. This demonestrates the modularity of tidymodels and how practical it is to use it to test different ML models to decide the best model for your data.
+
+#### 1. Multinomial Regression (`multinom_reg`)
+
+This is an extension of logistic regression used for multi-class classification. It estimates the probability of a sample belonging to each category. It is computationally efficient and provides interpretable log-odds.
+
+```{r}
+multinom_spec <- multinom_reg(penalty = tune(), mixture = tune()) |>
+  set_engine("glmnet", family = "multinomial", nlambda = 100) |>
+  set_mode("classification")
+```
+
+-   `penalty:` Represents the total amount of regularization. It penalizes large coefficients to prevent overfitting.
+
+-   `mixture:` A value between 0 and 1 that determines the proportion of L1 (Lasso) vs L2 (Ridge) regularization.
+
+-   `tune():` This acts as a placeholder, signaling to the tune package that these values will be determined later via cross-validation or a grid search to find the optimal balance between bias and variance. Downstream when we set grid to eg. 3, the model will test 3 random values for the parameters of the model, giving us 3 accuracy values.
+
+-   `family = "multinomial"`: While glmnet usually infers this from the mode, explicitly passing it to the engine ensures the underlying glmnet::glmnet() function uses the grouped-penalty approach, which is more stable for multi-class biological datasets.
+
+-   `nlambda = 100`: This instructs the engine to evaluate a path of 100 penalty values. This provides a denser "regularization path," making the subsequent tuning process more granular and likely to find the global optimum for the F1 score or Accuracy.
+
+#### 2. Decision Trees (`decision_tree`)
+
+Decision trees use recursive partitioning to split data into increasingly homogeneous subsets (nodes).
+
+Here a predefined set of tuning parameters is hard coded.
+
+```{r}
+tree_grid <- expand.grid(tree_depth = seq(2, 10, by = 2),
+                         cost_complexity = c(0.05, 0.01, 0.001),
+                         min_n = seq(4, 10, by = 2)) |> 
+  as_tibble()
+tree_spec <- decision_tree(cost_complexity = tune(),
+                           tree_depth = tune(),
+                           min_n = tune()) |>
+  set_engine("rpart", model = TRUE) |>
+  set_mode("classification")
+```
+
+-   `cost_complexity`: A pruning parameter that controls the trade-off between model complexity and its fit to the training data. Larger values penalize more complex trees, effectively "snipping" off branches that do not significantly reduce the overall impurity.
+
+-   `tree_depth`: Limits the maximum number of nodes from the root to the furthest leaf. A high depth risks overfitting by capturing noise in biological samples, while a low depth may underfit by missing critical diagnostic thresholds.
+
+-   `min_n`: the minimum number of data points required in a node to attempt a further split.
+
+#### 3. Random Forests (`rand_forest`)
+
+An ensemble method that builds multiple decision trees using **bagging** (Bootstrap Aggregating) and feature randomness.
+
+```{r}
+rf_grid <- expand.grid(mtry = 2:4) |> 
+  as_tibble()
+rf_spec <- rand_forest(trees = 1000,
+                       mtry = tune()) |>
+  set_engine("ranger", importance = "impurity") |>
+  set_mode("classification")
+```
+
+-   `trees`: Specifies the number of trees in the ensemble.
+
+-   `mtry` = tune(): It defines the number of predictors that will be randomly sampled at each split in each tree. Tuning this prevents a few dominant predictors (like a very large body mass) from overshadowing other subtle but biologically relevant features.
+
+-   `importance` = "impurity": This calculates Variable Importance Scores based on the Gini impurity. It measures how much each variable (e.g., flipper length) contributes to making the nodes "pure" across all 1000 trees.
+
+#### 4. K-Nearest Neighbors (`nearest_neighbor`)
+
+A non-parametric, instance-based learning algorithm. It classifies a point based on the majority vote of its k neighbors in the feature space. **Note:** Features must be normalized/scaled for KNN to function correctly.
+
+```{r}
+knn_spec <- nearest_neighbor(neighbors = tune(),
+                             weight_func = "triangular") |>
+  set_engine("kknn") |>
+  set_mode("classification")
+```
+
+-   **`neighbors = tune()`**: The number of nearest data points to consider.
+
+-   **`weight_func = "triangular"`**: This defines the kernel function used to weight the neighbors. In a "triangular" scheme, neighbors that are geographically closer to the query point in the feature space exert a stronger influence on the final classification than those further away. This often yields better boundary definitions than simple majority voting.
+
+-   **`weight_func = tune()`**: Instead of assuming a triangular kernel, tuning allows the grid search to test "rectangular" (simple voting), "gaussian", or "optimal" kernels to see which best captures the biological clusters.
+
+**Statistical Note:** k-NN is susceptible to the "Curse of Dimensionality." In datasets with hundreds of features (like transcriptomics), the "distance" between points becomes less meaningful. In such cases, dimensionality reduction (e.g., PCA) should be added to the `recipe` before the `knn_spec`.
+
+#### 5. Boosted Trees (`boost_tree` via XGBoost)
+
+Unlike Random Forests, Gradient Boosting builds trees **sequentially**. Each new tree attempts to correct the errors (residuals) of the previous ones.
+
+Tuning parameters are defined by specifying ranges and the number of steps. This gives greater control as compared to just a call to `tune()`.
+
+```{r}
+xgb_grid <- grid_space_filling(
+  tree_depth(range = c(2, 12)), # Searches between 2 and 10
+  trees(range = c(50, 200)), 
+  learn_rate(),
+  loss_reduction(),
+  min_n(range = c(5,20)),
+  # finalize(sample_size(), rawdata),
+  finalize(mtry(), rawdata), 
+  size = 10
+)
+xgb_spec <- boost_tree(
+  trees = tune(),
+  tree_depth = tune(),
+  min_n = tune(),
+  loss_reduction = tune(),
+  mtry = tune(),
+  # sample_size = tune(),
+  learn_rate = tune()
+) |>
+  set_engine("xgboost") |>
+  set_mode("classification")
+```
+
+-   **`trees = tune()`**: Specifies the number of boosting iterations.
+
+-   **`learn_rate = tune()`**: Scales the contribution of each new tree. A smaller learning rate makes the model more robust to overfitting but requires more `trees` to converge.
+
+-   **`loss_reduction`**: Specifies the minimum loss reduction required to make a further partition on a leaf node. It acts as a conservative guard against capturing noise.
+
+#### 6. C5.0 Decision Trees (`boost_tree` via C5.0)
+
+This defines a **Boosted Decision Tree specification** using the **C5.0** engine. C5.0 is an evolution of the landmark C4.5 algorithm, specifically designed to be faster, more memory-efficient, and more accurate through a process called **boosting**.
+
+```{r}
+c50_spec <- boost_tree(trees = 10) |>
+  set_engine("C5.0") |>
+  set_mode("classification")
+```
+
+#### 7. Linear Discriminant Analysis (`discrim_linear`)
+
+LDA seeks to find a linear combination of features that maximizes the separation between classes. It assumes that predictors follow a multivariate normal distribution with a common covariance matrix. It uses **Bayes' Theorem** to estimate the probability that a given observation belongs to a specific penguin species.
+
+```{r}
+lda_spec <- discrim_linear() |>
+  set_engine("MASS") |>
+  set_mode("classification")
+
+# slda_spec <- discrim_linear(penalty = tune()) |>
+#   set_engine("mda") |>
+#   set_mode("classification")
+```
+
+-   **penalty**: If you were working with genomic data where the number of predictors exceeds the number of samples, the standard `MASS` engine would fail because the covariance matrix becomes non-invertible. Switching to a penalized engine (like `mda` or `klaR`) allows for **Shrinkage Discriminant Analysis**, which regularizes the covariance matrix to ensure numerical stability.
+
+#### 8. Support Vector Machines (`svm_poly` / `svm_rbf`)
+
+SVMs find the **hyperplane** that maximizes the "margin" between classes. Using the "kernel trick," they can project data into higher dimensions to separate classes that are not linearly separable in their original state.
+
+```{r}
+svm_spec <- svm_poly(cost = tune(), degree = tune()) |>
+  set_engine("kernlab") |>
+  set_mode("classification")
+```
+
+-   **`cost`**: This is the regularization parameter. It controls the trade-off between maximizing the margin and minimizing training errors. A **high cost** penalizes misclassifications heavily, leading to a complex boundary that may overfit. A **low cost** allows for a "softer" margin, which can improve generalization in noisy biological data.
+
+-   **`degree`:** This defines the exponent of the polynomial. A degree of 1 is equivalent to a linear kernel; a degree of 2 or 3 allows for quadratic or cubic curves. Higher degrees can capture very complex patterns but are computationally expensive and prone to overfitting.
+
+#### 9. Naive Bayes (`naive_Bayes`)
+
+Based on **Bayes' Theorem**, this model assumes that all predictors are independent of one another given the class label (the "naive" assumption). It is remarkably fast and handles categorical data well.
+
+```{r}
+nb_spec <- naive_Bayes(smoothness = tune()) |>
+  set_engine("klaR", usekernel = TRUE) |>
+  # set_engine("naivebayes") |>
+  set_mode("classification")
+```
+
+-   **`smoothness = tune()`**: This parameter controls the flexibility of the probability estimates. In biological datasets where some measurements might be rare or unique, a higher smoothness value prevents the model from assigning a "zero probability" to a species just because a specific value hasn't been seen in the training data.
+
+-   **`usekernel = TRUE`**: This tells the engine to use **Kernel Density Estimation (KDE)** instead of assuming a perfect Gaussian (normal) distribution for numeric features. This is significantly more flexible for biological data that might be skewed or bimodal.
+
+-   `naivebayes` engine is a lightweight alternative to `klaR` that is often faster for large-scale screenings where complex kernel density estimation is not required.
+
+**Note:** Naive Bayes is particularly susceptible to highly correlated features. In your `base_recipe`, if variables like `body_mass_g` and `flipper_length_mm` are almost identical in their distribution, the model may "double-count" their evidence, leading to overconfident (and potentially incorrect) probability estimates.
+
+#### 10. Multilayer Perceptron / Neural Networks (`mlp`)
+
+The foundation of deep learning. It consists of an input layer, one or more hidden layers, and an output layer. It uses backpropagation to adjust weights and learn complex hierarchical patterns.
+
+```{r}
+mlp_spec <- mlp(hidden_units = tune(),
+                penalty = tune(),
+                epochs = 500) |>
+  set_engine("nnet", MaxNWts = 2000) |>
+  set_mode("classification")
+```
+
+-   **`hidden_units = tune()`**: This defines the number of nodes in the hidden layer. Tuning this is critical; too few units will fail to capture the complexity of the biological data (**underfitting**), while too many can lead to the model memorizing the training samples (**overfitting**).
+
+-   **`penalty = tune()`**: This introduces **weight decay**. It penalizes large weights in the network, forcing the model to remain simpler and more robust to noise in the physical measurements.
+
+-   **`epochs = 500`**: An epoch represents one full pass of the entire training dataset through the network. 500 iterations allow the weight optimization (backpropagation) sufficient time to converge on a solution that minimizes the loss function.
+
+-   **`MaxNWts = 2000`**: Biological datasets with many predictors can quickly exceed the default weight limit in `nnet`. Increasing this ensures the model can actually initialize if the feature space grows.
+
+#### 11. Logistic Regression with Elastic Net (`logistic_reg`)
+
+This model combines **Lasso** ($L1$) and **Ridge** ($L2$) regularization. It is ideal for gene expression data where you have more variables than samples ($p > n$).
+
+**Note:** For multi-class (penguins), multinom_reg is used, but logistic_reg is standard for binary outcomes.
+
+```{r}
+elastic_spec <- logistic_reg(penalty = tune(), mixture = tune()) |>
+  set_engine("glmnet")
+```
+
+### Step 3: Competitive Model Evaluation (Using `workflow_set`)
+
+As different models have different requirements for preprocessing, a base set of steps and an extended recipe with normalization have been prepared. `workflow_set` builds all combinations of recipies and models, in a later step some combinations like normalization and tree models are filtered out, same for just base preprocessing and knn etc.
+
+For some models the tuning grid had been specified by either vectors of values or range definitions, they are added as options.
+
+```{r}
+model_set <- 
+  workflow_set(
+    preproc = list(base = base_recipe,
+                   norm = norm_recipe),
+    models = list(
+      multinom = multinom_spec,
+      dec_tree = tree_spec,
+      rf = rf_spec, 
+      knn = knn_spec,
+      xgb = xgb_spec,
+      c50 = c50_spec,
+      lda = lda_spec,
+      svm = svm_spec,
+      nb = nb_spec,
+      mlp = mlp_spec),
+    cross = TRUE
+  ) |>   
+  filter(!str_detect(wflow_id, "norm_[drxc]")) |> 
+  filter(!str_detect(wflow_id, "base_[mklsn]")) |> 
+  option_add(grid = tree_grid, id = "base_dec_tree") |> 
+  option_add(grid = xgb_grid, id = "base_xgb") |> 
+  option_add(grid = rf_grid, id = "base_rf")
+
+# This allows for batch fitting and performance ranking.
+```
+
+### Step 4: Cross-Validation
+
+Once you have your `workflow_set`, you don't use `fit()` like you do for a single model. You usually use **Resampling** (like Cross-Validation) to see which model is the most suitable before you pick a winner.
+
+```{r}
+# Create Cross-Validation folds
+set.seed(123)
+penguin_folds <- vfold_cv(rawdata, v = 5, repeats = 10)
+
+# Simplify the metrics to avoid naming conflicts
+penguin_metrics <- metric_set(accuracy, kap)
+
+# Run all models in the set across all folds
+plan(mirai_multisession, workers = availableCores()-2) # Use all but 2 cores for parallel processing
+models_test_results <- 
+  model_set |>
+  workflow_map("tune_grid",
+               resamples = penguin_folds,
+               # grid = 10, # Fewer combinations is faster for testing
+               # how many different "combinations of settings" it should try out to find the best settings
+               metrics = penguin_metrics,
+               verbose = TRUE        # This will show us exactly which model "crashes"
+  )
+plan(sequential)
+```
+
+### Step 5: Ranking the models
+
+```{r}
+# Extract the metrics
+# If some models failed, this will show you only the ones that succeeded
+model_metrics <- models_test_results |> 
+  filter(sapply(result, function(x) inherits(x, "tune_results"))) |> 
+  collect_metrics()
+
+# Visualize the ranking of all models
+
+model_metrics |> 
+  filter(.metric == "accuracy") |> 
+  mutate(model = str_remove(wflow_id, "^(base|norm|reduced)_")) |>
+  arrange(model) |> 
+  ggplot(aes(x = wflow_id, y = mean)) +
+  geom_beeswarm(size = 2, alpha = 0.25, cex = 3) +
+  facet_wrap(facets = vars(model), scales = "free") +
+  scale_x_discrete(name = NULL)+
+    labs(
+    title = "Full Model Comparison: All Grid Search Results",
+    subtitle = "Showing all hyperparameter combinations per algorithm",
+    y = "mean accuracy"
+  )
+
+
+autoplot(models_test_results, select_best = TRUE) + 
+  # Set select_best = FALSE to reveal all grid combinations 
+  # Map wflow_id to X to group triplicates together
+  aes(x = wflow_id) +
+  # Increase point size for better visibility
+  geom_point(size = 3, alpha = 0.25) + 
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+    legend.position = "none",
+    panel.grid.minor = element_blank()
+  ) +
+  labs(
+    title = "Full Model Comparison: ",
+    subtitle = "Showing best out of all hyperparameter combinations per algorithm",
+    x = "Model Specification",
+    y = "Metric Value"
+  )
+```
+
+What the Output Table Means
+
+When this code works, you will see a table (a `tibble`) with several columns. Here is how to read them:
+
+|  |  |
+|------------------------------------|------------------------------------|
+| **Column** | **What it tells you** |
+| **`wflow_id`** | Which model/recipe combo this is (e.g., `base_rf` for Random Forest). |
+| **`.metric`** | What is being measured (`accuracy` or `roc_auc`). |
+| **`mean`** | This is the average score from your repeated 5-fold cross-validation. Closer to 1.0 is better. |
+| **`n`** | How many times the model was tested (should match your folds * times, e.g., 5*10). |
+| **`std_err`** | The "Wiggle Room." If this is high, the model is inconsistent. You want this to be low. |
+
+Note: C50 and lda models show only 1 value for accuracy, as compared to the multiple values for other models.
+
+This is because:
+
+C50: there are no parameters that were set to tune(), since trees were set to 10.
+
+lda: LDA is a "closed-form" mathematical formula. It doesn't have parameters to tune. It just calculates the distance between group means; therefore, the grid simply collapses into 1.
+
+### Step 6: Best model selection
+
+```{r}
+# View the top models
+model_metrics_accuracy <- model_metrics |> 
+  filter(.metric == "accuracy") |> 
+  arrange(desc(mean))
+
+# 1. Identify the best model type
+best_results <- models_test_results |> 
+  rank_results(rank_metric = "kap", select_best = TRUE)
+
+# 2. Extract the best workflow configuration for the top model
+best_workflow_fit <- models_test_results |> 
+  extract_workflow_set_result("norm_multinom") |> # Replace with your winner ID
+  select_best(metric = "kap")
+best_workflow_fit_xgb <- models_test_results |> 
+  extract_workflow_set_result("base_xgb") |> # Replace with your winner ID
+  select_best(metric = "kap")
+best_workflow_fit_rf <- models_test_results |> 
+  extract_workflow_set_result("base_rf") |> # Replace with your winner ID
+  select_best(metric = "accuracy")
+
+# 3. Finalize the workflow
+final_workflow <- models_test_results |> 
+  extract_workflow("base_rf") |> 
+  finalize_workflow(best_workflow_fit_rf)
+```
+
+-   **`finalize_workflow()`**: It maps these values onto the model specification.
+
+-   **Note:** After this line, the `final_workflow` is no longer tunable. It is now a **fully defined model** ready to be used for prediction.
+
+Why is this necessary?
+
+In a bioinformatic pipeline, you cannot simply use the results from the `tune_grid()` directly for prediction. The tuning process happens across multiple "folds" (subsets) of your data. To get the most robust version of your chosen model, you must:
+
+1.  **Identify** the best settings from the folds.
+
+2.  **Apply** those settings to a fresh workflow (Finalize).
+
+3.  **Train** that finalized workflow on the **entire** `rawdata` (Last Fit).
+
+

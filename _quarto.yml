@@ -59,20 +59,11 @@ format:
     linkcolor: black      # Targets internal links (TOC, Figures)
     urlcolor: blue       # Targets web links
     citecolor: black      # Targets bibliography links
-    code-block-bg: ffffdf
-    # include-in-header:
-    #   text: |
-    #     \hypersetup{
-    #       colorlinks=true,
-    #       linkcolor=black,
-    #       urlcolor=black
-    #     }  
-      # \usepackage{graphbox}
-      # \usepackage{wrapfig}
-      # \usepackage{float}
-  # word:
-  #   template:
-
+    code-block-bg: fbfbf2 
+    monofont: "Cascadia Mono SemiBold"
+    monofontoptions: 
+      - Scale=0.55
+ 
 editor: visual
 highlight-style: github
 

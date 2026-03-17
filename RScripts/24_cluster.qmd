@@ -3,14 +3,17 @@
 ## kmeans
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted, tidyverse,
                wrappedtools, 
                palmerpenguins,
-               ggfortify, GGally,
+               ggfortify, GGally, ggdendro, ggpubr,
                factoextra,
                caret,clue,
                dendextend, circlize,
-               easystats, NbClust, mclust
+               easystats, NbClust, mclust,
+               tidymodels, tidyclust
 )
 
 # conflict_scout()
@@ -19,41 +22,49 @@ conflicts_prefer(dplyr::slice,
                  palmerpenguins::penguins)
 rawdata <- penguins |> 
   na.omit()
-rawdata <- mutate(rawdata,
-                  ID=paste('P', 1:nrow(rawdata))) |> 
-  select(ID, everything())
+```
+
+
+```{r}
 predvars <- ColSeeker(namepattern = c('_mm','_g'))
 
-rawdata <- predict(preProcess(rawdata |> 
-                               select(predvars$names),
-                             method = c("center", "scale")),
-                  rawdata)
+norm_rec <- 
+  recipe(rawdata) |>
+  update_role(all_of(predvars$names), new_role = "predictor") |> 
+  step_normalize(all_numeric_predictors())
+rawdata <- 
+  norm_rec |> 
+  prep() |>  
+  bake(new_data = rawdata) 
 fviz_nbclust(rawdata |> select(predvars$names),
              FUNcluster = kmeans)
+```
 
+
+```{r}
 kmeans_out <- kmeans(rawdata |> select(predvars$names),
-                     centers = 2)
+                     centers = 3)
 
 rawdata <- 
-  mutate(rawdata,Cluster_k2var4=kmeans_out$cluster |> as.factor())
+  mutate(rawdata,Cluster_k3=kmeans_out$cluster |> as.factor())
 rawdata |> 
-  ggplot(aes(species,fill=Cluster_k2var4))+
+  ggplot(aes(species,fill=Cluster_k3))+
   geom_bar()
 
 rawdata |> 
-  ggplot(aes(fill=species,x=Cluster_k2var4))+
+  ggplot(aes(fill=species,x=Cluster_k3))+
   geom_bar(position = 'fill')+
   scale_y_continuous(name = 'Frequency', labels=scales::percent)
 
 
 rawdata |> 
   ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=Cluster_k2var4))+
+             shape=species,color=Cluster_k3))+
   geom_point()
 
 rawdata |> 
-  ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=Cluster_k2var4))+
+  ggplot(aes(flipper_length_mm,body_mass_g,
+             shape=species,color=Cluster_k3))+
   geom_point()
 
 
@@ -63,46 +74,18 @@ fviz_cluster(kmeans_out,rawdata |> select(predvars$names))
 # predict(kmeans_out)
 sample(clue::cl_predict(kmeans_out),10)
 
-# more clusters
-kmeans_out3 <- kmeans(rawdata |> select(predvars$names),
-                     centers = 3)
-
-rawdata <- 
-  mutate(rawdata,Cluster_k3var4=kmeans_out3$cluster |> as.factor())
-rawdata |> 
-  ggplot(aes(species,fill=Cluster_k3var4))+
-  geom_bar()
-
-rawdata |> 
-  ggplot(aes(fill=species,x=Cluster_k3var4))+
-  geom_bar(position = 'fill')+
-  scale_y_continuous(name = 'Frequency', labels=scales::percent)
-
-
-rawdata |> 
-  ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=Cluster_k3var4))+
-  geom_point()
-
-rawdata |> 
-  ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=Cluster_k3var4))+
-  geom_point()
-
-
-
 kmeans_out6 <- kmeans(rawdata |> select(predvars$names),
                      centers = 6)
 
 rawdata <- 
-  mutate(rawdata,Cluster_k6var4=kmeans_out6$cluster |> as.factor())
+  mutate(rawdata,Cluster_k6=kmeans_out6$cluster |> as.factor())
 rawdata |> 
-  ggplot(aes(species,fill=Cluster_k6var4))+
+  ggplot(aes(species,fill=Cluster_k6))+
   geom_bar()+
   facet_grid(rows=vars(sex))
 
 rawdata |> 
-  ggplot(aes(fill=species,x=Cluster_k6var4))+
+  ggplot(aes(fill=species,x=Cluster_k6))+
   geom_bar(position = 'fill')+
   scale_y_continuous(name = 'Frequency', labels=scales::percent)+
   facet_grid(rows=vars(sex))
@@ -110,16 +93,9 @@ rawdata |>
 
 rawdata |> 
   ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=Cluster_k6var4))+
+             shape=species,color=Cluster_k6))+
   geom_point()+
   facet_grid(rows=vars(sex))
-
-rawdata |> 
-  ggplot(aes(flipper_length_mm,bill_length_mm,
-             shape=species,color=Cluster_k6var4))+
-  geom_point()
-
-
 ```
 
 ## HClust
@@ -150,40 +126,12 @@ hc_result <- hclust(distance_matrix, method = "ward.D2")
 hc_result
 
 
-# Visualize the Dendrogram using factoextra
-#    The dendrogram is the primary output of hierarchical clustering.
-#    It shows how observations are grouped together.
-#    `fviz_dend()` from `factoextra` provides a beautiful and easy way to plot it.
-
-fviz_dend(hc_result,
-          k = 3, # Cut the dendrogram into 3 groups (you can try other numbers)
-          cex = 0.5, # Adjust label size
-          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800"), # Custom colors for clusters
-          # color_labels_by_k = TRUE, # Color labels by group
-          rect = TRUE, # Draw a rectangle around clusters
-          # rect_border = c("#2E9FDF", "#00AFBB", "#E7B800"),
-          rect_fill = TRUE,
-          main = "Hierarchical Clustering Dendrogram (Ward's Method)",
-          sub = "Penguins Data",
-          xlab = "Observations",
-          ylab = "Height (Distance)")
-
-
-fviz_dend(hc_result,
-          k = 6, cex = 0.5, 
-          rect = TRUE,
-          rect_fill = TRUE,
-          main = "Hierarchical Clustering Dendrogram (Ward's Method)",
-          sub = "Penguins Data", #ignored??
-          xlab = "Observations",
-          ylab = "Height (Distance)")
-
 
 dend <- as.dendrogram(hc_result)
 dend <- color_branches(dend, k=3)
 dendextend::circlize_dendrogram(dend,
                                 facing = "outside")
-
+dendextend::as.ggdend(dend, type = "triangle")
 
 # Cut the Dendrogram and Extract Clusters
 #    To form distinct clusters, you "cut" the dendrogram at a certain height
@@ -236,7 +184,7 @@ fviz_cluster(list(data = penguins_scaled, cluster = clusters),
 ## Unified from easystats
 
 ```{r}
-easycluster1 <- cluster_analysis(penguins_scaled,
+easycluster1 <- cluster_analysis(penguins_scaled,n = 3,
                                  standardize = FALSE)
 print(easycluster1)
 
@@ -252,3 +200,22 @@ plot(easycluster2)
 
 
 ```
+
+
+```{r}
+# 1. Model Specification
+kmeans_spec <- k_means(num_clusters = 3) |> 
+  set_engine("stats")
+
+# 2. Preprocessing (Scaling is CRITICAL for K-means)
+# done above 
+# 3. Workflow
+kmeans_wflow <- workflow() |> 
+  add_model(kmeans_spec) |> 
+  add_formula(~ .)
+
+# 4. Fit
+kmeans_fit <- kmeans_wflow |> fit(data = rawdata |> 
+                                    select(all_of(predvars$names)))
+```
+

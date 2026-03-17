@@ -1,6 +1,8 @@
 # k nearest neighbors knn
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,
                tidyverse,
                wrappedtools,  # just tools 
@@ -54,7 +56,7 @@ rawplot+
 
 ## Scaling
 
-To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame.  
+To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame.
 
 ### Center + scale (z-score normalization)
 
@@ -86,6 +88,7 @@ penguins_ranged <- rec_ranged |>
 ```
 
 ### Percentile transformation
+
 ```{r}
 rec_quantiled <- recipe(model_formula, data = rawdata) |>
   step_percentile(all_predictors())
@@ -165,10 +168,12 @@ knn_workflow <- workflow() |>
 ```
 
 #### Fit the model to the training data
+
 ```{r}
 knn_fit <- knn_workflow |> 
   fit(data = traindata)
 ```
+
 #### Predict classes
 
 ```{r}

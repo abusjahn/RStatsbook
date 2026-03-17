@@ -94,6 +94,8 @@ rename_with(
   colnames()
 ```
 
+\newpage
+
 ## Exercise
 
 ```{r}

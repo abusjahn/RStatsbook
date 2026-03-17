@@ -121,6 +121,6 @@ There are plenty of books available, check out e.g.
 
 [R-bloggers](https://www.r-bloggers.com/)
 
-[Bioconductor - Home](https://www.bioconductor.org/)  
-  
-\newpage    
+[Bioconductor - Home](https://www.bioconductor.org/)
+
+\newpage

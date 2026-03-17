@@ -1,6 +1,8 @@
 # Boosted regression trees
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,
                tidyverse,
                ggbeeswarm,

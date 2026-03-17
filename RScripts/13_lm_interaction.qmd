@@ -1,6 +1,8 @@
 # Interaction in linear models
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,tidyverse,car,multcomp,wrappedtools, broom)
 conflicts_prefer(dplyr::select, dplyr::filter)
 ```

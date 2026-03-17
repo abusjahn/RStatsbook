@@ -1,6 +1,8 @@
 # Grouping of variables by type / distribution / use
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,wrappedtools,tidyverse, here)
 conflicts_prefer(dplyr::filter)
 rawdata <- readRDS(here('data/rawdata.rds'))
@@ -196,6 +198,8 @@ head(resulttable3)
 
 rm(numvars)
 ```
+
+\newpage
 
 ## Exercise: Distribution of penguin measures
 

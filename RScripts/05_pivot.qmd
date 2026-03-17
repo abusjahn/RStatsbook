@@ -195,6 +195,8 @@ rawdata_wide2 <-
 head(rawdata_wide2)
 ```
 
+\newpage
+
 ## Exercise: Reshaping Data
 
 **Scenario:** You are a biologist studying the growth of chicks under different diets. The `ChickWeight` dataset in R contains observations on the weight of chicks over time, grouped by individual chick and diet. Understanding how to reshape data is crucial for different types of analyses and visualizations.

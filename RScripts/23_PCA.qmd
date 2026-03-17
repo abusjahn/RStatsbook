@@ -1,23 +1,19 @@
 # Principal Components Analysis
 
 ```{r}
-if(!requireNamespace("BiocManager", quietly = TRUE)) {
-  install.packages("BiocManager")
-}
-if(!requireNamespace("PCAtools", quietly = TRUE)) {
-  BiocManager::install("PCAtools")
-}
-# BiocManager::install("PCAtools")
+#| output: false
+#| message: false
 pacman::p_load(conflicted,
                tidyverse,
                wrappedtools, 
                palmerpenguins,
                ggfortify, GGally,
-               PCAtools, # bioconductor
+               tidytext,
                FactoMineR,
-               ggrepel,
+               ggrepel, ggforce,
                boot,
-               caret)
+               tidymodels, 
+               corrplot)
 
 # conflict_scout()
 conflicts_prefer(dplyr::slice, 
@@ -38,12 +34,17 @@ predvars <- ColSeeker(namepattern = c('_mm','_g'))
 ```{r}
 #| fig_width: 6
 #| fig.height: 5
-cortestR(rawdata |> 
-           # filter(species== "Adelie") |>
-           select(predvars$names),
-         split = T) |> 
-  pluck('corout') |> 
-  ggcormat(maxpoint = 8)
+corout <- rawdata |> 
+  select(predvars$names) |> 
+  cor()
+
+corrplot(corout, type = 'upper', 
+         method = "number", tl.pos = 'd')
+corrplot(corout, add = TRUE, type = 'lower', 
+         method = 'ellipse', 
+         diag = FALSE, tl.pos = 'n', cl.pos = 'n')
+
+
 ```
 
 ```{r}
@@ -65,11 +66,16 @@ ggpairs(rawdata |> select(species, sex,
 predvars2 <- ColSeeker(namepattern = c('body','flipper'))
 ggplot(rawdata, aes(.data[[predvars2$names[1]]], .data[[predvars2$names[2]]]))+
   geom_point(aes(color=species))
-v2data <- predict(preProcess(rawdata |> 
-                               select(predvars2$names),
-                             method = c("YeoJohnson","center", "scale")),
-                  rawdata) |> 
-                    select(species,predvars2$names)
+var2_rec <- 
+  recipe(rawdata) |>
+  update_role(all_of(predvars2$names), new_role = "predictor") |> 
+  step_YeoJohnson(all_numeric_predictors()) |> 
+  step_normalize(all_numeric_predictors())
+v2data <- 
+  var2_rec |> 
+  prep() |> 
+  bake(rawdata)
+  
 ggplot(v2data, aes(.data[[predvars2$names[1]]], .data[[predvars2$names[2]]]))+
   geom_point(aes(color=species))
 
@@ -165,8 +171,67 @@ pc1plot+
 v2data[c(1,101, 201,301),]
 ```
 
+## tidymodels approach
+
 ```{r}
-pca_out <- prcomp(rawdata |> 
+pca_rec <- 
+  recipe(rawdata) |>
+  update_role(all_of(predvars$names), new_role = "predictor") |> 
+  step_YeoJohnson(all_numeric_predictors()) |> 
+  step_normalize(all_numeric_predictors())
+pca_rec_trained <- 
+  pca_rec |> 
+  prep() 
+
+pca_preped <- 
+  pca_rec_trained |> 
+  step_pca(all_numeric_predictors(), id = "pca_step") |> 
+    prep() 
+
+pca_baked <- 
+  pca_preped |> 
+    bake(new_data = rawdata) 
+
+pca_baked |> 
+    ggplot(aes(x = .panel_x, y = .panel_y, color = species, fill = species)) +
+    geom_point(alpha = 0.4, size = 0.5) +
+    geom_autodensity(alpha = .5) +
+    facet_matrix(vars(starts_with("PC")), layer.diag = 2) 
+pca_loadings <- 
+  pca_preped %>%
+  tidy(id = "pca_step")
+
+pca_loadings |>
+  group_by(component) |>
+  slice_max(abs(value), n = 10) |> # Get top 10 influencers per PC
+  ungroup() |>
+  ggplot(aes(x = abs(value), y = reorder_within(terms, abs(value), component),
+             fill = value > 0)) +
+  geom_col() +
+  scale_y_reordered() + # Works with reorder_within for clean facets
+  facet_wrap(vars(component), scales = "free_y") +
+  labs(
+    x = "Absolute value of loading",
+    y = NULL,
+    fill = "Positive?",
+    title = "Principal Component Loadings"
+  )
+pca_loadings |>
+  filter(component %in% c("PC1", "PC2")) |>
+  pivot_wider(names_from = component, values_from = value) |>
+  ggplot(aes(x = PC1, y = PC2)) +
+  geom_segment(aes(xend = PC1, yend = PC2), 
+               x = 0, y = 0, arrow = arrow(length = unit(0.2, "cm"))) +
+  geom_text(aes(label = terms), check_overlap = TRUE, vjust = 1, hjust = 1) +
+  theme_minimal() +
+  labs(title = "Variable Loadings Biplot (PC1 vs PC2)")
+
+
+```
+
+## base approach
+
+```{pca_out <- prcomp(rawdata |>}
                     select(predvars$names),
                   center = T,scale. = T)
 summary(pca_out)
@@ -273,34 +338,4 @@ pca_out_deca$rotation |>
 autoplot(pca_out_deca, data=decathlon, 
          loadings = TRUE, loadings.colour = 'black',
          loadings.label = TRUE, loadings.label.size = 4)
-```
-
-## PCA bioconductor style
-
-```{r}
-# PCA tools
-pca_mat <- rawdata |> select(ID,predvars$names) |> 
-  column_to_rownames(var = 'ID') |> 
-  as.matrix() |> 
-  t()
-
-pca_out3 <- pca(mat = pca_mat,
-                center = T,scale = T
-)
-getVars(pca_out3)
-getLoadings(pca_out3)
-
-PCAtools::screeplot(pca_out3)
-PCAtools::biplot(pca_out3,
-                 showLoadings = TRUE,ntopLoadings = 2,
-                 labSize = 5, pointSize = 3, sizeLoadingsNames = 3)
-# pairsplot(pca_out3)
-# eigencorplot(pca_out3,
-#              metavars=predvars$names)
-pca_out3$loadings |> 
-  as_tibble(rownames='measure') |> 
-  ggplot(aes(PC1,PC2,shape=measure))+
-  geom_point(data=pca_out3$rotated, color='grey', shape=1)+
-  geom_segment(xend=0,yend=0,arrow=arrow(ends='first'))+
-  ggrepel::geom_label_repel(aes(label=measure))
 ```

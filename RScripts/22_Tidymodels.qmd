@@ -1,32 +1,40 @@
-
 # tidymodels framework
 
 In the **tidymodels** framework, the `parsnip` package provides a unified interface for model specification. This abstraction allows researchers to switch between radically different mathematical engines without altering their data processing pipeline.
 
-```{r}
-pacman::p_load(conflicted,
-               tidyverse,
-               palmerpenguins,
-               tidymodels,
-               kernlab, # SVM engines
-               rpart,   # Decision Trees
-               klaR,    # Naive Bayes
-               nnet,    # Neural Networks and Multinomial Regression
-               ranger,  # Fast Random Forest
-               xgboost, # Gradient Boosting
-               kknn,    # Weighted KNN
-               discrim, # For LDA and Naive Bayes engines
-               C50,
-               glmnet,
-               ggbeeswarm,
-               workflowsets, 
-               vip,
-               future.mirai, mirai)
+Extensive documentation is available here: [Tidy Modelling with R](https://www.tmwr.org/)
 
-conflicts_prefer(dplyr::filter,
-                 dplyr::slice,
-                 palmerpenguins::penguins,
-                 vip::vi)
+```{r}
+#| output: false
+#| message: false
+pacman::p_load(
+  conflicted,
+  tidyverse,
+  palmerpenguins,
+  tidymodels,
+  kernlab, # SVM engines
+  rpart, # Decision Trees
+  klaR, # Naive Bayes
+  nnet, # Neural Networks and Multinomial Regression
+  ranger, # Fast Random Forest
+  xgboost, # Gradient Boosting
+  kknn, # Weighted KNN
+  discrim, # For LDA and Naive Bayes engines
+  C50,
+  glmnet,
+  ggbeeswarm,
+  ggforce,
+  workflowsets,
+  vip,
+  future.mirai, mirai
+)
+
+conflicts_prefer(
+  dplyr::filter,
+  dplyr::slice,
+  palmerpenguins::penguins,
+  vip::vi
+)
 ```
 
 ```{r}
@@ -44,19 +52,19 @@ A base_recipe is defined to handle missing data, on-hot-encoding, and zero-varia
 
 ```{r}
 base_recipe <- recipe(species ~ ., data = rawdata) |>
-  # 1. Fix missing values (use with care!!) 
+  # 1. Fix missing values (use with care!!)
   step_impute_median(all_numeric_predictors()) |>
   step_impute_mode(all_nominal_predictors()) |>
-  # 2. Turn words into numbers 
+  # 2. Turn words into numbers
   # This performs one-hot encoding, converting a single nominal column into multiple binary (0/1) columns. For example, the island column becomes island_Biscoe and island_Dream.
   step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
-  # 3. Remove Zero Variance predictors 
+  # 3. Remove Zero Variance predictors
   # It identifies columns that contain only a single unique value. Such variables are computationally problematic and provide no information gain for distinguishing between penguin species.
   step_zv(all_predictors())
 
-norm_recipe <-  
+norm_recipe <-
   base_recipe |>
-  # 4. Centering and Scaling transformation 
+  # 4. Centering and Scaling transformation
   # For every numeric predictor, it subtracts the mean and divides by the standard deviation
   # -all_outcomes() ensures the target variable (species) remains a factor and is not mathematically transformed.
   step_normalize(all_predictors())
@@ -93,13 +101,25 @@ Decision trees use recursive partitioning to split data into increasingly homoge
 Here a predefined set of tuning parameters is hard coded.
 
 ```{r}
-tree_grid <- expand.grid(tree_depth = seq(2, 10, by = 2),
-                         cost_complexity = c(0.05, 0.01, 0.001),
-                         min_n = seq(4, 10, by = 2)) |> 
+tree_grid <- expand.grid(
+  tree_depth = seq(2, 10, by = 2),
+  cost_complexity = c(0.05, 0.01, 0.001),
+  min_n = seq(4, 10, by = 2)
+) |>
   as_tibble()
-tree_spec <- decision_tree(cost_complexity = tune(),
-                           tree_depth = tune(),
-                           min_n = tune()) |>
+tree_grid |> 
+ggplot(aes(x = .panel_x, y = .panel_y)) + 
+  geom_point() +
+  geom_blank() +
+  facet_matrix(vars(tree_depth, cost_complexity, min_n), 
+               layer.upper = FALSE, layer.diag = 2) + 
+  labs(title = str_glue("Crossed design with {nrow(tree_grid)} combinations"))
+
+tree_spec <- decision_tree(
+  cost_complexity = tune(),
+  tree_depth = tune(),
+  min_n = tune()
+) |>
   set_engine("rpart", model = TRUE) |>
   set_mode("classification")
 ```
@@ -115,10 +135,12 @@ tree_spec <- decision_tree(cost_complexity = tune(),
 An ensemble method that builds multiple decision trees using **bagging** (Bootstrap Aggregating) and feature randomness.
 
 ```{r}
-rf_grid <- expand.grid(mtry = 2:4) |> 
+rf_grid <- expand.grid(mtry = 2:4) |>
   as_tibble()
-rf_spec <- rand_forest(trees = 1000,
-                       mtry = tune()) |>
+rf_spec <- rand_forest(
+  trees = 1000,
+  mtry = tune()
+) |>
   set_engine("ranger", importance = "impurity") |>
   set_mode("classification")
 ```
@@ -134,8 +156,10 @@ rf_spec <- rand_forest(trees = 1000,
 A non-parametric, instance-based learning algorithm. It classifies a point based on the majority vote of its k neighbors in the feature space. **Note:** Features must be normalized/scaled for KNN to function correctly.
 
 ```{r}
-knn_spec <- nearest_neighbor(neighbors = tune(),
-                             weight_func = "triangular") |>
+knn_spec <- nearest_neighbor(
+  neighbors = tune(),
+  weight_func = "triangular"
+) |>
   set_engine("kknn") |>
   set_mode("classification")
 ```
@@ -157,14 +181,22 @@ Tuning parameters are defined by specifying ranges and the number of steps. This
 ```{r}
 xgb_grid <- grid_space_filling(
   tree_depth(range = c(2, 12)), # Searches between 2 and 10
-  trees(range = c(50, 200)), 
+  trees(range = c(50, 200)),
   learn_rate(),
-  loss_reduction(),
-  min_n(range = c(5,20)),
+  loss_reduction(range = c(0, 10)),
+  min_n(range = c(5, 20)),
   # finalize(sample_size(), rawdata),
-  finalize(mtry(), rawdata), 
-  size = 10
+  finalize(mtry(), rawdata),
+  size = 20
 )
+xgb_grid |> 
+  mutate(learn_rate = log10(learn_rate)) |>  
+ggplot(aes(x = .panel_x, y = .panel_y)) + 
+  geom_point() +
+  geom_blank() +
+  facet_matrix(vars(everything()), 
+               layer.upper = FALSE, layer.diag = 2) + 
+  labs(title = str_glue("Space-filling design with {nrow(xgb_grid)} combinations"))
 xgb_spec <- boost_tree(
   trees = tune(),
   tree_depth = tune(),
@@ -248,9 +280,11 @@ nb_spec <- naive_Bayes(smoothness = tune()) |>
 The foundation of deep learning. It consists of an input layer, one or more hidden layers, and an output layer. It uses backpropagation to adjust weights and learn complex hierarchical patterns.
 
 ```{r}
-mlp_spec <- mlp(hidden_units = tune(),
-                penalty = tune(),
-                epochs = 500) |>
+mlp_spec <- mlp(
+  hidden_units = tune(),
+  penalty = tune(),
+  epochs = 500
+) |>
   set_engine("nnet", MaxNWts = 2000) |>
   set_mode("classification")
 ```
@@ -276,35 +310,37 @@ elastic_spec <- logistic_reg(penalty = tune(), mixture = tune()) |>
 
 ### Step 3: Competitive Model Evaluation (Using `workflow_set`)
 
-As different models have different requirements for preprocessing, a base set of steps and an extended recipe with normalization have been prepared. `workflow_set` builds all combinations of recipies and models, in a later step some combinations like normalization and tree models are filtered out, same for just base preprocessing and knn etc.
+As different models have different requirements for preprocessing, a base recipe and an extended recipe with normalization have been prepared. `workflow_set` allows you to define multiple workflows with different combinations of recipes and models. This is particularly useful for comparing models that require different preprocessing steps (e.g., KNN needs normalization, while Random Forest does not).
 
 For some models the tuning grid had been specified by either vectors of values or range definitions, they are added as options.
 
 ```{r}
-model_set <- 
+model_set_base <-
   workflow_set(
-    preproc = list(base = base_recipe,
-                   norm = norm_recipe),
+    preproc = list(base = base_recipe),
+    models = list(
+      dec_tree = tree_spec,
+      rf = rf_spec,
+      xgb = xgb_spec,
+      c50 = c50_spec
+    )
+  ) |>
+  option_add(grid = tree_grid, id = "base_dec_tree") |>
+  option_add(grid = xgb_grid, id = "base_xgb") |>
+  option_add(grid = rf_grid, id = "base_rf")
+model_set_norm <-
+  workflow_set(
+    preproc = list(norm = norm_recipe),
     models = list(
       multinom = multinom_spec,
-      dec_tree = tree_spec,
-      rf = rf_spec, 
       knn = knn_spec,
-      xgb = xgb_spec,
-      c50 = c50_spec,
       lda = lda_spec,
       svm = svm_spec,
       nb = nb_spec,
-      mlp = mlp_spec),
-    cross = TRUE
-  ) |>   
-  filter(!str_detect(wflow_id, "norm_[drxc]")) |> 
-  filter(!str_detect(wflow_id, "base_[mklsn]")) |> 
-  option_add(grid = tree_grid, id = "base_dec_tree") |> 
-  option_add(grid = xgb_grid, id = "base_xgb") |> 
-  option_add(grid = rf_grid, id = "base_rf")
-
-# This allows for batch fitting and performance ranking.
+      mlp = mlp_spec
+    )
+  )
+model_set <- bind_rows(model_set_base, model_set_norm)
 ```
 
 ### Step 4: Cross-Validation
@@ -314,21 +350,22 @@ Once you have your `workflow_set`, you don't use `fit()` like you do for a singl
 ```{r}
 # Create Cross-Validation folds
 set.seed(123)
-penguin_folds <- vfold_cv(rawdata, v = 5, repeats = 10)
+folds <- 5
+penguin_folds <- vfold_cv(rawdata, v = folds, repeats = 10)
 
 # Simplify the metrics to avoid naming conflicts
 penguin_metrics <- metric_set(accuracy, kap)
 
 # Run all models in the set across all folds
-plan(mirai_multisession, workers = availableCores()-2) # Use all but 2 cores for parallel processing
-models_test_results <- 
+plan(mirai_multisession, workers = max(availableCores() - 2, folds))
+models_test_results <-
   model_set |>
-  workflow_map("tune_grid",
-               resamples = penguin_folds,
-               # grid = 10, # Fewer combinations is faster for testing
-               # how many different "combinations of settings" it should try out to find the best settings
-               metrics = penguin_metrics,
-               verbose = TRUE        # This will show us exactly which model "crashes"
+  workflow_map(
+    "tune_grid",
+    resamples = penguin_folds,
+    metrics = penguin_metrics,
+    verbose = TRUE,
+    seed = 321
   )
 plan(sequential)
 ```
@@ -338,33 +375,33 @@ plan(sequential)
 ```{r}
 # Extract the metrics
 # If some models failed, this will show you only the ones that succeeded
-model_metrics <- models_test_results |> 
-  filter(sapply(result, function(x) inherits(x, "tune_results"))) |> 
+model_metrics <- models_test_results |>
+  filter(sapply(result, function(x) inherits(x, "tune_results"))) |>
   collect_metrics()
 
 # Visualize the ranking of all models
 
-model_metrics |> 
-  filter(.metric == "accuracy") |> 
+model_metrics |>
+  filter(.metric == "accuracy") |>
   mutate(model = str_remove(wflow_id, "^(base|norm|reduced)_")) |>
-  arrange(model) |> 
+  arrange(model) |>
   ggplot(aes(x = wflow_id, y = mean)) +
   geom_beeswarm(size = 2, alpha = 0.25, cex = 3) +
   facet_wrap(facets = vars(model), scales = "free") +
-  scale_x_discrete(name = NULL)+
-    labs(
+  scale_x_discrete(name = NULL) +
+  labs(
     title = "Full Model Comparison: All Grid Search Results",
     subtitle = "Showing all hyperparameter combinations per algorithm",
     y = "mean accuracy"
   )
 
 
-autoplot(models_test_results, select_best = TRUE) + 
-  # Set select_best = FALSE to reveal all grid combinations 
+autoplot(models_test_results, select_best = TRUE) +
+  # Set select_best = FALSE to reveal all grid combinations
   # Map wflow_id to X to group triplicates together
   aes(x = wflow_id) +
   # Increase point size for better visibility
-  geom_point(size = 3, alpha = 0.25) + 
+  geom_point(size = 3, alpha = 0.25) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
@@ -389,7 +426,7 @@ When this code works, you will see a table (a `tibble`) with several columns. He
 | **`wflow_id`** | Which model/recipe combo this is (e.g., `base_rf` for Random Forest). |
 | **`.metric`** | What is being measured (`accuracy` or `roc_auc`). |
 | **`mean`** | This is the average score from your repeated 5-fold cross-validation. Closer to 1.0 is better. |
-| **`n`** | How many times the model was tested (should match your folds * times, e.g., 5*10). |
+| **`n`** | How many times the model was tested (should match your folds \* times, e.g., 5\*10). |
 | **`std_err`** | The "Wiggle Room." If this is high, the model is inconsistent. You want this to be low. |
 
 Note: C50 and lda models show only 1 value for accuracy, as compared to the multiple values for other models.
@@ -404,28 +441,28 @@ lda: LDA is a "closed-form" mathematical formula. It doesn't have parameters to 
 
 ```{r}
 # View the top models
-model_metrics_accuracy <- model_metrics |> 
-  filter(.metric == "accuracy") |> 
+model_metrics_accuracy <- model_metrics |>
+  filter(.metric == "accuracy") |>
   arrange(desc(mean))
 
 # 1. Identify the best model type
-best_results <- models_test_results |> 
+best_results <- models_test_results |>
   rank_results(rank_metric = "kap", select_best = TRUE)
 
 # 2. Extract the best workflow configuration for the top model
-best_workflow_fit <- models_test_results |> 
+best_workflow_fit <- models_test_results |>
   extract_workflow_set_result("norm_multinom") |> # Replace with your winner ID
   select_best(metric = "kap")
-best_workflow_fit_xgb <- models_test_results |> 
+best_workflow_fit_xgb <- models_test_results |>
   extract_workflow_set_result("base_xgb") |> # Replace with your winner ID
   select_best(metric = "kap")
-best_workflow_fit_rf <- models_test_results |> 
+best_workflow_fit_rf <- models_test_results |>
   extract_workflow_set_result("base_rf") |> # Replace with your winner ID
   select_best(metric = "accuracy")
 
 # 3. Finalize the workflow
-final_workflow <- models_test_results |> 
-  extract_workflow("base_rf") |> 
+final_workflow <- models_test_results |>
+  extract_workflow("base_rf") |>
   finalize_workflow(best_workflow_fit_rf)
 ```
 
@@ -442,5 +479,3 @@ In a bioinformatic pipeline, you cannot simply use the results from the `tune_gr
 2.  **Apply** those settings to a fresh workflow (Finalize).
 
 3.  **Train** that finalized workflow on the **entire** `rawdata` (Last Fit).
-
-

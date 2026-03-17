@@ -15,14 +15,8 @@ Key Functionality:
 -   **Performance Evaluation**: Provides functions for calculating and visualizing performance metrics (e.g., accuracy, RMSE, ROC curves) and comparing multiple models.
 
 ```{r}
-# remove.packages("xgboost")
-# 
-# install.packages(
-#   "https://cran.r-project.org/src/contrib/Archive/xgboost/xgboost_1.7.11.1.tar.gz",
-#   repos = NULL,
-#   type = "source"
-# )
-
+#| output: false
+#| message: false
 pacman::p_load(conflicted,
                tidyverse, broom,
                wrappedtools, flextable,

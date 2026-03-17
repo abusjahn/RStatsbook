@@ -3,6 +3,8 @@
 Linear Mixed-Effects Models (LMMs) are statistical tools used to analyze data where observations are grouped or repeated, allowing researchers to model both **fixed effects** (effects for which an estimate/prediction and a p-value are of interest, which represent population-level averages, like treatment type) and **random effects** (effects for which usually no prediction or p-value is required, which account for variation and non-independence among the groups, like individual subjects, families, or experimental batches). In biology, LMMs are essential for analyzing longitudinal studies (e.g., tracking an animal's growth over time), repeated measure experiments (e.g., measuring gene expression in the same tissue across different conditions, or exploring experimental variation between technical replicates), and ecological studies (e.g., accounting for variation between different field sites or populations).
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,wrappedtools,car,broom,
                multcomp,tidyverse, DescTools, haven, 
                ggbeeswarm,

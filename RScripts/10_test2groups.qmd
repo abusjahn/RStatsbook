@@ -217,7 +217,9 @@ rawdata |>
   bg(~p!=" ",bg = "lightgrey")
 ```
 
-# Exercise
+\newpage
+
+## Exercise
 
 Compare the 4 measurements in the penguin data between the sex as well as between 2 species (e.g Adelie vs. Gentoo). Treat the measures first as gaussian, then as ordinal.
 

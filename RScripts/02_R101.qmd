@@ -14,6 +14,8 @@ OR
 
 ```{r}
 # ↑ this is the head of a code chunk
+#| output: false
+#| message: false
 Sys.setenv(LANG = "en_EN.UTF-8") # to get errors/warnings in English
 if (!requireNamespace("pacman", quietly = TRUE)) {
   install.packages("pacman")
@@ -121,6 +123,8 @@ int_num < float_num
 as.logical(c(0, 1, 5, -7.45678)) # c() combines values into a vector
 ```
 
+\newpage
+
 ### Exercise: variables / Assignments
 
 (Please do exercises in scripts in a different project!)
@@ -197,6 +201,8 @@ factor_var2 <- factor(c("m", "m", "f", "m", "f", "f", "?"),
 factor_var2
 ```
 
+\newpage
+
 ### Exercise: Factors
 
 **Scenario:** Beyond just individual measurements, biologists often need to categorize samples based on different experimental conditions, genetic backgrounds, or developmental stages. R uses a special data type called **factors** for this. Factors are crucial because they tell R that your data belongs to discrete groups, which is very important for statistical analysis!
@@ -266,7 +272,6 @@ factor_var2
 -   **`as.numeric()`** shows you the underlying "integer tags."
 
 -   Use `ordered = TRUE` within the `factor()` function when your categories have a meaningful order (e.g., "Low" \< "Medium" \< "High").
-
 
 Dates / Time:
 
@@ -554,6 +559,8 @@ my1.Matrix[c(1, 3), -2] # exclude column 2
 my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 ```
 
+\newpage
+
 ## Exercise: Matrix
 
 **Scenario:** Imagine you are a field biologist studying plant distribution. You've set up several quadrants (square frames) in your study area and counted the number of individuals for three different plant species in each quadrant.
@@ -765,6 +772,8 @@ rawdata |> select(contains("r"), -contains("rr"))
 rawdata |> pull(`sysRR (mmHg)`)
 ```
 
+\newpage
+
 ### Exercise: tibble
 
 Think of a cruet_stand / Gewürzmenage
@@ -975,7 +984,7 @@ paste0(
 
 #### case_when / case_match
 
-When there are many tests to do, case_when or case_match are nice replacements for ifelse. While case_when allows complex conditions, case_match is used for for simple comparisons:
+When there are many tests to do, `case_when`/`case_replace` or `recode_values`/`replace_values` (`case_match` is deprecated) are nice replacements for `ifelse.` While case_when allows complex conditions, recode_values is used for for simple comparisons:
 
 ```{r}
 rawdata <- mutate(
@@ -985,11 +994,16 @@ rawdata <- mutate(
     `sysRR (mmHg)` < 160 & `diaRR (mmHg)` <= 80 ~ "borderline",
     .default = "hypertensive"
   ),
-  `prescribe something?` = case_match(
+  # `prescribe something?` = recode_values( #case_match(
+  #   Hypertension,
+  #   "hypertensive" ~ "yes",  # lookup value ~ new value 
+  #   "borderline" ~ "possibly",
+  #   "normotensive" ~ "no"
+  # )
+  `prescribe something?` = recode_values(
     Hypertension,
-    "hypertensive" ~ "yes",
-    "borderline" ~ "possibly",
-    "normotensive" ~ "no"
+    from = c("hypertensive", "borderline", "normotensive"), #lookup-tables
+    to = c("yes", "possibly","no")
   )
 )
 rawdata |>
@@ -1002,6 +1016,8 @@ paste0(
   "significant"
 )
 ```
+
+\newpage
 
 ### Exercise: `for` and `while` loops, and `if`/`ifelse`/`case_xxx`
 

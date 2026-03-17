@@ -1,5 +1,8 @@
 # Random forrests
+
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,
                tidyverse,
                ggbeeswarm,
@@ -24,7 +27,6 @@ rawdata <- penguins |>
   mutate(year = factor(year)
          )
 ```
-
 
 Random forrests are an ensemble method that builds multiple decision trees and averages their predictions. This reduces the risk of overfitting and increases the accuracy of the model. The random part comes from the fact that each tree is built on a random subset of the data and a random subset of the variables. The number of trees and the number of variables to consider at each split are hyper-parameters that need to be tuned. (more on tuning in chapter caret)
 

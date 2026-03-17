@@ -8,6 +8,8 @@ Output is not optimized for print, but rather for interactive use.
 All packages necessary will be invoked by p_load. Packages with only a single function call or potential for name conflicts can be unloaded, this way we still checked for their existence and installed them if need be.
 
 ```{r}
+#| output: false
+#| message: false
 pacman::p_load(conflicted,wrappedtools,car,nlme,broom, flextable,
                multcomp,tidyverse,foreign,DescTools, #ez,
                ggbeeswarm,
@@ -300,7 +302,9 @@ check_model(lmOut_interaction)
 # dev.off()
 ```
 
-# Exercise
+\newpage
+
+## Exercise
 
 In the penguin data, model relationship between
 

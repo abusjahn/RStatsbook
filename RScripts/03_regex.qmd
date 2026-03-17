@@ -24,7 +24,7 @@ Basic functions like `grep()` or `gsub()` are difficult to use in pipelines and 
 
 -   **\\D**: Matches any non-digit character.
 
-### Some basic examples:
+## Some basic examples:
 
 ```{r}
 pacman::p_load(tidyverse)
@@ -69,7 +69,7 @@ str_replace_all(
 )
 ```
 
-### An example for their use in renaming variables:
+## An example for their use in renaming variables:
 
 ```{r}
 temptibble <- tibble(

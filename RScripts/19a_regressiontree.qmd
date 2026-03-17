@@ -26,7 +26,7 @@ rawdata <- mutate(rawdata,
   select(ID, everything())
 ```
 
-### Graphical exploration
+## Graphical exploration
 
 When looking at the 2 measures `bill_length_mm` and `flipper_length_mm`, we can see that the 3 species of penguins are separated to a large extend, with the Gentoos having longer flippers than Adelies and Chinstraps, and Adelies and Chinstraps separated by smaller / longer bills. We can define a rough classification rule based on that just by eyeballing the data.
 
@@ -42,11 +42,11 @@ rawplot+
   geom_vline(xintercept = 44)
 ```
 
-### Modelling
+## Modelling
 
 A regression tree is following the same logic as the classification rule we defined above, but in a more systematic way. It is a recursive partitioning algorithm that splits the data into subsets that are as homogeneous as possible with respect to the target variable. The algorithm is greedy, meaning that it makes the best split at each step, without considering the impact of the split on future steps. This can lead to over-fitting, so we need to be careful with the depth of the tree. As each split is testing each variable separately, there is no need for scaling. Accordingly, the results are easily comprehensible as they relate to the actual measurements. Beside the classification rules, the output contains information on variable importance as well.
 
-#### Direct call to rpart
+### Direct call to rpart
 
 ```{r}
 rpart_formula <- paste('species',
@@ -69,7 +69,7 @@ ggplot(importance, aes(x=Variable,y=Importancescore))+
   coord_flip()
 ```
 
-#### Tidy-models approach
+### Tidy-models approach
 
 To make model more interesting, we add 2 more variables. We'll switch from the direct call to rpart to the tidy-models approach, as this will allow tuning and better validation strategies. Data is split into training and test sets using cross-validation. As a 1st step predictors are defined:
 
@@ -142,7 +142,7 @@ tree_best <- tree_results |>
   select_best(metric = "accuracy")
 ```
 
-Visualize the tuning results
+### Visualize the tuning results
 
 ```{r}
 tree_results |>
@@ -187,12 +187,12 @@ test_predicted <- final_fit |>
   rename_with(~str_remove(.x, "^.pred_"), starts_with(".pred_"))
 ```
 
-### Model evaluation
+## Model evaluation
 
 class-based metrics:
 
 | Metric | Function | Meaning |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | Accuracy | accuracy() | The percentage of total predictions that were correct. Simple, but can be misleading if classes are imbalanced |
 | Kappa | kap() | Similar to accuracy, but accounts for the possibility of the agreement occurring by chance |
 | Sensitivity (Recall) | sens() | Out of all actual positives, how many did the model find? (True Positive Rate) |
@@ -203,7 +203,7 @@ class-based metrics:
 probability-based metrics:
 
 | Metric | Function | Meaning |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | ROC AUC | roc_auc() | Measures the model's ability to distinguish between classes across all possible thresholds |
 | PR AUC | pr_auc() | Area under the Precision-Recall curve. Preferred over ROC AUC when the "Positive" class is very rare |
 | Log Loss | mn_log_loss() | Measures how "close" the predicted probability is to the actual binary label (0 or 1). Heavily penalizes being "confidently wrong" |

@@ -1019,7 +1019,7 @@ paste0(
 
 \newpage
 
-### Exercise: `for` and `while` loops, and `if`/`ifelse`/`case_xxx`
+## Exercise: `for` and `while` loops, and `if`/`ifelse`/`case_xxx`
 
 #### 1. Analyzing Gene Expression Data (Using `for` loop and `if/else`)
 

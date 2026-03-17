@@ -67,7 +67,7 @@ colnames(rawdata) <- cn_temp[1,]
 
 Package readODS provides similar functionality for OpenOffice/LibreOffice files.
 
-### Import from SPSS/SAS
+## Import from SPSS/SAS
 
 Import from SPSS generic files is implemented in various packages:
 

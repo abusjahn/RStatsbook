@@ -42,11 +42,9 @@ rawdata <- penguins |>
   drop_na()
 ```
 
-## Building the tidymodel framework
+Building the tidymodel framework is done in several steps:
 
-Following the steps from the introduction chapter to build the main framework and work flow
-
-### Step 1: Pre-processing
+## Step 1: Pre-processing
 
 A base_recipe is defined to handle missing data, on-hot-encoding, and zero-variance. This is extended in norm_recipe with normalization.
 
@@ -70,11 +68,11 @@ norm_recipe <-
   step_normalize(all_predictors())
 ```
 
-### Step 2: Defining the model using Parsnip package
+## Step 2: Defining the model using Parsnip package
 
 Here we will explore multiple machine learning approaches to implement in the work. This demonestrates the modularity of tidymodels and how practical it is to use it to test different ML models to decide the best model for your data.
 
-#### 1. Multinomial Regression (`multinom_reg`)
+### 1. Multinomial Regression (`multinom_reg`)
 
 This is an extension of logistic regression used for multi-class classification. It estimates the probability of a sample belonging to each category. It is computationally efficient and provides interpretable log-odds.
 
@@ -94,7 +92,7 @@ multinom_spec <- multinom_reg(penalty = tune(), mixture = tune()) |>
 
 -   `nlambda = 100`: This instructs the engine to evaluate a path of 100 penalty values. This provides a denser "regularization path," making the subsequent tuning process more granular and likely to find the global optimum for the F1 score or Accuracy.
 
-#### 2. Decision Trees (`decision_tree`)
+### 2. Decision Trees (`decision_tree`)
 
 Decision trees use recursive partitioning to split data into increasingly homogeneous subsets (nodes).
 
@@ -130,7 +128,7 @@ tree_spec <- decision_tree(
 
 -   `min_n`: the minimum number of data points required in a node to attempt a further split.
 
-#### 3. Random Forests (`rand_forest`)
+### 3. Random Forests (`rand_forest`)
 
 An ensemble method that builds multiple decision trees using **bagging** (Bootstrap Aggregating) and feature randomness.
 
@@ -151,7 +149,7 @@ rf_spec <- rand_forest(
 
 -   `importance` = "impurity": This calculates Variable Importance Scores based on the Gini impurity. It measures how much each variable (e.g., flipper length) contributes to making the nodes "pure" across all 1000 trees.
 
-#### 4. K-Nearest Neighbors (`nearest_neighbor`)
+### 4. K-Nearest Neighbors (`nearest_neighbor`)
 
 A non-parametric, instance-based learning algorithm. It classifies a point based on the majority vote of its k neighbors in the feature space. **Note:** Features must be normalized/scaled for KNN to function correctly.
 
@@ -172,7 +170,7 @@ knn_spec <- nearest_neighbor(
 
 **Statistical Note:** k-NN is susceptible to the "Curse of Dimensionality." In datasets with hundreds of features (like transcriptomics), the "distance" between points becomes less meaningful. In such cases, dimensionality reduction (e.g., PCA) should be added to the `recipe` before the `knn_spec`.
 
-#### 5. Boosted Trees (`boost_tree` via XGBoost)
+### 5. Boosted Trees (`boost_tree` via XGBoost)
 
 Unlike Random Forests, Gradient Boosting builds trees **sequentially**. Each new tree attempts to correct the errors (residuals) of the previous ones.
 
@@ -216,7 +214,7 @@ xgb_spec <- boost_tree(
 
 -   **`loss_reduction`**: Specifies the minimum loss reduction required to make a further partition on a leaf node. It acts as a conservative guard against capturing noise.
 
-#### 6. C5.0 Decision Trees (`boost_tree` via C5.0)
+### 6. C5.0 Decision Trees (`boost_tree` via C5.0)
 
 This defines a **Boosted Decision Tree specification** using the **C5.0** engine. C5.0 is an evolution of the landmark C4.5 algorithm, specifically designed to be faster, more memory-efficient, and more accurate through a process called **boosting**.
 
@@ -226,7 +224,7 @@ c50_spec <- boost_tree(trees = 10) |>
   set_mode("classification")
 ```
 
-#### 7. Linear Discriminant Analysis (`discrim_linear`)
+### 7. Linear Discriminant Analysis (`discrim_linear`)
 
 LDA seeks to find a linear combination of features that maximizes the separation between classes. It assumes that predictors follow a multivariate normal distribution with a common covariance matrix. It uses **Bayes' Theorem** to estimate the probability that a given observation belongs to a specific penguin species.
 
@@ -242,7 +240,7 @@ lda_spec <- discrim_linear() |>
 
 -   **penalty**: If you were working with genomic data where the number of predictors exceeds the number of samples, the standard `MASS` engine would fail because the covariance matrix becomes non-invertible. Switching to a penalized engine (like `mda` or `klaR`) allows for **Shrinkage Discriminant Analysis**, which regularizes the covariance matrix to ensure numerical stability.
 
-#### 8. Support Vector Machines (`svm_poly` / `svm_rbf`)
+### 8. Support Vector Machines (`svm_poly` / `svm_rbf`)
 
 SVMs find the **hyperplane** that maximizes the "margin" between classes. Using the "kernel trick," they can project data into higher dimensions to separate classes that are not linearly separable in their original state.
 
@@ -256,7 +254,7 @@ svm_spec <- svm_poly(cost = tune(), degree = tune()) |>
 
 -   **`degree`:** This defines the exponent of the polynomial. A degree of 1 is equivalent to a linear kernel; a degree of 2 or 3 allows for quadratic or cubic curves. Higher degrees can capture very complex patterns but are computationally expensive and prone to overfitting.
 
-#### 9. Naive Bayes (`naive_Bayes`)
+### 9. Naive Bayes (`naive_Bayes`)
 
 Based on **Bayes' Theorem**, this model assumes that all predictors are independent of one another given the class label (the "naive" assumption). It is remarkably fast and handles categorical data well.
 
@@ -275,7 +273,7 @@ nb_spec <- naive_Bayes(smoothness = tune()) |>
 
 **Note:** Naive Bayes is particularly susceptible to highly correlated features. In your `base_recipe`, if variables like `body_mass_g` and `flipper_length_mm` are almost identical in their distribution, the model may "double-count" their evidence, leading to overconfident (and potentially incorrect) probability estimates.
 
-#### 10. Multilayer Perceptron / Neural Networks (`mlp`)
+### 10. Multilayer Perceptron / Neural Networks (`mlp`)
 
 The foundation of deep learning. It consists of an input layer, one or more hidden layers, and an output layer. It uses backpropagation to adjust weights and learn complex hierarchical patterns.
 
@@ -297,7 +295,7 @@ mlp_spec <- mlp(
 
 -   **`MaxNWts = 2000`**: Biological datasets with many predictors can quickly exceed the default weight limit in `nnet`. Increasing this ensures the model can actually initialize if the feature space grows.
 
-#### 11. Logistic Regression with Elastic Net (`logistic_reg`)
+### 11. Logistic Regression with Elastic Net (`logistic_reg`)
 
 This model combines **Lasso** ($L1$) and **Ridge** ($L2$) regularization. It is ideal for gene expression data where you have more variables than samples ($p > n$).
 
@@ -308,7 +306,7 @@ elastic_spec <- logistic_reg(penalty = tune(), mixture = tune()) |>
   set_engine("glmnet")
 ```
 
-### Step 3: Competitive Model Evaluation (Using `workflow_set`)
+## Step 3: Competitive Model Evaluation (Using `workflow_set`)
 
 As different models have different requirements for preprocessing, a base recipe and an extended recipe with normalization have been prepared. `workflow_set` allows you to define multiple workflows with different combinations of recipes and models. This is particularly useful for comparing models that require different preprocessing steps (e.g., KNN needs normalization, while Random Forest does not).
 
@@ -343,7 +341,7 @@ model_set_norm <-
 model_set <- bind_rows(model_set_base, model_set_norm)
 ```
 
-### Step 4: Cross-Validation
+## Step 4: Cross-Validation
 
 Once you have your `workflow_set`, you don't use `fit()` like you do for a single model. You usually use **Resampling** (like Cross-Validation) to see which model is the most suitable before you pick a winner.
 
@@ -370,7 +368,7 @@ models_test_results <-
 plan(sequential)
 ```
 
-### Step 5: Ranking the models
+## Step 5: Ranking the models
 
 ```{r}
 # Extract the metrics
@@ -437,7 +435,7 @@ C50: there are no parameters that were set to tune(), since trees were set to 10
 
 lda: LDA is a "closed-form" mathematical formula. It doesn't have parameters to tune. It just calculates the distance between group means; therefore, the grid simply collapses into 1.
 
-### Step 6: Best model selection
+## Step 6: Best model selection
 
 ```{r}
 # View the top models

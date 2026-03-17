@@ -30,7 +30,7 @@ rawdata <- penguins |>
 
 Random forrests are an ensemble method that builds multiple decision trees and averages their predictions. This reduces the risk of overfitting and increases the accuracy of the model. The random part comes from the fact that each tree is built on a random subset of the data and a random subset of the variables. The number of trees and the number of variables to consider at each split are hyper-parameters that need to be tuned. (more on tuning in chapter caret)
 
-### Modelling
+## Modelling
 
 ```{r}
 rf_folds <- vfold_cv(rawdata, v = 5, strata = species,repeats = 5 )
@@ -106,7 +106,7 @@ test_predicted <- final_fit |>
 
 ```
 
-### Model evaluation
+## Model evaluation
 
 ```{r}
 tidy_metrics <- metric_set(accuracy, kap, f_meas,roc_auc, mn_log_loss)

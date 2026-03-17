@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2026-03-15"
+  date: "2026-03-17"
   page-footer:
     left: |
       R Intro by Andreas Busjahn
@@ -35,9 +35,9 @@ book:
     - RScripts/19a_regressiontree.qmd
     - RScripts/19b_randomforrest.qmd
     - RScripts/20_xgboost.qmd
-    - RScripts/21_tidymodels.qmd
-    - RScripts/22_PCA.qmd
-    - RScripts/23_LDA.qmd
+    - RScripts/21_LDA.qmd
+    - RScripts/22_tidymodels.qmd
+    - RScripts/23_PCA.qmd
     - RScripts/24_cluster.qmd
     # - RScripts/25_caret.qmd
     # - lmm-qmd
@@ -60,7 +60,7 @@ format:
     urlcolor: blue       # Targets web links
     citecolor: black      # Targets bibliography links
     code-block-bg: fbfbf2 
-    monofont: "Cascadia Mono SemiBold"
+    monofont: "Cascadia Mono"
     monofontoptions: 
       - Scale=0.55
  

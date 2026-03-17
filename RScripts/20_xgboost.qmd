@@ -29,9 +29,11 @@ rawdata <- penguins |>
 ```
 
 ## Direct modelling
+
 ### Preprocessing
-one_hot encoding transforms factors in dummy columns for EVERY level, recommended for tree-based models as they can handle the resulting collinearity, and it is more intuitive to interpret the importance of each level. The `recipe` package provides a convenient way to do this. The resulting columns are added to the original data frame, and the original factor columns can be removed if desired.
-For linear models, one-hot encoding is not recommended as it can lead to multicollinearity issues.
+
+one_hot encoding transforms factors in dummy columns for EVERY level, recommended for tree-based models as they can handle the resulting collinearity, and it is more intuitive to interpret the importance of each level. The `recipe` package provides a convenient way to do this. The resulting columns are added to the original data frame, and the original factor columns can be removed if desired. For linear models, one-hot encoding is not recommended as it can lead to multicollinearity issues.
+
 ```{r}
 rawdata <- 
   recipe(species ~ ., data = rawdata) |>
@@ -48,7 +50,9 @@ boostdata <- rawdata |>
   select(predvars$names) |>
   as.matrix()
 ```
+
 ### Modelling
+
 ```{r}
 xgb_out <- xgboost(
   x = boostdata,
@@ -69,7 +73,6 @@ slice_sample(prediction, n=10)
 ```
 
 ## Tidy model approach
-
 
 ```{r}
 predvars <- ColSeeker(namepattern = c("_mm","_g", "island", "sex"))
@@ -161,9 +164,8 @@ test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
   rename_with(~str_remove(.x, "^.pred_"), starts_with(".pred_"))
 ```
- 
-### Model evaluation
 
+### Model evaluation
 
 ```{r}
 yardstick::conf_mat(test_predicted, truth = species, estimate = class)
@@ -186,7 +188,6 @@ test_predicted |>
   facet_grid(rows = vars(species))
 
 ```
-
 
 ```{r}
 final_fit |> 

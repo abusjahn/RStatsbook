@@ -233,7 +233,7 @@ Sometimes, you might want to see all the measurements for a single individual (e
 
     -   What does `NA` mean in this new `chick_weight_wide` dataset? (Hint: Not all chicks were measured at all time points, or some started later).
 
-#### Part 2: From Wide to Long (`pivot_longer()`)
+### Part 2: From Wide to Long (`pivot_longer()`)
 
 Imagine you received data from a collaborator where each time point (e.g., Day 0, Day 2, Day 4, etc.) is its own column. For many biological analyses, especially for plotting time series with `ggplot2` or running mixed-effects models, you need this data in a "long" format, where all the measurements are in a single `weight` column, and there's a separate `Time` column indicating when that measurement was taken.
 

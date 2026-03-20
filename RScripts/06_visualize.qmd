@@ -12,7 +12,7 @@ pacman::p_load(conflicted, tidyverse,here,
                ggforce,
                ggbeeswarm,
                wrappedtools,
-               emojifont,
+               # emojifont,
                patchwork,
                GGally)
 conflicts_prefer(dplyr::filter,
@@ -312,11 +312,6 @@ ggplot(diamonds,aes(carat,price,color=clarity))+
 ggplot(data=mtcars,
        aes(wt, mpg,size=qsec, shape=factor(cyl)))+
   geom_point()
-
-ggplot(data=mtcars,aes(wt, mpg, size=qsec))+
-  geom_text(family="EmojiOne",label="\U1F697")+
-  scale_size_continuous(range = c(5,10))
-
 ```
 
 ## Positioning elements

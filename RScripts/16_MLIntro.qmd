@@ -1,5 +1,11 @@
 # Machine Learning with R: Basic concepts
 
+## Literature links
+
+[Feature engineering](https://feat.engineering/)
+
+[Tidy Modeling with R](https://www.tmwr.org/)
+
 ## structured vs. unstructured data
 
 ## supervised vs. unsupervised methods
@@ -45,6 +51,61 @@
 | Control  | Exposed |
 
 -   repeated x times
+-   count, how frequent results as "extreme" as the observation occur by coincidence
+
+```{r}
+#| output: false
+#| message: false
+pacman::p_load(conflicted,wrappedtools,tidyverse, ggbeeswarm,
+               broom, boot, Hmisc)
+
+conflicts_prefer(dplyr::filter,
+                 dplyr::select)
+```
+
+Simulation of a weak effect with vaccination reducing cough incidence from 70% to 60%:
+
+```{r}
+set.seed(161)
+vaccination <- 
+  tibble(vaccination = rep(c("no more cough","placebo"),each = 100),
+         infection = c(sample(c("yes","no"),size = 100,
+                              replace = TRUE,prob = c(.6,.4)),
+                       sample(c("yes","no"),size = 100,
+                              replace = TRUE,prob = c(.7,.3))))
+vaccination |> 
+  ggplot(aes(vaccination, fill = infection))+
+  geom_bar()+
+  scale_fill_manual(values = c("lightgreen","salmon"))+
+  scale_y_continuous(breaks = seq(0,1000,20))
+observed_or <- fisher.test(vaccination$vaccination, 
+                           vaccination$infection)$estimate
+estimated_p <- fisher.test(vaccination$vaccination, 
+                           vaccination$infection,
+                           simulate.p.value = FALSE)$p.value
+extremes_log_or <- c(-log(observed_or), log(observed_or))
+n_reps <- 10^3
+simulated_or <- tibble(run_i = 1:n_reps,
+                       or = NA_real_)
+for (shuffle_i in seq_len(n_reps)){
+  shuffled_infection <- sample(vaccination$infection)
+  simulated_or$or[shuffle_i] <- 
+    fisher.test(vaccination$vaccination, 
+                shuffled_infection)$estimate
+}
+ggplot(simulated_or, aes(x = log(or)))+
+  geom_histogram(binwidth = .1, center = 0,
+                 fill = "lightgreen", color = "darkgrey")+
+  geom_vline(xintercept = extremes_log_or, color = "salmon")+
+  labs(
+    title="Distribution of simulated log(ORs) under the Null hypothesis",
+    caption = "Vertical lines indicate the observed log(OR) and its negative counterpart")
+extremes_count <- 
+  table(between(log(simulated_or$or),
+                extremes_log_or[1], extremes_log_or[2]))
+```
+
+The conventional p-value is `r formatP(estimated_p,ndigits = 5)`, while shuffling the data resulted in `r round(extremes_count[1]/n_reps, 5)`% of the simulated ORs being as extreme as the observed OR.
 
 ### Bootstrapping
 
@@ -52,13 +113,72 @@
 
 -   Bootstrap is a powerful statistical tool used to quantify the uncertainty of a given model.
 
-![](/Graphs/bootstrap_classify.png){fig-align="center"}
+```{r}
+#| echo: false
+boot_data <- tibble(
+  SubjectID = factor(1:9),
+  x = factor(rep(1:3, times = 3)),
+  y = factor(rep(1:3, each = 3)),
+  size = rnorm(9, mean = 170, sd = 10),
+  fishing = 0)
 
-![](/Graphs/Bootstrap_25_0.png){fig-align="center"}
+for (i in 1:9) {
+  boot_data <- 
+    bind_rows(
+      boot_data,
+      boot_data |> 
+        filter(fishing == 0) |> 
+        slice_sample(n = 9, replace = TRUE) |>
+        mutate(fishing = i))
+
+}
+plot_org <- boot_data |> 
+  filter(fishing == 0) |> 
+  ggplot(aes(x, y, color = SubjectID)) +
+  geom_point(size = 30) +
+  geom_label(aes(label = SubjectID), size = 5) +
+  scale_x_discrete("", labels = "") +
+  scale_y_discrete("", labels = "") +
+  labs(title = "Original Data") +
+  guides(x = "none", y = "none", color = "none") +
+  theme_bw()
+plot_org  
+plot_boot <- boot_data |> 
+  filter(fishing != 0) |> 
+  ggplot(aes(x, y, color = SubjectID)) +
+  geom_beeswarm(size = 5, alpha = .5, cex = 4) +
+  geom_label(aes(label = SubjectID), size = 2) +
+  scale_x_discrete("", labels = "") +
+  scale_y_discrete("", labels = "") +
+  facet_wrap(facets = vars(fishing), ncol = 3, 
+             labeller = "label_both") +
+  labs(title = "Bootstrap samples") +
+  guides(x = "none", y = "none", color = "none") +
+  theme_bw()
+plot_boot
+```
+
+Based on the bootstrap samples, we can visualize variation in outcome **size**:
 
 ```{r}
-pacman::p_load(wrappedtools, boot, Hmisc, tidyverse)
+desc_boot <- 
+  boot_data |> 
+  # filter(fishing != 0) |> 
+  ggplot(aes(x = factor(fishing), y = size)) +
+  stat_summary(color = "salmon", fun.data = mean_cl_normal,
+               size = 1)+
+  geom_beeswarm(alpha = .75, size = 2)+
+  ylab("size mean \u00b1 95% CI")+
+  scale_x_discrete("bootstrap sample",
+                   labels = c("original", paste("boot", 1:9)))
+desc_boot
 ```
+
+<!-- ![](/Graphs/bootstrap_classify.png){fig-align="center"} -->
+
+<!-- ![](/Graphs/Bootstrap_25_0.png){fig-align="center"} -->
+
+A large number of bootstrap (\>1000) samples is usually required to obtain stable results. We simulate 50 cases with true mean of 170 and true SD of 10:
 
 ```{r}
 n_subjects <- 50
@@ -68,9 +188,17 @@ n_boot <- 10^4
 set.seed(12345)
 experimental_data <- 
   rnorm(n = n_subjects, mean = real_mean, sd = real_sd)
+```
+
+Conventional estimates from sample:
+```{r}
 meansd(experimental_data,roundDig = 4)
 meanse(experimental_data,roundDig = 4)
 smean.cl.normal(experimental_data)
+```
+
+Bootstrap estimates:
+```{r}
 smean.cl.boot(experimental_data,B = n_boot)
 #looped bootstraping
 boot_means <- tibble(Mean = NA_real_, .rows = 0)
@@ -108,22 +236,68 @@ boot_ci <- boot.ci(boot_results, type = "basic")
 print(boot_ci)
 ```
 
+### Cross validation
+
+-   Cross-validation is a resampling method used to evaluate the performance of a model on unseen data.
+
+-   It involves partitioning the data into `k` subsets, training the model on one subset (training set) made of k-1 subsets, and evaluating it on the left-out subset (testing set).
+
+-   This process is repeated `k` times, with each subset serving as the testing set once, and the results are averaged to provide an overall performance estimate.
+
+-   Cross-validation is often repeated multiple times to reduce the variance of the performance estimates and to get a more reliable estimate of the model's performance. 10 repeated 5-fold cross-validations would provide 50 estimates of the model's performance, capturing average as well as possible extreme results.
+
+![](/Graphs/8-Stratified-K-Fold-Cross-Validation.jpg){fig-align="center"}
+
+\newpage
+
 ### Jacknife
 
--   Jackknife is resampling without replacement
+-   Jackknife (or **L**eave **O**ne **O**ut) is resampling without replacement, where one observation is left out at a time to create new samples. It is used to estimate the bias and variance of a statistic, as well as to construct confidence intervals.
 
 -   Creates n samples of size n-1
 
-![](/Graphs/jackknife_estimate.jpg){fig-align="center"}
+<!-- ![](/Graphs/jackknife_estimate.jpg){fig-align="center"} -->
 
-### k-fold CV
+```{r}
+#| echo: false
+loo_data <- tibble(
+  SubjectID = factor(1:9),
+  x = factor(rep(1:3, times = 3)),
+  y = factor(rep(1:3, each = 3)),
+  drop = 0)
 
--   Splitting sample into k groups
+for (i in 1:9) {
+  loo_data <- 
+    bind_rows(
+      loo_data,
+      loo_data |> 
+        filter(drop == 0,
+               SubjectID != i) |> 
+        mutate(drop = i))
 
--   One group for testing,
-
--   k-1 groups for training
-
--   Repeated k times, no resampling
-
-![](/Graphs/8-Stratified-K-Fold-Cross-Validation.jpg){fig-align="center"}
+}
+plot_org <- loo_data |> 
+  filter(drop == 0) |> 
+  ggplot(aes(x, y, color = SubjectID)) +
+  geom_point(size = 30) +
+  geom_label(aes(label = SubjectID), size = 5) +
+  scale_x_discrete("", labels = "") +
+  scale_y_discrete("", labels = "") +
+  labs(title = "Original Data") +
+  guides(x = "none", y = "none", color = "none") +
+  theme_bw()
+plot_org  
+plot_loo <- loo_data |> 
+  filter(drop != 0) |> 
+  ggplot(aes(x, y, color = SubjectID)) +
+  geom_point(size = 5) +
+  geom_label(aes(label = SubjectID), size = 2) +
+  scale_x_discrete("", labels = "") +
+  scale_y_discrete("", labels = "") +
+  facet_wrap(facets = vars(drop), ncol = 3, 
+             labeller = "label_both") +
+  labs(title = "LOO samples") +
+  guides(x = "none", y = "none", color = "none") +
+  theme_bw()
+plot_loo
+```

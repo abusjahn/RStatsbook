@@ -3,25 +3,28 @@
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,
-               tidyverse,
-               wrappedtools,  # just tools 
-               palmerpenguins, # data
-               ggforce, # for cluster plots, hulls, zoom etc
-               ggbeeswarm,
-               flextable,
-               caret, # Classification and Regression Training Framework
-               tidymodels, # alternative to caret
-               gmodels, # tools for model fitting
-               easystats, 
-               yardstick,
-               kknn)  # model performance
+pacman::p_load(
+  conflicted,
+  tidyverse,
+  wrappedtools, # just tools
+  palmerpenguins, # data
+  ggforce, # for cluster plots, hulls, zoom etc
+  ggbeeswarm,
+  flextable,
+  caret, # Classification and Regression Training Framework
+  tidymodels, # alternative to caret
+  gmodels, # tools for model fitting
+  easystats,
+  yardstick,
+  kknn
+) # model performance
 
 # conflict_scout()
-conflicts_prefer(dplyr::slice, 
-                 dplyr::filter,
-                 palmerpenguins::penguins)
-
+conflicts_prefer(
+  dplyr::slice,
+  dplyr::filter,
+  palmerpenguins::penguins
+)
 ```
 
 ## Data preparation
@@ -29,9 +32,9 @@ conflicts_prefer(dplyr::slice,
 In the penguin data set, the four numerical variables related to anatomy are `bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`, and `body_mass_g`. We will use the first two variables to demonstrate the use of knn.
 
 ```{r}
-rawdata <- penguins |> 
+rawdata <- penguins |>
   drop_na()
-predvars <- ColSeeker(rawdata,'length')
+predvars <- ColSeeker(rawdata, "length")
 ```
 
 ## Exploratory plots
@@ -39,19 +42,22 @@ predvars <- ColSeeker(rawdata,'length')
 Package `ggforce` provides functions to plot convex hulls, ellipses, and zoomed facets. This is helpful in exploring group separation across 2 dimensions.
 
 ```{r}
-rawplot <- 
-  ggplot(rawdata, 
-         aes(.data[[predvars$names[1]]], 
-             .data[[predvars$names[2]]], 
-             color=species))+
-  geom_point()  
+rawplot <-
+  ggplot(
+    rawdata,
+    aes(.data[[predvars$names[1]]],
+      .data[[predvars$names[2]]],
+      color = species
+    )
+  ) +
+  geom_point()
 rawplot
 
-rawplot+
-  geom_mark_hull(expand = unit(2.5,'mm'))
+rawplot +
+  geom_mark_hull(expand = unit(2.5, "mm"))
 
-rawplot+
-  geom_mark_ellipse(expand = unit(2.5,'mm'))
+rawplot +
+  geom_mark_ellipse(expand = unit(2.5, "mm"))
 ```
 
 ## Scaling
@@ -62,17 +68,17 @@ To avoid the effect of different scales / ranges of the variables, it is desirab
 
 ```{r}
 # Build recipe for scaling
-model_formula <- 
-  paste("~", paste(predvars$names, collapse = "+")) |> 
+model_formula <-
+  paste("~", paste(predvars$names, collapse = "+")) |>
   as.formula()
 rec_normalized <- recipe(model_formula, data = rawdata) |>
-  step_normalize(all_predictors()) 
+  step_normalize(all_predictors())
 
 # Fit recipe and apply to data
 penguins_normalized <- rec_normalized |>
   prep() |>
-  bake(new_data = rawdata) |> 
-  rename_with(~paste0(.x, "_norm"))
+  bake(new_data = rawdata) |>
+  rename_with(~ paste0(.x, "_norm"))
 ```
 
 ### Range transformation
@@ -83,8 +89,8 @@ rec_ranged <- recipe(model_formula, data = rawdata) |>
 
 penguins_ranged <- rec_ranged |>
   prep() |>
-  bake(new_data = rawdata) |> 
-  rename_with(~paste0(.x, "_range"))
+  bake(new_data = rawdata) |>
+  rename_with(~ paste0(.x, "_range"))
 ```
 
 ### Percentile transformation
@@ -95,34 +101,36 @@ rec_quantiled <- recipe(model_formula, data = rawdata) |>
 
 penguins_quantiled <- rec_quantiled |>
   prep() |>
-  bake(new_data = rawdata) |> 
-  rename_with(~paste0(.x, "_perc"))
+  bake(new_data = rawdata) |>
+  rename_with(~ paste0(.x, "_perc"))
 ```
 
 ### Visual comparison of the scaled data
 
 ```{r}
-rawdata <- 
-  bind_cols(rawdata, 
-            penguins_normalized, 
-            penguins_ranged, 
-            penguins_quantiled)
-rawdata |> 
-  select(contains('length')) |> 
-  pivot_longer(everything()) |> 
-  ggplot(aes(value,fill=name))+
-  geom_density()+
-  facet_wrap(facets = vars(name), scales='free', nrow = 2)+
-  guides(fill="none")
+rawdata <-
+  bind_cols(
+    rawdata,
+    penguins_normalized,
+    penguins_ranged,
+    penguins_quantiled
+  )
+rawdata |>
+  select(contains("length")) |>
+  pivot_longer(everything()) |>
+  ggplot(aes(value, fill = name)) +
+  geom_density() +
+  facet_wrap(facets = vars(name), scales = "free", nrow = 2) +
+  guides(fill = "none")
 
-rawdata |> 
-  ggplot(aes(bill_length_mm,bill_length_mm_norm))+ 
-  geom_point() 
-rawdata |> 
-  ggplot(aes(bill_length_mm,bill_length_mm_perc))+ 
+rawdata |>
+  ggplot(aes(bill_length_mm, bill_length_mm_norm)) +
   geom_point()
-rawdata |> 
-  ggplot(aes(bill_length_mm,bill_length_mm_range))+ 
+rawdata |>
+  ggplot(aes(bill_length_mm, bill_length_mm_perc)) +
+  geom_point()
+rawdata |>
+  ggplot(aes(bill_length_mm, bill_length_mm_range)) +
   geom_point()
 ```
 
@@ -131,7 +139,7 @@ rawdata |>
 ### Definition of predictor variables (IV)
 
 ```{r}
-predvars_std <- ColSeeker(namepattern = '_norm')
+predvars_std <- ColSeeker(namepattern = "_norm")
 ```
 
 ### Data splitting
@@ -140,7 +148,7 @@ predvars_std <- ColSeeker(namepattern = '_norm')
 set.seed(2026)
 data_split <- initial_split(
   rawdata,
-  prop = 2/3,
+  prop = 2 / 3,
   strata = species
 )
 traindata <- training(data_split)
@@ -158,34 +166,34 @@ knn_recipe <- recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
   update_role(all_of(predvars$names), new_role = "predictor")
 
-knn_spec <- nearest_neighbor(neighbors = 5) |> 
-  set_engine("kknn") |> 
+knn_spec <- nearest_neighbor(neighbors = 5) |>
+  set_engine("kknn") |>
   set_mode("classification")
 
-knn_workflow <- workflow() |> 
-  add_model(knn_spec)|> 
+knn_workflow <- workflow() |>
+  add_model(knn_spec) |>
   add_recipe(knn_recipe)
 ```
 
 #### Fit the model to the training data
 
 ```{r}
-knn_fit <- knn_workflow |> 
+knn_fit <- knn_workflow |>
   fit(data = traindata)
 ```
 
 #### Predict classes
 
 ```{r}
-predictions <- knn_fit |> 
+predictions <- knn_fit |>
   predict(new_data = testdata)
-prob_preds <- knn_fit |> 
-  predict(new_data = testdata, type = "prob") |> 
-  rename_with(~str_remove(.x, "^.pred_"))
+prob_preds <- knn_fit |>
+  predict(new_data = testdata, type = "prob") |>
+  rename_with(~ str_remove(.x, "^.pred_"))
 # Combine with original data to check accuracy
-test_results <- testdata |> 
-  select(species) |> 
-  bind_cols(predictions,prob_preds)
+test_results <- testdata |>
+  select(species) |>
+  bind_cols(predictions, prob_preds)
 ```
 
 \newpage
@@ -194,21 +202,24 @@ test_results <- testdata |>
 
 ```{r}
 CrossTable(test_results$.pred_class,
-           test_results$species, prop.chisq = FALSE, prop.t = FALSE, 
-           format = 'SAS')
+  test_results$species,
+  prop.chisq = FALSE, prop.t = FALSE,
+  format = "SAS"
+)
 
-yardstick::accuracy(data = test_results, truth=species, estimate=.pred_class)
+yardstick::accuracy(data = test_results, truth = species, estimate = .pred_class)
 
-test_results |> 
-  pivot_longer(c(Adelie,Chinstrap,Gentoo), 
-               values_to = 'p species', 
-               names_to = 'Species_pred') |> 
-  ggplot(aes(Species_pred,`p species`))+ 
-  geom_violin()+ 
-  geom_beeswarm(cex = .25, alpha=.25)+ 
+test_results |>
+  pivot_longer(c(Adelie, Chinstrap, Gentoo),
+    values_to = "p species",
+    names_to = "Species_pred"
+  ) |>
+  ggplot(aes(Species_pred, `p species`)) +
+  geom_violin() +
+  geom_beeswarm(cex = .25, alpha = .25) +
   facet_grid(rows = vars(species))
 
-ggplot(rawdata, aes(bill_length_mm_norm,flipper_length_mm_norm, color=sex,shape=species))+ 
+ggplot(rawdata, aes(bill_length_mm_norm, flipper_length_mm_norm, color = sex, shape = species)) +
   geom_point()
 ```
 
@@ -217,60 +228,72 @@ ggplot(rawdata, aes(bill_length_mm_norm,flipper_length_mm_norm, color=sex,shape=
 Now we'll try to predict the sex based on body measures and species. Species will be automatically recoded using one-hot encoding.
 
 ```{r}
-model_formula <- 
-  paste(" sex ~", paste(c(predvars$names, "species"), collapse = "+")) |> 
+model_formula <-
+  paste(" sex ~", paste(c(predvars$names, "species"), collapse = "+")) |>
   as.formula()
 penguins_preped <- recipe(model_formula, data = rawdata) |>
-  step_normalize(all_numeric_predictors()) |> 
-  step_dummy(all_nominal_predictors(), one_hot = TRUE) |> 
+  step_normalize(all_numeric_predictors()) |>
+  step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
   prep() |>
-  bake(new_data = rawdata) 
-knn_spec <- nearest_neighbor(neighbors = 5) |> 
-  set_engine("kknn") |> 
+  bake(new_data = rawdata)
+knn_spec <- nearest_neighbor(neighbors = 5) |>
+  set_engine("kknn") |>
   set_mode("classification")
 
-knn_workflow2 <- workflow() |> 
-  add_model(knn_spec) |> 
+knn_workflow2 <- workflow() |>
+  add_model(knn_spec) |>
   add_formula(sex ~ .)
 
 # Fit the model to the training data
-knn_fit2 <- knn_workflow2 |> 
+knn_fit2 <- knn_workflow2 |>
   fit(data = penguins_preped)
 # Predict classes
-predictions <- knn_fit2 |> 
+predictions <- knn_fit2 |>
   predict(new_data = penguins_preped)
-prob_preds <- knn_fit2 |> 
-  predict(new_data = penguins_preped, type = "prob") |> 
-  rename_with(~str_remove(.x, "^.pred_"))
+prob_preds <- knn_fit2 |>
+  predict(new_data = penguins_preped, type = "prob") |>
+  rename_with(~ str_remove(.x, "^.pred_"))
 # Combine with original data to check accuracy
-all_results <- penguins_preped |> 
-  select(sex) |> 
-  bind_cols(predictions,prob_preds)
+all_results <- penguins_preped |>
+  select(sex) |>
+  bind_cols(predictions, prob_preds)
 
-all_results |> 
-  pivot_longer(c(female,male), 
-               values_to = 'p sex', 
-               names_to = 'Sex predicted') |> 
-  ggplot(aes(`Sex predicted`,`p sex`))+ 
-  geom_violin()+ 
-  geom_beeswarm(cex = .25, alpha=.25)+ 
+all_results |>
+  pivot_longer(c(female, male),
+    values_to = "p sex",
+    names_to = "Sex predicted"
+  ) |>
+  ggplot(aes(`Sex predicted`, `p sex`)) +
+  geom_violin() +
+  geom_beeswarm(cex = .25, alpha = .25) +
   facet_grid(rows = vars(sex))
 
-yardstick::accuracy(data = all_results, truth=sex, 
-                    estimate=.pred_class) 
-yardstick::sensitivity(data = all_results, truth=sex, 
-                       estimate=.pred_class, 
-                       event_level="second") 
-yardstick::specificity(data = all_results, truth=sex, 
-                       estimate=.pred_class, 
-                       event_level="second") 
-yardstick::ppv(data = all_results, truth=sex, 
-               estimate=.pred_class, 
-               event_level="second") 
+yardstick::accuracy(
+  data = all_results, truth = sex,
+  estimate = .pred_class
+)
+yardstick::sensitivity(
+  data = all_results, truth = sex,
+  estimate = .pred_class,
+  event_level = "second"
+)
+yardstick::specificity(
+  data = all_results, truth = sex,
+  estimate = .pred_class,
+  event_level = "second"
+)
+yardstick::ppv(
+  data = all_results, truth = sex,
+  estimate = .pred_class,
+  event_level = "second"
+)
 CrossTable(all_results$.pred_class,
-           all_results$sex, prop.chisq = F, prop.t = F, 
-           format = 'SPSS')
+  all_results$sex,
+  prop.chisq = F, prop.t = F,
+  format = "SPSS"
+)
 
 caret::confusionMatrix(all_results$.pred_class, all_results$sex,
-                positive = "male")
+  positive = "male"
+)
 ```

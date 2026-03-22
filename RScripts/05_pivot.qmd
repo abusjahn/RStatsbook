@@ -32,17 +32,19 @@ When working with repeated measures (e.g. follow-ups or changes over shorter per
 While long data can be seen as the tidier version and is necessary for many statistical procedures, the wide format makes computation of differences and procedures as the t-test for dependent samples easier. Package tidyr provides the functions pivot_wider and pivot_longer for conversations between those forms. Another use-case is the plotting of several variables into ggplot facets, which can be achieved by combining those variables into a single column. Summarizing several variables and grouped data may result in a wide table with groups as rows and variables as columns, contrary to the common opposite form, another use-case.
 
 ```{r}
-pacman::p_load(conflicted,tidyverse, wrappedtools)
+pacman::p_load(conflicted, tidyverse, wrappedtools)
 ```
 
 ## Example 1: single repeated measure
 
 ```{r}
 n <- 3
-wide_data <- tibble(ID = paste("P",1:n),
-                    Var1 = LETTERS[1:n],
-                    Var2Time1 = rnorm(n = n, mean = 100, sd = 15),
-                    Var2Time2 = Var2Time1 + rnorm(n,10,5))
+wide_data <- tibble(
+  ID = paste("P", 1:n),
+  Var1 = LETTERS[1:n],
+  Var2Time1 = rnorm(n = n, mean = 100, sd = 15),
+  Var2Time2 = Var2Time1 + rnorm(n, 10, 5)
+)
 wide_data
 long_data <- pivot_longer(
   data = wide_data,
@@ -55,12 +57,14 @@ long_data
 
 ```{r}
 set.seed(42)
-wide_data <- tibble(ID = paste("P",1:n),
-                    Var1Time1 = rnorm(n = n, mean = 100, sd = 15),
-                    Var1Time2 = Var1Time1 + rnorm(n,10,5),
-                    Var2Time1 = rnorm(n = n, mean = 10, sd = 2),
-                    Var2Time2 = Var2Time1 + rnorm(n,0,1),
-                    Var3 = LETTERS[1:n])
+wide_data <- tibble(
+  ID = paste("P", 1:n),
+  Var1Time1 = rnorm(n = n, mean = 100, sd = 15),
+  Var1Time2 = Var1Time1 + rnorm(n, 10, 5),
+  Var2Time1 = rnorm(n = n, mean = 10, sd = 2),
+  Var2Time2 = Var2Time1 + rnorm(n, 0, 1),
+  Var3 = LETTERS[1:n]
+)
 wide_data
 # version with intermediate step:
 very_long_data <- pivot_longer(
@@ -72,8 +76,9 @@ very_long_data <- pivot_longer(
 )
 very_long_data
 long_data <- pivot_wider(very_long_data,
-                         names_from = Variable,
-                         values_from = Value)
+  names_from = Variable,
+  values_from = Value
+)
 long_data
 ```
 
@@ -81,10 +86,10 @@ Alternatively in 1 step, value column names will be extracted from parts of the 
 
 ```{r}
 long_data <- pivot_longer(
-  data=wide_data,
-  cols=contains("Time"),
-  names_to = c(".value","Time"), # .value will be replaced dynamically
-  #names_sep = "Time"
+  data = wide_data,
+  cols = contains("Time"),
+  names_to = c(".value", "Time"), # .value will be replaced dynamically
+  # names_sep = "Time"
   names_pattern = "(Var\\d+)(Time\\d+)"
 )
 long_data
@@ -124,13 +129,15 @@ wide_again_data
 set.seed(42)
 n <- 10
 rawdata <-
-  tibble(ID=paste("Pat",seq_len(n), sep="#"),
-         groups=rep(c("A","B"), each=n/2),
-         weight_V1=rnorm(n = n,mean = 46,sd = 2),
-         weight_V2=rnorm(n = n,mean = 50,sd = 2),
-         weight_V3=rnorm(n = n,mean = 51,sd = 2),
-         size_V1=rnorm(n = n,mean = 120,sd = 3),
-         size_V3=rnorm(n = n,mean = 135,sd = 3))
+  tibble(
+    ID = paste("Pat", seq_len(n), sep = "#"),
+    groups = rep(c("A", "B"), each = n / 2),
+    weight_V1 = rnorm(n = n, mean = 46, sd = 2),
+    weight_V2 = rnorm(n = n, mean = 50, sd = 2),
+    weight_V3 = rnorm(n = n, mean = 51, sd = 2),
+    size_V1 = rnorm(n = n, mean = 120, sd = 3),
+    size_V3 = rnorm(n = n, mean = 135, sd = 3)
+  )
 
 head(rawdata)
 ```
@@ -145,26 +152,34 @@ head(rawdata)
 # with intermediate super_long step
 rawdata_long <-
   # to superlong
-  pivot_longer(data = rawdata,
-               cols = contains("V"),
-               names_to = c("what_was_measured",
-                            "Visit"),
-               names_sep = "_",
-               values_to =  "weight_or_size") |>
+  pivot_longer(
+    data = rawdata,
+    cols = contains("V"),
+    names_to = c(
+      "what_was_measured",
+      "Visit"
+    ),
+    names_sep = "_",
+    values_to = "weight_or_size"
+  ) |>
   # from superlong to long
-  pivot_wider(names_from = what_was_measured,
-              values_from = weight_or_size)
+  pivot_wider(
+    names_from = what_was_measured,
+    values_from = weight_or_size
+  )
 head(rawdata_long)
 ```
 
 ```{r}
 # single step approach
 rawdata_long2 <-
-  pivot_longer(data = rawdata,
-               cols = contains("V"),
-               names_to = c(".value","Visit"),  
-               # .value will be replaced by weigh or size
-               names_sep = "_")
+  pivot_longer(
+    data = rawdata,
+    cols = contains("V"),
+    names_to = c(".value", "Visit"),
+    # .value will be replaced by weigh or size
+    names_sep = "_"
+  )
 head(rawdata_long2)
 ```
 
@@ -174,13 +189,16 @@ head(rawdata_long2)
 # 2-steps
 rawdata_wide <-
   pivot_longer(rawdata_long,
-               cols = c(weight, size),
-               names_to = "what_was_measured",
-               values_to = "weight_or_size") |>
-  pivot_wider(names_from=c(what_was_measured,Visit),
-              # names created from 2 sources
-              values_from = weight_or_size,
-              names_sep = "_")
+    cols = c(weight, size),
+    names_to = "what_was_measured",
+    values_to = "weight_or_size"
+  ) |>
+  pivot_wider(
+    names_from = c(what_was_measured, Visit),
+    # names created from 2 sources
+    values_from = weight_or_size,
+    names_sep = "_"
+  )
 head(rawdata_wide)
 ```
 
@@ -188,10 +206,11 @@ head(rawdata_wide)
 # 1step option
 rawdata_wide2 <-
   pivot_wider(rawdata_long,
-              values_from = c(weight,size),
-              # values come from 2 sources, names will used in names_glue
-              names_from=Visit,
-              names_glue="{.value}_{Visit}")
+    values_from = c(weight, size),
+    # values come from 2 sources, names will used in names_glue
+    names_from = Visit,
+    names_glue = "{.value}_{Visit}"
+  )
 head(rawdata_wide2)
 ```
 

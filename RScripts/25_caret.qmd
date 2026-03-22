@@ -17,14 +17,16 @@ Key Functionality:
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,
-               tidyverse, broom,
-               wrappedtools, flextable,
-               palmerpenguins, tictoc,
-               ggfortify, GGally, nnet,
-               caret, randomForest, kernlab, naivebayes,
-               mlbench,
-               doParallel, future, doFuture, future.mirai)
+pacman::p_load(
+  conflicted,
+  tidyverse, broom,
+  wrappedtools, flextable,
+  palmerpenguins, tictoc,
+  ggfortify, GGally, nnet,
+  caret, randomForest, kernlab, naivebayes,
+  mlbench,
+  doParallel, future, doFuture, future.mirai
+)
 # conflict_scout()
 conflicts_prefer(
   dplyr::filter,
@@ -33,12 +35,15 @@ conflicts_prefer(
   dplyr::slice,
   palmerpenguins::penguins,
   caret::lift,
-  .quiet = TRUE)
-rawdata <- penguins |> 
+  .quiet = TRUE
+)
+rawdata <- penguins |>
   na.omit()
-predvars <- ColSeeker(namepattern = c('_mm','_g'))
-rawdata <- select(rawdata,
-                  species, predvars$names)
+predvars <- ColSeeker(namepattern = c("_mm", "_g"))
+rawdata <- select(
+  rawdata,
+  species, predvars$names
+)
 ```
 
 ## Parallel computing setup
@@ -46,12 +51,12 @@ rawdata <- select(rawdata,
 ```{r}
 # Determine the number of cores to use (it's common to leave one core free for the operating system)
 cores <- parallel::detectCores() - 1
-if(cores < 1) {
+if (cores < 1) {
   cores <- 1 # Ensure at least one core is used
 }
 # Create the cluster
 # makePSOCKcluster works on all operating systems (Windows, macOS, Linux)
- cl <- makePSOCKcluster(cores)
+cl <- makePSOCKcluster(cores)
 
 # Register the cluster as the parallel backend for the 'foreach' package (which caret uses)
 registerDoParallel(cl)
@@ -74,9 +79,11 @@ plan(multisession, workers = future::availableCores() - 1)
 This will be applied to all models. Here we use 5-fold cross-validation repeated 20 times. Thus 100 models will be trained for each tuning parameter combination.
 
 ```{r}
-ctrl <- trainControl(method = "repeatedcv", 
-                     number=5,  
-                     repeats = 20)
+ctrl <- trainControl(
+  method = "repeatedcv",
+  number = 5,
+  repeats = 20
+)
 ```
 
 Method-specific options will be defined below for each model (`tune`).
@@ -88,36 +95,42 @@ Method-specific options will be defined below for each model (`tune`).
 ### K-Nearest Neighbors (KNN)
 
 ```{r}
-tune <- expand.grid(k=seq(1,9,2))
-knnfit <- train(form = species~.,
-                data = rawdata,
-                preProcess = c('center','scale'),
-                method='knn',
-                metric='Accuracy',
-                trControl = ctrl,
-                tuneGrid=tune)
+tune <- expand.grid(k = seq(1, 9, 2))
+knnfit <- train(
+  form = species ~ .,
+  data = rawdata,
+  preProcess = c("center", "scale"),
+  method = "knn",
+  metric = "Accuracy",
+  trControl = ctrl,
+  tuneGrid = tune
+)
 ```
 
 ### Extreme Gradient Boosting (XGBoost)
 
 ```{r}
-tune <- expand.grid(nrounds=c(25,50,75),
-                    max_depth=seq(2,10,2),
-                    eta=1,
-                    gamma=c(.01,.005),
-                    colsample_bytree=1,
-                    min_child_weight=1,
-                    subsample=1)
+tune <- expand.grid(
+  nrounds = c(25, 50, 75),
+  max_depth = seq(2, 10, 2),
+  eta = 1,
+  gamma = c(.01, .005),
+  colsample_bytree = 1,
+  min_child_weight = 1,
+  subsample = 1
+)
 tictoc::tic("xgb")
-xgbfit <- train(form = species~.,
-                data = rawdata,
-                # preProcess = c('center','scale'),
-                method='xgbTree',
-                # objective = "multi:softprob", # set by train
-                metric='Accuracy',
-                trControl = ctrl,
-                tuneGrid=tune,
-                verbosity = 0)
+xgbfit <- train(
+  form = species ~ .,
+  data = rawdata,
+  # preProcess = c('center','scale'),
+  method = "xgbTree",
+  # objective = "multi:softprob", # set by train
+  metric = "Accuracy",
+  trControl = ctrl,
+  tuneGrid = tune,
+  verbosity = 0
+)
 tictoc::toc()
 ```
 
@@ -126,47 +139,55 @@ tictoc::toc()
 ### Random Forest (RF)
 
 ```{r}
-tune <- expand.grid(mtry=seq(2,3,1))
-rffit <- train(form = species~.,
-                data = rawdata,
-                # preProcess = c('center','scale'),
-                method='rf',
-                metric='Accuracy',
-                trControl = ctrl,
-               tuneGrid=tune)
+tune <- expand.grid(mtry = seq(2, 3, 1))
+rffit <- train(
+  form = species ~ .,
+  data = rawdata,
+  # preProcess = c('center','scale'),
+  method = "rf",
+  metric = "Accuracy",
+  trControl = ctrl,
+  tuneGrid = tune
+)
 ```
 
 ### Linear Discriminant Analysis (LDA)
 
 ```{r}
-ldafit <- train(form = species~.,
-                data = rawdata,
-                preProcess = c('center','scale'),
-                method='lda',
-                metric='Accuracy',
-                trControl = ctrl)
+ldafit <- train(
+  form = species ~ .,
+  data = rawdata,
+  preProcess = c("center", "scale"),
+  method = "lda",
+  metric = "Accuracy",
+  trControl = ctrl
+)
 ```
 
 ### Support Vector Machine (SVM)
 
 ```{r}
-svmfit <- train(form = species~.,
-                data = rawdata,
-                preProcess = c('center','scale'),
-                method='svmLinear',
-                metric='Accuracy',
-                trControl = ctrl)
+svmfit <- train(
+  form = species ~ .,
+  data = rawdata,
+  preProcess = c("center", "scale"),
+  method = "svmLinear",
+  metric = "Accuracy",
+  trControl = ctrl
+)
 ```
 
 ### Naive Bayes
 
 ```{r}
-bayesfit <- train(form = species~.,
-                data = rawdata,
-                preProcess = c('center','scale'),
-                method='naive_bayes',
-                metric='Accuracy',
-                trControl = ctrl)
+bayesfit <- train(
+  form = species ~ .,
+  data = rawdata,
+  preProcess = c("center", "scale"),
+  method = "naive_bayes",
+  metric = "Accuracy",
+  trControl = ctrl
+)
 ```
 
 \newpage
@@ -174,12 +195,14 @@ bayesfit <- train(form = species~.,
 ### Neural Network (NN)
 
 ```{r}
-nnfit <- train(form=species~.,
-               data=rawdata, 
-               method="nnet",
-               preProcess=c("center","scale"),
-               metric="Accuracy",
-               trControl=ctrl)
+nnfit <- train(
+  form = species ~ .,
+  data = rawdata,
+  method = "nnet",
+  preProcess = c("center", "scale"),
+  metric = "Accuracy",
+  trControl = ctrl
+)
 ```
 
 ## Stopping parallel computing
@@ -195,58 +218,62 @@ registerDoSEQ() # Optional: reverts to sequential operation
 The 100 models trained for the selected optimal tuning parameter combination are compared below.
 
 ```{r}
-resamps <- resamples(list(knn = knnfit, 
-                          lda = ldafit,
-                          rf=rffit,
-                          xgb=xgbfit,
-                          svm=svmfit,
-                          bayes=bayesfit,
-                          nn=nnfit))
-summary(resamps) |> 
-  pluck("statistics") |> 
-  pluck("Accuracy") |> 
+resamps <- resamples(list(
+  knn = knnfit,
+  lda = ldafit,
+  rf = rffit,
+  xgb = xgbfit,
+  svm = svmfit,
+  bayes = bayesfit,
+  nn = nnfit
+))
+summary(resamps) |>
+  pluck("statistics") |>
+  pluck("Accuracy") |>
   as_tibble(rownames = "Model") |>
   mutate(across(-Model,
-                .fns =  ~round(.x,3))) |>
-  flextable() |> 
-  set_table_properties(width=1, layout="autofit") 
+    .fns = ~ round(.x, 3)
+  )) |>
+  flextable() |>
+  set_table_properties(width = 1, layout = "autofit")
 
 resamps$values |>
-  head()|>
-  select(1:7) |> 
-  mutate(across(-Resample, round,3)) |>
-  flextable() |> 
-  set_table_properties(width=1, layout="autofit") 
+  head() |>
+  select(1:7) |>
+  mutate(across(-Resample, round, 3)) |>
+  flextable() |>
+  set_table_properties(width = 1, layout = "autofit")
 
-resamps$values |> 
-  pivot_longer(contains('~'),
-               names_to = c('Model','Measure'),
-               names_sep = '~') |> 
-  ggplot(aes(Model,value))+
-  geom_boxplot(outlier.alpha = .6)+
-  facet_wrap(facets = vars(Measure),scales = 'free')
+resamps$values |>
+  pivot_longer(contains("~"),
+    names_to = c("Model", "Measure"),
+    names_sep = "~"
+  ) |>
+  ggplot(aes(Model, value)) +
+  geom_boxplot(outlier.alpha = .6) +
+  facet_wrap(facets = vars(Measure), scales = "free")
 ```
 
 If really deemed necessary, the differences between models can be tested statistically.
 
 ```{r}
-diffs <- diff(resamps, adjustment = "fdr") 
-diffs$statistics <- 
-  diffs$statistics |> 
-  map_depth(.depth =2, \(x) {
-      if (is.list(x) && "p.value" %in% names(x)) {
-        x$p.value <- formatP(x$p.value, ndigits = 2, textout = F)
-      }
-      return(x)
-    })
-diffs$statistics <- 
-  diffs$statistics |> 
-  map_depth(.depth =2, function(x) {
-      if (is.list(x) && "estimate" %in% names(x)) {
-        x$estimate <- round(x$estimate, 4)
-      }
-      return(x)
-    })
+diffs <- diff(resamps, adjustment = "fdr")
+diffs$statistics <-
+  diffs$statistics |>
+  map_depth(.depth = 2, \(x) {
+    if (is.list(x) && "p.value" %in% names(x)) {
+      x$p.value <- formatP(x$p.value, ndigits = 2, textout = F)
+    }
+    return(x)
+  })
+diffs$statistics <-
+  diffs$statistics |>
+  map_depth(.depth = 2, function(x) {
+    if (is.list(x) && "estimate" %in% names(x)) {
+      x$estimate <- round(x$estimate, 4)
+    }
+    return(x)
+  })
 summary(diffs)
 ```
 
@@ -261,15 +288,14 @@ xgbfit[["bestTune"]]
 xgbpred <- predict(xgbfit, newdata = rawdata)
 confusionMatrix(xgbpred, rawdata$species)
 # Importance
-importance_xgb <- 
-  xgboost::xgb.importance(model=xgbfit[["finalModel"]]) |> 
-  arrange(Gain) |> 
-  mutate(Feature=fct_inorder(Feature))
+importance_xgb <-
+  xgboost::xgb.importance(model = xgbfit[["finalModel"]]) |>
+  arrange(Gain) |>
+  mutate(Feature = fct_inorder(Feature))
 importance_xgb
-importance_xgb |> 
-  ggplot(aes(Feature,Gain))+
-  geom_col(aes(fill=Gain))+
-  coord_flip()+
-  guides(fill="none")
-
+importance_xgb |>
+  ggplot(aes(Feature, Gain)) +
+  geom_col(aes(fill = Gain)) +
+  coord_flip() +
+  guides(fill = "none")
 ```

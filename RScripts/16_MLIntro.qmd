@@ -56,53 +56,77 @@
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,wrappedtools,tidyverse, ggbeeswarm,
-               broom, boot, Hmisc)
+pacman::p_load(
+  conflicted, wrappedtools, tidyverse, ggbeeswarm,
+  broom, boot, Hmisc
+)
 
-conflicts_prefer(dplyr::filter,
-                 dplyr::select)
+conflicts_prefer(
+  dplyr::filter,
+  dplyr::select
+)
 ```
 
-Simulation of a weak effect with vaccination reducing cough incidence from 70% to 60%:
+Simulation of a weak effect with vaccination reducing cough incidence from 70% to 55%:
 
 ```{r}
-set.seed(161)
-vaccination <- 
-  tibble(vaccination = rep(c("no more cough","placebo"),each = 100),
-         infection = c(sample(c("yes","no"),size = 100,
-                              replace = TRUE,prob = c(.6,.4)),
-                       sample(c("yes","no"),size = 100,
-                              replace = TRUE,prob = c(.7,.3))))
-vaccination |> 
-  ggplot(aes(vaccination, fill = infection))+
-  geom_bar()+
-  scale_fill_manual(values = c("lightgreen","salmon"))+
-  scale_y_continuous(breaks = seq(0,1000,20))
-observed_or <- fisher.test(vaccination$vaccination, 
-                           vaccination$infection)$estimate
-estimated_p <- fisher.test(vaccination$vaccination, 
-                           vaccination$infection,
-                           simulate.p.value = FALSE)$p.value
+set.seed(16)
+vaccination <-
+  tibble(
+    vaccination = rep(c("no more cough\u00ae", "placebo"), each = 100),
+    infection = c(
+      sample(c("yes", "no"),
+        size = 100,
+        replace = TRUE, prob = c(.55, .45)
+      ),
+      sample(c("yes", "no"),
+        size = 100,
+        replace = TRUE, prob = c(.7, .3)
+      )
+    )
+  )
+vaccination |>
+  ggplot(aes(vaccination, fill = infection)) +
+  geom_bar() +
+  scale_fill_manual(values = c("lightgreen", "salmon")) +
+  scale_y_continuous(breaks = seq(0, 1000, 20))
+observed_or <- fisher.test(
+  vaccination$vaccination,
+  vaccination$infection
+)$estimate
+estimated_p <- fisher.test(vaccination$vaccination,
+  vaccination$infection,
+  simulate.p.value = FALSE
+)$p.value
 extremes_log_or <- c(-log(observed_or), log(observed_or))
-n_reps <- 10^3
-simulated_or <- tibble(run_i = 1:n_reps,
-                       or = NA_real_)
-for (shuffle_i in seq_len(n_reps)){
+n_reps <- 10^4
+simulated_or <- tibble(
+  run_i = 1:n_reps,
+  or = NA_real_
+)
+for (shuffle_i in seq_len(n_reps)) {
   shuffled_infection <- sample(vaccination$infection)
-  simulated_or$or[shuffle_i] <- 
-    fisher.test(vaccination$vaccination, 
-                shuffled_infection)$estimate
+  simulated_or$or[shuffle_i] <-
+    fisher.test(
+      vaccination$vaccination,
+      shuffled_infection
+    )$estimate
 }
-ggplot(simulated_or, aes(x = log(or)))+
-  geom_histogram(binwidth = .1, center = 0,
-                 fill = "lightgreen", color = "darkgrey")+
-  geom_vline(xintercept = extremes_log_or, color = "salmon")+
+ggplot(simulated_or, aes(x = log(or))) +
+  geom_histogram(
+    binwidth = .1, center = 0,
+    fill = "lightgreen", color = "darkgrey"
+  ) +
+  geom_vline(xintercept = extremes_log_or, color = "salmon") +
   labs(
-    title="Distribution of simulated log(ORs) under the Null hypothesis",
-    caption = "Vertical lines indicate the observed log(OR) and its negative counterpart")
-extremes_count <- 
-  table(between(log(simulated_or$or),
-                extremes_log_or[1], extremes_log_or[2]))
+    title = "Distribution of simulated log(ORs) under the Null hypothesis",
+    caption = "Vertical lines indicate the observed log(OR) and its negative counterpart"
+  )
+extremes_count <-
+  table(between(
+    log(simulated_or$or),
+    extremes_log_or[1], extremes_log_or[2]
+  ))
 ```
 
 The conventional p-value is `r formatP(estimated_p,ndigits = 5)`, while shuffling the data resulted in `r round(extremes_count[1]/n_reps, 5)`% of the simulated ORs being as extreme as the observed OR.
@@ -120,20 +144,21 @@ boot_data <- tibble(
   x = factor(rep(1:3, times = 3)),
   y = factor(rep(1:3, each = 3)),
   size = rnorm(9, mean = 170, sd = 10),
-  fishing = 0)
+  fishing = 0
+)
 
 for (i in 1:9) {
-  boot_data <- 
+  boot_data <-
     bind_rows(
       boot_data,
-      boot_data |> 
-        filter(fishing == 0) |> 
+      boot_data |>
+        filter(fishing == 0) |>
         slice_sample(n = 9, replace = TRUE) |>
-        mutate(fishing = i))
-
+        mutate(fishing = i)
+    )
 }
-plot_org <- boot_data |> 
-  filter(fishing == 0) |> 
+plot_org <- boot_data |>
+  filter(fishing == 0) |>
   ggplot(aes(x, y, color = SubjectID)) +
   geom_point(size = 30) +
   geom_label(aes(label = SubjectID), size = 5) +
@@ -142,16 +167,18 @@ plot_org <- boot_data |>
   labs(title = "Original Data") +
   guides(x = "none", y = "none", color = "none") +
   theme_bw()
-plot_org  
-plot_boot <- boot_data |> 
-  filter(fishing != 0) |> 
+plot_org
+plot_boot <- boot_data |>
+  filter(fishing != 0) |>
   ggplot(aes(x, y, color = SubjectID)) +
   geom_beeswarm(size = 5, alpha = .5, cex = 4) +
   geom_label(aes(label = SubjectID), size = 2) +
   scale_x_discrete("", labels = "") +
   scale_y_discrete("", labels = "") +
-  facet_wrap(facets = vars(fishing), ncol = 3, 
-             labeller = "label_both") +
+  facet_wrap(
+    facets = vars(fishing), ncol = 3,
+    labeller = "label_both"
+  ) +
   labs(title = "Bootstrap samples") +
   guides(x = "none", y = "none", color = "none") +
   theme_bw()
@@ -161,16 +188,19 @@ plot_boot
 Based on the bootstrap samples, we can visualize variation in outcome **size**:
 
 ```{r}
-desc_boot <- 
-  boot_data |> 
-  # filter(fishing != 0) |> 
+desc_boot <-
+  boot_data |>
+  # filter(fishing != 0) |>
   ggplot(aes(x = factor(fishing), y = size)) +
-  stat_summary(color = "salmon", fun.data = mean_cl_normal,
-               size = 1)+
-  geom_beeswarm(alpha = .75, size = 2)+
-  ylab("size mean \u00b1 95% CI")+
+  stat_summary(
+    color = "salmon", fun.data = mean_cl_normal,
+    size = 1
+  ) +
+  geom_beeswarm(alpha = .75, size = 2) +
+  ylab("size mean \u00b1 95% CI") +
   scale_x_discrete("bootstrap sample",
-                   labels = c("original", paste("boot", 1:9)))
+    labels = c("original", paste("boot", 1:9))
+  )
 desc_boot
 ```
 
@@ -186,33 +216,36 @@ real_mean <- 170
 real_sd <- 10
 n_boot <- 10^4
 set.seed(12345)
-experimental_data <- 
+experimental_data <-
   rnorm(n = n_subjects, mean = real_mean, sd = real_sd)
 ```
 
 Conventional estimates from sample:
 ```{r}
-meansd(experimental_data,roundDig = 4)
-meanse(experimental_data,roundDig = 4)
+meansd(experimental_data, roundDig = 4)
+meanse(experimental_data, roundDig = 4)
 smean.cl.normal(experimental_data)
 ```
 
 Bootstrap estimates:
 ```{r}
-smean.cl.boot(experimental_data,B = n_boot)
-#looped bootstraping
+smean.cl.boot(experimental_data, B = n_boot)
+# looped bootstraping
 boot_means <- tibble(Mean = NA_real_, .rows = 0)
-for (run_i in seq_len(n_boot)){
-  boot_means <- 
+for (run_i in seq_len(n_boot)) {
+  boot_means <-
     add_row(boot_means,
-            Mean = mean(sample(x = experimental_data,
-                               size = n_subjects,
-                               replace = TRUE)))
+      Mean = mean(sample(
+        x = experimental_data,
+        size = n_subjects,
+        replace = TRUE
+      ))
+    )
 }
 
-cl_boot <- quantile(boot_means$Mean,probs = c(.025, .975))
-ggplot(boot_means, aes(Mean))+
-  geom_histogram(binwidth = .5, fill = "lightblue", color = "darkgrey")+
+cl_boot <- quantile(boot_means$Mean, probs = c(.025, .975))
+ggplot(boot_means, aes(Mean)) +
+  geom_histogram(binwidth = .5, fill = "lightblue", color = "darkgrey") +
   geom_vline(xintercept = cl_boot, linetype = 2)
 
 # package boot
@@ -223,8 +256,8 @@ boot_mean <- function(d, i) {
 # Sample data
 # Execute n_boot bootstrap replicates
 boot_results <- boot(
-  data = experimental_data, 
-  statistic = boot_mean, 
+  data = experimental_data,
+  statistic = boot_mean,
   R = n_boot
 )
 
@@ -264,20 +297,23 @@ loo_data <- tibble(
   SubjectID = factor(1:9),
   x = factor(rep(1:3, times = 3)),
   y = factor(rep(1:3, each = 3)),
-  drop = 0)
+  drop = 0
+)
 
 for (i in 1:9) {
-  loo_data <- 
+  loo_data <-
     bind_rows(
       loo_data,
-      loo_data |> 
-        filter(drop == 0,
-               SubjectID != i) |> 
-        mutate(drop = i))
-
+      loo_data |>
+        filter(
+          drop == 0,
+          SubjectID != i
+        ) |>
+        mutate(drop = i)
+    )
 }
-plot_org <- loo_data |> 
-  filter(drop == 0) |> 
+plot_org <- loo_data |>
+  filter(drop == 0) |>
   ggplot(aes(x, y, color = SubjectID)) +
   geom_point(size = 30) +
   geom_label(aes(label = SubjectID), size = 5) +
@@ -286,16 +322,18 @@ plot_org <- loo_data |>
   labs(title = "Original Data") +
   guides(x = "none", y = "none", color = "none") +
   theme_bw()
-plot_org  
-plot_loo <- loo_data |> 
-  filter(drop != 0) |> 
+plot_org
+plot_loo <- loo_data |>
+  filter(drop != 0) |>
   ggplot(aes(x, y, color = SubjectID)) +
   geom_point(size = 5) +
   geom_label(aes(label = SubjectID), size = 2) +
   scale_x_discrete("", labels = "") +
   scale_y_discrete("", labels = "") +
-  facet_wrap(facets = vars(drop), ncol = 3, 
-             labeller = "label_both") +
+  facet_wrap(
+    facets = vars(drop), ncol = 3,
+    labeller = "label_both"
+  ) +
   labs(title = "LOO samples") +
   guides(x = "none", y = "none", color = "none") +
   theme_bw()

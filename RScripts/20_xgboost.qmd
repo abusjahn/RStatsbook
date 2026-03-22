@@ -3,29 +3,32 @@
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,
-               tidyverse,
-               ggbeeswarm,
-               wrappedtools,  # just tools 
-               palmerpenguins, # data
-               caret, # Classification and Regression Training
-               gmodels, # tools for model fitting
-               easystats, 
-               yardstick,# model performance
-               xgboost,
-               tidymodels,
-               vip,
-               flextable,
-               future.mirai)  # XGBoost
-conflicts_prefer(dplyr::slice, 
-                 dplyr::filter,
-                 dplyr::lag,
-                 palmerpenguins::penguins)
+pacman::p_load(
+  conflicted,
+  tidyverse,
+  ggbeeswarm,
+  wrappedtools, # just tools
+  palmerpenguins, # data
+  caret, # Classification and Regression Training
+  gmodels, # tools for model fitting
+  easystats,
+  yardstick, # model performance
+  xgboost,
+  tidymodels,
+  vip,
+  flextable,
+  future.mirai
+) # XGBoost
+conflicts_prefer(
+  dplyr::slice,
+  dplyr::filter,
+  dplyr::lag,
+  palmerpenguins::penguins
+)
 
-rawdata <- penguins |> 
-  na.omit() |> 
-  mutate(year = factor(year)
-         )
+rawdata <- penguins |>
+  na.omit() |>
+  mutate(year = factor(year))
 ```
 
 ## Direct modelling
@@ -35,15 +38,19 @@ rawdata <- penguins |>
 one_hot encoding transforms factors in dummy columns for EVERY level, recommended for tree-based models as they can handle the resulting collinearity, and it is more intuitive to interpret the importance of each level. The `recipe` package provides a convenient way to do this. The resulting columns are added to the original data frame, and the original factor columns can be removed if desired. For linear models, one-hot encoding is not recommended as it can lead to multicollinearity issues.
 
 ```{r}
-rawdata <- 
+rawdata <-
   recipe(species ~ ., data = rawdata) |>
-  step_dummy(all_nominal_predictors(),one_hot = TRUE) |> 
+  step_dummy(all_nominal_predictors(), one_hot = TRUE) |>
   prep() |>
   bake(new_data = rawdata)
 cn()
-predvars <- ColSeeker(rawdata,
-                      c("_.+_","sex.+",
-                        "island.+","year_"))
+predvars <- ColSeeker(
+  rawdata,
+  c(
+    "_.+_", "sex.+",
+    "island.+", "year_"
+  )
+)
 predvars$names
 
 boostdata <- rawdata |>
@@ -58,26 +65,30 @@ xgb_out <- xgboost(
   x = boostdata,
   y = rawdata$species,
   nrounds = 100,
-  objective = "multi:softprob") # requests class probabilities
-prediction <- predict(xgb_out,boostdata) |> 
-  as_tibble() |> 
-  mutate(predicted= # find highest prob
-           case_when(Adelie>=Chinstrap &
-                       Adelie>=Gentoo ~ "Adelie",
-                     Gentoo>=Chinstrap ~ "Gentoo",
-                     !is.na(Chinstrap) ~ "Chinstrap"
-           ) |> 
-           factor())
+  objective = "multi:softprob"
+) # requests class probabilities
+prediction <- predict(xgb_out, boostdata) |>
+  as_tibble() |>
+  mutate(
+    predicted = # find highest prob
+      case_when(
+        Adelie >= Chinstrap &
+          Adelie >= Gentoo ~ "Adelie",
+        Gentoo >= Chinstrap ~ "Gentoo",
+        !is.na(Chinstrap) ~ "Chinstrap"
+      ) |>
+        factor()
+  )
 
-slice_sample(prediction, n=10)
+slice_sample(prediction, n = 10)
 ```
 
 ## Tidy model approach
 
 ```{r}
-predvars <- ColSeeker(namepattern = c("_mm","_g", "island", "sex"))
+predvars <- ColSeeker(namepattern = c("_mm", "_g", "island", "sex"))
 
-xgb_folds <- vfold_cv(rawdata, v = 5, strata = species,repeats = 5 )
+xgb_folds <- vfold_cv(rawdata, v = 5, strata = species, repeats = 5)
 
 xgb_recipe <- recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
@@ -85,11 +96,11 @@ xgb_recipe <- recipe(rawdata) |>
 
 xgb_grid <- grid_space_filling(
   tree_depth(range = c(5, 10)), # Searches between 2 and 10
-  trees(range = c(100, 200)), 
+  trees(range = c(100, 200)),
   learn_rate(),
   loss_reduction(),
-  min_n(range = c(10,20)),
-  finalize(mtry(), rawdata), 
+  min_n(range = c(10, 20)),
+  finalize(mtry(), rawdata),
   size = 20
 )
 xgb_spec <- boost_tree(
@@ -102,13 +113,13 @@ xgb_spec <- boost_tree(
 ) |>
   set_engine("xgboost") |>
   set_mode("classification")
-xgb_workflow <- workflow() |> 
+xgb_workflow <- workflow() |>
   add_recipe(xgb_recipe) |>
   add_model(xgb_spec)
 
 # Fit the model to the data
-plan(mirai_multisession, workers = availableCores()-2) # Use all but 2 cores for parallel processing
-xgb_results <- xgb_workflow |> 
+plan(mirai_multisession, workers = availableCores() - 2) # Use all but 2 cores for parallel processing
+xgb_results <- xgb_workflow |>
   tune_grid(
     resamples = xgb_folds,
     grid = xgb_grid,
@@ -117,52 +128,58 @@ xgb_results <- xgb_workflow |>
 plan(sequential)
 
 # See the top performing models
-xgb_results |> 
-  show_best(metric = "accuracy") |> 
-  select(-.metric, -.estimator) |> 
+xgb_results |>
+  show_best(metric = "accuracy") |>
+  select(-.metric, -.estimator) |>
   flextable()
 
 
 # Select the best parameters based on your preferred metric
-xgb_best <- xgb_results |> 
+xgb_best <- xgb_results |>
   select_best(metric = "accuracy")
 
 # Visualize the tuning results
-xgb_results |> 
+xgb_results |>
   collect_metrics() |>
-  filter(.metric == "accuracy",
-         mean>=median(mean)) |>
-  arrange(desc(mean)) |>  
-  ggplot(aes(x = trees, y = mean, 
-             color = min_n, shape = factor(mtry))) +
-#  geom_line(position = position_dodge(.25)) +
+  filter(
+    .metric == "accuracy",
+    mean >= median(mean)
+  ) |>
+  arrange(desc(mean)) |>
+  ggplot(aes(
+    x = trees, y = mean,
+    color = min_n, shape = factor(mtry)
+  )) +
+  #  geom_line(position = position_dodge(.25)) +
   geom_point(position = position_dodge(.25)) +
   theme_bw()
 
-xgb_results |> 
+xgb_results |>
   collect_metrics(summarize = FALSE) |>
-  filter(.metric == "accuracy",
-         mtry == xgb_best$mtry,
-         trees == xgb_best$trees,
-         min_n == xgb_best$min_n,
-         tree_depth == xgb_best$tree_depth) |>
+  filter(
+    .metric == "accuracy",
+    mtry == xgb_best$mtry,
+    trees == xgb_best$trees,
+    min_n == xgb_best$min_n,
+    tree_depth == xgb_best$tree_depth
+  ) |>
   ggplot(aes(x = factor(tree_depth), y = .estimate)) +
   geom_boxplot(outlier.alpha = 0) +
-  geom_beeswarm(alpha = 0.5, size =2) +
+  geom_beeswarm(alpha = 0.5, size = 2) +
   xlab("tree depth") +
   theme_bw()
 
 # Update the workflow with those best parameters
-final_workflow <- xgb_workflow |> 
+final_workflow <- xgb_workflow |>
   finalize_workflow(xgb_best)
 
 # Fit to the entire dataset (or use test split)
-final_fit <- final_workflow |> 
+final_fit <- final_workflow |>
   fit(data = rawdata)
 
-test_predicted <- final_fit |> 
+test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
-  rename_with(~str_remove(.x, "^.pred_"), starts_with(".pred_"))
+  rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
 ```
 
 ### Model evaluation
@@ -170,36 +187,37 @@ test_predicted <- final_fit |>
 ```{r}
 yardstick::conf_mat(test_predicted, truth = species, estimate = class)
 
-tidy_metrics <- metric_set(accuracy, kap, f_meas,roc_auc, mn_log_loss)
-tidy_metrics(test_predicted, truth = species, estimate = class,
-             Adelie, Chinstrap, Gentoo) |> 
+tidy_metrics <- metric_set(accuracy, kap, f_meas, roc_auc, mn_log_loss)
+tidy_metrics(test_predicted,
+  truth = species, estimate = class,
+  Adelie, Chinstrap, Gentoo
+) |>
   flextable()
-
 ```
 
 ```{r}
-test_predicted |> 
-  pivot_longer(c(Adelie,Chinstrap,Gentoo), 
-               values_to = 'p species', 
-               names_to = 'Species_pred') |> 
-  ggplot(aes(Species_pred,`p species`))+ 
-  geom_violin()+ 
-  geom_beeswarm(cex = .35, alpha=.25)+ 
+test_predicted |>
+  pivot_longer(c(Adelie, Chinstrap, Gentoo),
+    values_to = "p species",
+    names_to = "Species_pred"
+  ) |>
+  ggplot(aes(Species_pred, `p species`)) +
+  geom_violin() +
+  geom_beeswarm(cex = .35, alpha = .25) +
   facet_grid(rows = vars(species))
-
 ```
 
 ```{r}
-final_fit |> 
-  extract_fit_engine() |> 
+final_fit |>
+  extract_fit_engine() |>
   vip()
 
-final_fit |> 
-  extract_fit_engine() |> 
-  xgb.importance() |> 
-  as_tibble() |> 
-  ggplot(aes(reorder(Feature, Gain), Gain))+
-  geom_col()+
-  coord_flip()+
-  labs(x="Feature", y="Gain")
+final_fit |>
+  extract_fit_engine() |>
+  xgb.importance() |>
+  as_tibble() |>
+  ggplot(aes(reorder(Feature, Gain), Gain)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "Feature", y = "Gain")
 ```

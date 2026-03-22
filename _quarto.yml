@@ -29,14 +29,14 @@ book:
     - RScripts/13_lm_interaction.qmd
     - RScripts/14_glm.qmd
     - RScripts/15_lmm.qmd
-    - RScripts/16_MLintro.qmd
+    - RScripts/16_MLIntro.qmd
     - RScripts/17_MCMC.qmd
     - RScripts/18_knn.qmd
     - RScripts/19a_regressiontree.qmd
     - RScripts/19b_randomforrest.qmd
     - RScripts/20_xgboost.qmd
     - RScripts/21_LDA.qmd
-    - RScripts/22_tidymodels.qmd
+    - RScripts/22_Tidymodels.qmd
     - RScripts/23_PCA.qmd
     - RScripts/24_cluster.qmd
     # - RScripts/25_caret.qmd
@@ -61,9 +61,13 @@ format:
     citecolor: black      # Targets bibliography links
     code-block-bg: fbfbf2 
     monofont: "Cascadia Mono"
-    monofontoptions: 
-      - Scale=0.55
- 
+    monofontoptions:
+      - Scale=0.75
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+
 editor: visual
 highlight-style: github
 

@@ -5,135 +5,143 @@ LDAs are used to find a linear combination of features that characterizes or sep
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,
-               tidyverse,
-               wrappedtools, 
-               here,
-               palmerpenguins,
-               ggfortify, GGally,
-               MASS,
-               caret,
-               tidymodels, MASS, discrim
+pacman::p_load(
+  conflicted,
+  tidyverse,
+  wrappedtools,
+  here,
+  palmerpenguins,
+  ggfortify, GGally,
+  MASS,
+  caret,
+  tidymodels, MASS, discrim
 )
 
 # conflict_scout()
-conflicts_prefer(dplyr::select,
-                 dplyr::filter,
-                 palmerpenguins::penguins)
-rawdata <- penguins |> 
+conflicts_prefer(
+  dplyr::select,
+  dplyr::filter,
+  palmerpenguins::penguins
+)
+rawdata <- penguins |>
   na.omit()
 ```
 
 
 ```{r}
-predvars <- ColSeeker(namepattern = c('_mm','_g'))
-norm_rec <- 
+predvars <- ColSeeker(namepattern = c("_mm", "_g"))
+norm_rec <-
   recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
-  update_role(all_of(predvars$names), new_role = "predictor") |> 
+  update_role(all_of(predvars$names), new_role = "predictor") |>
   step_normalize(all_numeric_predictors())
-lda_data <- 
-  norm_rec |> 
-  prep() |>  
-  bake(new_data = rawdata) 
+lda_data <-
+  norm_rec |>
+  prep() |>
+  bake(new_data = rawdata)
 
-lda_formula <- paste('species',
-                       paste(predvars$names, collapse='+'),
-                       sep='~') |> 
+lda_formula <- paste("species",
+  paste(predvars$names, collapse = "+"),
+  sep = "~"
+) |>
   as.formula()
 ```
 
 Direct call from MASS package
 
 ```{r}
-lda_out <- lda(lda_formula, data=lda_data)
+lda_out <- lda(lda_formula, data = lda_data)
 lda_out$prior
 lda_out$svd^2 / sum(lda_out$svd^2) # explained variance
 lda_out$scaling
 lda_pred <- predict(lda_out)
-lda_plotdata <- 
-  lda_pred$x |> 
-  as_tibble() |> 
+lda_plotdata <-
+  lda_pred$x |>
+  as_tibble() |>
   cbind(rawdata |> select(species))
-lda_plotdata |> 
-  ggplot(aes(LD1,LD2, color=species))+
+lda_plotdata |>
+  ggplot(aes(LD1, LD2, color = species)) +
   geom_point()
 
-confusionMatrix(lda_pred$class,rawdata$species)
+confusionMatrix(lda_pred$class, rawdata$species)
 ```
 
 tidymodels approach
 
 ```{r}
-lda_spec <- discrim_linear() |> 
-  set_mode("classification") |> 
+lda_spec <- discrim_linear() |>
+  set_mode("classification") |>
   set_engine("MASS")
-lda_workflow <- workflow() |> 
-  add_recipe(norm_rec) |> 
-  add_model(lda_spec) 
+lda_workflow <- workflow() |>
+  add_recipe(norm_rec) |>
+  add_model(lda_spec)
 
-lda_fit <- 
-  lda_workflow |> 
+lda_fit <-
+  lda_workflow |>
   fit(data = rawdata)
 
-lda_coefficients <- lda_fit |> 
-  extract_fit_engine() |> 
+lda_coefficients <- lda_fit |>
+  extract_fit_engine() |>
   # For MASS engine, coefficients are in the 'scaling' element
   getElement("scaling")
 
 print(lda_coefficients)
 
-lda_data <- 
-  bind_cols(lda_data, 
-            lda_fit |> 
-              extract_fit_engine() |> 
-              predict(newdata = lda_data) |> 
-              pluck("x") |> 
-              as_tibble())
+lda_data <-
+  bind_cols(
+    lda_data,
+    lda_fit |>
+      extract_fit_engine() |>
+      predict(newdata = lda_data) |>
+      pluck("x") |>
+      as_tibble()
+  )
 
 ggplot(lda_data, aes(x = LD1, y = LD2, color = species)) +
-  geom_point(alpha = 0.7, size = 2) 
+  geom_point(alpha = 0.7, size = 2)
 ```
 
 
 ```{r}
-#data(bordeaux)
-bordeaux <- readxl::read_excel(here('Data/bordeaux.xlsx')) |> 
-  mutate(quality=factor(quality,
-                        levels=c('bad','medium', 'good'))) |> 
+# data(bordeaux)
+bordeaux <- readxl::read_excel(here("Data/bordeaux.xlsx")) |>
+  mutate(quality = factor(quality,
+    levels = c("bad", "medium", "good")
+  )) |>
   select(-year)
-lda_rec <- 
+lda_rec <-
   recipe(bordeaux) |>
-  update_role(everything(), new_role = "predictor") |> 
+  update_role(everything(), new_role = "predictor") |>
   update_role(quality, new_role = "outcome") |>
   step_normalize(all_numeric_predictors())
-lda_spec <- discrim_linear() |> 
-  set_mode("classification") |> 
+lda_spec <- discrim_linear() |>
+  set_mode("classification") |>
   set_engine("MASS")
-lda_workflow <- workflow() |> 
-  add_recipe(lda_rec) |> 
-  add_model(lda_spec) 
+lda_workflow <- workflow() |>
+  add_recipe(lda_rec) |>
+  add_model(lda_spec)
 
-lda_fit <- 
-  lda_workflow |> 
+lda_fit <-
+  lda_workflow |>
   fit(data = bordeaux)
 
-lda_coefficients <- lda_fit |> 
-  extract_fit_engine() |> 
+lda_coefficients <- lda_fit |>
+  extract_fit_engine() |>
   # For MASS engine, coefficients are in the 'scaling' element
   getElement("scaling")
 
 print(lda_coefficients)
 
-bordeaux <- 
-  bind_cols(bordeaux, 
-            lda_fit |> 
-              extract_fit_engine() |> 
-              predict(newdata = bordeaux) |> 
-              pluck("x") |> 
-              as_tibble())
+bordeaux <-
+  bind_cols(
+    bordeaux,
+    lda_fit |>
+      extract_fit_engine() |>
+      predict(newdata = bordeaux) |>
+      pluck("x") |>
+      as_tibble()
+  )
 
 ggplot(bordeaux, aes(x = LD1, y = LD2, color = quality)) +
-  geom_point(alpha = 0.7, size = 2) 
-
+  geom_point(alpha = 0.7, size = 2)
 ```

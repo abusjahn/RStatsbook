@@ -10,7 +10,7 @@ At the beginning of (almost) every script we define packages to be used. This co
 
 OR
 
--   simplifying this using function p_load() from package pacman; if you want to create fool-proof scripts, check for pacman and install if needed.
+-   simplifying this using function `p_load()` from package `pacman`; if you want to create fool-proof scripts, check for `pacman` and install if needed.
 
 ```{r}
 # ↑ this is the head of a code chunk
@@ -504,7 +504,6 @@ markSign0(SignIn = "0.35")
 markSign0(SignIn = "p=3,5%") # wrong input
 
 
-
 # source("F:/Aktenschrank/Analysen/R/myfunctions.R")
 ```
 
@@ -861,7 +860,7 @@ for (season_i in 1:3) {
 # content index
 ## names of elements
 for (col_i in colnames(rawdata)) {
-  cat(col_i,"\n")
+  cat(col_i, "\n")
   print(str(rawdata |> pull(col_i)))
 }
 ## content of elements
@@ -996,14 +995,14 @@ rawdata <- mutate(
   ),
   # `prescribe something?` = recode_values( #case_match(
   #   Hypertension,
-  #   "hypertensive" ~ "yes",  # lookup value ~ new value 
+  #   "hypertensive" ~ "yes",  # lookup value ~ new value
   #   "borderline" ~ "possibly",
   #   "normotensive" ~ "no"
   # )
   `prescribe something?` = recode_values(
     Hypertension,
-    from = c("hypertensive", "borderline", "normotensive"), #lookup-tables
-    to = c("yes", "possibly","no")
+    from = c("hypertensive", "borderline", "normotensive"), # lookup-tables
+    to = c("yes", "possibly", "no")
   )
 )
 rawdata |>

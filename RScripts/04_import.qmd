@@ -1,8 +1,10 @@
 # Importing data
 
 ```{r}
-pacman::p_load(conflicted,tidyverse, wrappedtools, 
-               readxl, readODS, foreign, haven, here)
+pacman::p_load(
+  conflicted, tidyverse, wrappedtools,
+  readxl, readODS, foreign, haven, here
+)
 ```
 
 ## Import from text files (.txt, .csv)
@@ -11,10 +13,13 @@ There are base functions like read.csv() and tidyverse-based updated ones like r
 
 ```{r}
 rawdata <- read_csv2(here("data/Medtest_e.csv"))
-Medtest_e <- read_delim(here("data/Medtest_e.csv"), 
-    delim = ";", escape_double = FALSE, locale = locale(date_names = "de", 
-        decimal_mark = ",", grouping_mark = "."), 
-    trim_ws = TRUE)
+Medtest_e <- read_delim(here("data/Medtest_e.csv"),
+  delim = ";", escape_double = FALSE, locale = locale(
+    date_names = "de",
+    decimal_mark = ",", grouping_mark = "."
+  ),
+  trim_ws = TRUE
+)
 View(Medtest_e)
 ```
 
@@ -23,15 +28,21 @@ View(Medtest_e)
 ### Tidy Excel files
 
 ```{r}
-rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |> 
-  rename_with(.fn = ~str_replace_all(.x,pattern="_",
-                                     replacement=" ")) |>
-  rename_with(.fn=str_to_title,
-              .cols = !contains(c("BP","BMI","NY"))) |> 
-  rename(`Size (cm)`=Size, #newname=oldname
-         `Weight (kg)`=Weight) |> 
+rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |>
+  rename_with(.fn = ~ str_replace_all(.x,
+    pattern = "_",
+    replacement = " "
+  )) |>
+  rename_with(
+    .fn = str_to_title,
+    .cols = !contains(c("BP", "BMI", "NY"))
+  ) |>
+  rename(
+    `Size (cm)` = Size, # newname=oldname
+    `Weight (kg)` = Weight
+  ) |>
   select(-`Sex M`)
-saveRDS(rawdata,file = here("data/rawdata.rds"))
+saveRDS(rawdata, file = here("data/rawdata.rds"))
 ```
 
 ### Excel file with units row
@@ -47,20 +58,24 @@ saveRDS(rawdata,file = here("data/rawdata.rds"))
 3.  Use 1st row as colnames for data
 
 ```{r}
-cn_temp <- read_excel(path = here("data/Medtest_e.xlsx"),
-                      range = "A1:Y2",col_names = FALSE,
-                      sheet = 2)
-for(col_i in colnames(cn_temp)){
-   if(!is.na(cn_temp |> slice(2) |> pull(col_i))){
-    cn_temp[1,col_i] <- 
-      paste0(cn_temp[1,col_i], " [", cn_temp[2,col_i], "]")
-   }
+cn_temp <- read_excel(
+  path = here("data/Medtest_e.xlsx"),
+  range = "A1:Y2", col_names = FALSE,
+  sheet = 2
+)
+for (col_i in colnames(cn_temp)) {
+  if (!is.na(cn_temp |> slice(2) |> pull(col_i))) {
+    cn_temp[1, col_i] <-
+      paste0(cn_temp[1, col_i], " [", cn_temp[2, col_i], "]")
+  }
 }
 
-rawdata <- read_excel(path = here("data/Medtest_e.xlsx"),
-                      skip = 2, col_names = FALSE,
-                      sheet = 2)
-colnames(rawdata) <- cn_temp[1,]
+rawdata <- read_excel(
+  path = here("data/Medtest_e.xlsx"),
+  skip = 2, col_names = FALSE,
+  sheet = 2
+)
+colnames(rawdata) <- cn_temp[1, ]
 ```
 
 ## ODS files
@@ -84,15 +99,18 @@ Import from SPSS generic files is implemented in various packages:
     -   as_factor uses value labels
 
 ```{r}
-import1 <- read.spss(file = here("data/Zellbeads.sav"),
-                     to.data.frame = TRUE,
-                     use.value.labels = TRUE)
+import1 <- read.spss(
+  file = here("data/Zellbeads.sav"),
+  to.data.frame = TRUE,
+  use.value.labels = TRUE
+)
 str(import1)
 as_tibble(import1)
 import2 <- read_sav(file = here("data/Zellbeads.sav"))
 str(import2$Bedingung)
-attr(import2$Bedingung,"labels")
+attr(import2$Bedingung, "labels")
 import2 <- mutate(import2,
-                  Bedingung=as_factor(Bedingung))
+  Bedingung = as_factor(Bedingung)
+)
 str(import2$Bedingung)
 ```

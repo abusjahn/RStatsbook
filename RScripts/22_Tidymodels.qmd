@@ -105,12 +105,13 @@ tree_grid <- expand.grid(
   min_n = seq(4, 10, by = 2)
 ) |>
   as_tibble()
-tree_grid |> 
-ggplot(aes(x = .panel_x, y = .panel_y)) + 
+tree_grid |>
+  ggplot(aes(x = .panel_x, y = .panel_y)) +
   geom_point() +
   geom_blank() +
-  facet_matrix(vars(tree_depth, cost_complexity, min_n), 
-               layer.upper = FALSE, layer.diag = 2) + 
+  facet_matrix(vars(tree_depth, cost_complexity, min_n),
+    layer.upper = FALSE, layer.diag = 2
+  ) +
   labs(title = str_glue("Crossed design with {nrow(tree_grid)} combinations"))
 
 tree_spec <- decision_tree(
@@ -187,13 +188,14 @@ xgb_grid <- grid_space_filling(
   finalize(mtry(), rawdata),
   size = 20
 )
-xgb_grid |> 
-  mutate(learn_rate = log10(learn_rate)) |>  
-ggplot(aes(x = .panel_x, y = .panel_y)) + 
+xgb_grid |>
+  mutate(learn_rate = log10(learn_rate)) |>
+  ggplot(aes(x = .panel_x, y = .panel_y)) +
   geom_point() +
   geom_blank() +
-  facet_matrix(vars(everything()), 
-               layer.upper = FALSE, layer.diag = 2) + 
+  facet_matrix(vars(everything()),
+    layer.upper = FALSE, layer.diag = 2
+  ) +
   labs(title = str_glue("Space-filling design with {nrow(xgb_grid)} combinations"))
 xgb_spec <- boost_tree(
   trees = tune(),

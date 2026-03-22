@@ -10,17 +10,21 @@ All packages necessary will be invoked by p_load. Packages with only a single fu
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,wrappedtools,car,nlme,broom, flextable,
-               multcomp,tidyverse,foreign,DescTools, #ez,
-               ggbeeswarm,
-               lme4, nlme,merTools,
-               easystats, patchwork,here)#conflicted,
+pacman::p_load(
+  conflicted, wrappedtools, car, nlme, broom, flextable,
+  multcomp, tidyverse, foreign, DescTools, # ez,
+  ggbeeswarm,
+  lme4, nlme, merTools,
+  easystats, patchwork, here
+) # conflicted,
 # rayshader,av)
 # pacman::p_unload(DescTools, foreign)
 # conflict_scout()
-conflicts_prefer(dplyr::select,
-                 dplyr::filter,
-                 modelbased::standardize)
+conflicts_prefer(
+  dplyr::select,
+  dplyr::filter,
+  modelbased::standardize
+)
 base_dir <- here::here()
 ```
 
@@ -29,14 +33,19 @@ base_dir <- here::here()
 Data are read from an SPSS file. Numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA. The call to here() expands the path to a file from the project directory to the full system path.
 
 ```{r}
-rawdata<-foreign::read.spss(file=here('data/Zellbeads.sav'),
-                            use.value.labels=T,to.data.frame=T) |>
+rawdata <- foreign::read.spss(
+  file = here("data/Zellbeads.sav"),
+  use.value.labels = T, to.data.frame = T
+) |>
   as_tibble() |>
-  dplyr::select(-ZahlZellen) |> 
-  rename(Growth=Wachstum,Treatment=Bedingung) |> 
-  mutate(Passage_F=factor(Passage),
-         Treatment=fct_recode(Treatment,
-                              Control="Kontrolle"))
+  dplyr::select(-ZahlZellen) |>
+  rename(Growth = Wachstum, Treatment = Bedingung) |>
+  mutate(
+    Passage_F = factor(Passage),
+    Treatment = fct_recode(Treatment,
+      Control = "Kontrolle"
+    )
+  )
 ```
 
 ## Graphical exploration
@@ -44,34 +53,36 @@ rawdata<-foreign::read.spss(file=here('data/Zellbeads.sav'),
 First impression of the data will be attempted by grouped boxplot, followed by interaction plots, both as basic and ggplot with variations.
 
 ```{r}
-ggplot(rawdata,aes(Passage_F,Growth, fill=Treatment))+
-  geom_boxplot(coef=3)
+ggplot(rawdata, aes(Passage_F, Growth, fill = Treatment)) +
+  geom_boxplot(coef = 3)
 with(rawdata, interaction.plot(
-  x.factor=Passage, trace.factor=Treatment, response=Growth,
-  ylim = c(90, 160), lty = c(1,3,12), lwd = 5,
+  x.factor = Passage, trace.factor = Treatment, response = Growth,
+  ylim = c(90, 160), lty = c(1, 3, 12), lwd = 5,
   ylab = "Growth", xlab = "Passage",
-  trace.label = "Treatment"))
+  trace.label = "Treatment"
+))
 # p1<-ggplot(rawdata,aes(x=Passage,y=Growth))+
 #    stat_summary(geom='line',fun='mean',aes(color=Treatment))+
 #    stat_summary(geom='line',fun='mean')
-p1<-ggplot(rawdata,aes(x=Passage,y=Growth))+
-  stat_summary(geom='line',fun='mean',
-               aes(color=Treatment),
-               position=position_dodge(width = .15))+
-  stat_summary(aes(color=Treatment),
-               position=position_dodge(width = .15),
-               fun.data = "mean_cl_normal")+
-  ylab('Growth \u00b1 95% CI')
+p1 <- ggplot(rawdata, aes(x = Passage, y = Growth)) +
+  stat_summary(
+    geom = "line", fun = "mean",
+    aes(color = Treatment),
+    position = position_dodge(width = .15)
+  ) +
+  stat_summary(aes(color = Treatment),
+    position = position_dodge(width = .15),
+    fun.data = "mean_cl_normal"
+  ) +
+  ylab("Growth \u00b1 95% CI")
 p1
-p1+geom_smooth(method='lm',color='black',se=F)+
-  geom_smooth(method='lm',aes(color=Treatment),se=F)
+p1 + geom_smooth(method = "lm", color = "black", se = F) +
+  geom_smooth(method = "lm", aes(color = Treatment), se = F)
 
-ggplot(rawdata,aes(x=Passage,y=Growth))+
-  stat_summary(geom='line',fun='mean')+
-  geom_smooth(method='lm')+
-  facet_grid(cols = vars(Treatment), margins=T)
-
-
+ggplot(rawdata, aes(x = Passage, y = Growth)) +
+  stat_summary(geom = "line", fun = "mean") +
+  geom_smooth(method = "lm") +
+  facet_grid(cols = vars(Treatment), margins = T)
 ```
 
 ## Linear Models
@@ -83,14 +94,14 @@ We will analyse the relation between dependent variable (DV) Growth and CONTINUO
 #### Graphical exploration
 
 ```{r}
-ggplot(rawdata,aes(Passage,Growth))+
-  geom_point()+
-  geom_smooth(method=lm)
-ggplot(rawdata,aes(Passage,Growth))+
-  geom_point()+
-  scale_x_continuous(breaks=seq(0,10,1), limits = c(0,6))+
-  geom_smooth(linewidth=2)+
-  geom_smooth(method=lm,se=F,color='red', fullrange = TRUE)
+ggplot(rawdata, aes(Passage, Growth)) +
+  geom_point() +
+  geom_smooth(method = lm)
+ggplot(rawdata, aes(Passage, Growth)) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(0, 10, 1), limits = c(0, 6)) +
+  geom_smooth(linewidth = 2) +
+  geom_smooth(method = lm, se = F, color = "red", fullrange = TRUE)
 ```
 
 #### Modelling
@@ -99,12 +110,12 @@ This takes 2 steps, building the model and computing p-values.
 
 ```{r}
 # model
-(regressionOut<-lm(Growth~Passage,data=rawdata))
+(regressionOut <- lm(Growth ~ Passage, data = rawdata))
 regressionOut$coefficients
 # model and p.value for slope, not recommended
 tidy(regressionOut)
 # computation of SSQs and p-values, use this!
-(anova_out<-anova(regressionOut))
+(anova_out <- anova(regressionOut))
 anova_out$`Pr(>F)` #|> na.omit()
 tidy(anova_out)
 # summary(regressionOut)
@@ -116,22 +127,31 @@ tidy(anova_out)
 To take out the variance due to Passage effects, we can use the residuals and shift them to the original mean:
 
 ```{r}
-rawdata <- 
+rawdata <-
   mutate(rawdata,
-         growthAdj = regressionOut$residuals+mean(Growth))
+    growthAdj = regressionOut$residuals + mean(Growth)
+  )
 
-summarise(rawdata,
-          across(contains('growth'),
-                 ~meansd(.x,roundDig =4)))
+summarise(
+  rawdata,
+  across(
+    contains("growth"),
+    ~ meansd(.x, roundDig = 4)
+  )
+)
 
-summarise(rawdata,
-          across(contains('growth'),
-                 ~meanse(.x,roundDig =4)))
+summarise(
+  rawdata,
+  across(
+    contains("growth"),
+    ~ meanse(.x, roundDig = 4)
+  )
+)
 
-ggplot(rawdata,aes(Passage,growthAdj))+
-  geom_point()+
-  geom_smooth(method = 'lm')
-lm(growthAdj~Passage,data=rawdata) |> tidy()
+ggplot(rawdata, aes(Passage, growthAdj)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+lm(growthAdj ~ Passage, data = rawdata) |> tidy()
 ```
 
 ### ANOVA
@@ -141,20 +161,20 @@ In the linear regression, we had Passage as a continuous IV, estimating a global
 #### Graphical exploration
 
 ```{r}
-ggplot(rawdata,aes(x = Passage_F, y = Growth))+
-  geom_boxplot(outlier.alpha = 0)+
-  geom_beeswarm(alpha=.5)+
-  scale_y_continuous(breaks=seq(0,1000,10))
+ggplot(rawdata, aes(x = Passage_F, y = Growth)) +
+  geom_boxplot(outlier.alpha = 0) +
+  geom_beeswarm(alpha = .5) +
+  scale_y_continuous(breaks = seq(0, 1000, 10))
 
-ggplot(rawdata,aes(x = Passage_F, y = Growth))+
-  geom_violin(draw_quantiles = c(.25,.5,.75))+
-  geom_beeswarm(alpha=.5)
+ggplot(rawdata, aes(x = Passage_F, y = Growth)) +
+  geom_violin(draw_quantiles = c(.25, .5, .75)) +
+  geom_beeswarm(alpha = .5)
 ```
 
 #### Modelling
 
 ```{r}
-(AnovaOut<-lm(Growth~Passage_F,data=rawdata))
+(AnovaOut <- lm(Growth ~ Passage_F, data = rawdata))
 tidy(AnovaOut)
 # summary(AnovaOut)
 (t <- anova(AnovaOut))
@@ -174,30 +194,39 @@ The p-value from our model only tests the global Null hypothesis of no differenc
 
 ```{r}
 # possible in a loop, but nominal p
-t.test(rawdata$Growth[which(rawdata$Passage==1)],
-       rawdata$Growth[which(rawdata$Passage==2)],
-       var.equal = T)
+t.test(rawdata$Growth[which(rawdata$Passage == 1)],
+  rawdata$Growth[which(rawdata$Passage == 2)],
+  var.equal = T
+)
 # all pairwise group combinations
-pt_out<-pairwise.t.test(x=rawdata$Growth,
-                        g=rawdata$Passage_F,
-                        p.adjust.method='none')
+pt_out <- pairwise.t.test(
+  x = rawdata$Growth,
+  g = rawdata$Passage_F,
+  p.adjust.method = "none"
+)
 pt_out
-pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage_F,
-                p.adjust.method='fdr')
-pairwise.t.test(x=rawdata$Growth,g=rawdata$Passage_F,
-                p.adjust.method='bonferroni')
+pairwise.t.test(
+  x = rawdata$Growth, g = rawdata$Passage_F,
+  p.adjust.method = "fdr"
+)
+pairwise.t.test(
+  x = rawdata$Growth, g = rawdata$Passage_F,
+  p.adjust.method = "bonferroni"
+)
 # comparison against reference group 1
-pt_out$p.value[,1]
+pt_out$p.value[, 1]
 # comparison against reference group 6
-pt_out$p.value[5,]
+pt_out$p.value[5, ]
 # comparison for selection
-c(pt_out$p.value[1,1],pt_out$p.value[3,2],
-  pt_out$p.value[5,1])
+c(
+  pt_out$p.value[1, 1], pt_out$p.value[3, 2],
+  pt_out$p.value[5, 1]
+)
 # comparison against next level
 diag(pt_out$p.value)
 # adjusting for multiple testing for selected comparisons
-p.adjust(diag(pt_out$p.value),method='fdr')
-formatP(p.adjust(pt_out$p.value[,1],method='fdr'))
+p.adjust(diag(pt_out$p.value), method = "fdr")
+formatP(p.adjust(pt_out$p.value[, 1], method = "fdr"))
 ```
 
 ### LM with continuous AND categorical IV
@@ -209,17 +238,17 @@ Traditionally you may think of *regression* **OR** *ANOVA*, but they are no diff
 ```{r}
 #| fig-width: 6
 #| fig-height: 6
-p0 <- ggplot(rawdata,aes(Treatment,Growth))+ 
-  geom_boxplot() 
-p1 <- ggplot(rawdata,aes(Treatment,Growth, color=Passage_F))+ 
-  geom_boxplot() 
-p2 <- ggplot(rawdata,aes(color=Treatment,Growth, x=Passage_F))+ 
-  geom_boxplot() 
-p3 <- ggplot(rawdata,aes(Treatment,Growth))+ 
-  geom_boxplot()+ 
-  facet_wrap(facets = vars(Passage_F), labeller='label_both') 
-# from patchwork 
-(p1+p2)/p3 
+p0 <- ggplot(rawdata, aes(Treatment, Growth)) +
+  geom_boxplot()
+p1 <- ggplot(rawdata, aes(Treatment, Growth, color = Passage_F)) +
+  geom_boxplot()
+p2 <- ggplot(rawdata, aes(color = Treatment, Growth, x = Passage_F)) +
+  geom_boxplot()
+p3 <- ggplot(rawdata, aes(Treatment, Growth)) +
+  geom_boxplot() +
+  facet_wrap(facets = vars(Passage_F), labeller = "label_both")
+# from patchwork
+(p1 + p2) / p3
 ```
 
 #### Modelling
@@ -227,15 +256,15 @@ p3 <- ggplot(rawdata,aes(Treatment,Growth))+
 Models with (\*) and without (+) interaction are build and tested.
 
 ```{r}
-lmOut_interaction<-lm(Growth~Passage*Treatment,data=rawdata)
-Anova(lmOut_interaction,type = 3)
+lmOut_interaction <- lm(Growth ~ Passage * Treatment, data = rawdata)
+Anova(lmOut_interaction, type = 3)
 #
-lmOut_additive<-lm(Growth~Passage+Treatment,data=rawdata)
-Anova_out <- Anova(lmOut_additive,type=2)
+lmOut_additive <- lm(Growth ~ Passage + Treatment, data = rawdata)
+Anova_out <- Anova(lmOut_additive, type = 2)
 Anova_out$`Pr(>F)`
 tidy(Anova_out)
 # for comparison, here is the univariable model
-lmOut_uni<-lm(Growth~Treatment,data=rawdata)
+lmOut_uni <- lm(Growth ~ Treatment, data = rawdata)
 a_uni <- anova(lmOut_uni)
 a_uni$`Pr(>F)`
 ```
@@ -245,24 +274,30 @@ a_uni$`Pr(>F)`
 For multivariable models, pairwise.t.test() is not appropriate, Dunnet or Tukey tests (depending on hypothesis) are typical solutions.
 
 ```{r}
-glht_out <- 
-  summary(glht(model=lmOut_additive,
-               linfct=mcp(Treatment='Dunnett')))
+glht_out <-
+  summary(glht(
+    model = lmOut_additive,
+    linfct = mcp(Treatment = "Dunnett")
+  ))
 glht_out$test$pvalues
-tidy(glht_out) |> 
+tidy(glht_out) |>
   select(-null.value)
-summary(glht(model=lmOut_additive,
-             linfct=mcp(Treatment='Tukey')))
-DescTools::DunnettTest(Growth~Passage_F,data=rawdata)
-DescTools::DunnettTest(Growth~Treatment,data=rawdata)
-pairwise.t.test(rawdata$Growth,rawdata$Treatment,p.adjust.method = 'n')
-# mean(rawdata$Growth[which(rawdata$Passage==1 & 
-                            # rawdata$Treatment=='Control')]) 
-anova_out$'Pr(>F)' 
-#aOut$`Sum Sq` 
-summary(lmOut_additive) 
-(result<-tibble(predictor=rownames(anova_out), 
-                    p=formatP(anova_out$'Pr(>F)',ndigits=5))) 
+summary(glht(
+  model = lmOut_additive,
+  linfct = mcp(Treatment = "Tukey")
+))
+DescTools::DunnettTest(Growth ~ Passage_F, data = rawdata)
+DescTools::DunnettTest(Growth ~ Treatment, data = rawdata)
+pairwise.t.test(rawdata$Growth, rawdata$Treatment, p.adjust.method = "n")
+# mean(rawdata$Growth[which(rawdata$Passage==1 &
+# rawdata$Treatment=='Control')])
+anova_out$"Pr(>F)"
+# aOut$`Sum Sq`
+summary(lmOut_additive)
+(result <- tibble(
+  predictor = rownames(anova_out),
+  p = formatP(anova_out$"Pr(>F)", ndigits = 5)
+))
 broom::tidy(anova_out)
 ```
 
@@ -270,20 +305,24 @@ broom::tidy(anova_out)
 
 ```{r}
 raw_out <- compare_n_numvars(rawdata,
-                             dep_vars = c("Growth","growthAdj"),
-                             indep_var = "Treatment",
-                             gaussian = TRUE,add_n = TRUE)
+  dep_vars = c("Growth", "growthAdj"),
+  indep_var = "Treatment",
+  gaussian = TRUE, add_n = TRUE
+)
 
 
-raw_out$results |> 
-  select(Variable, `p(ANOVA)` = multivar_p,contains("fn")) |> 
-  rename_with(~str_replace_all(.x,
-                               c(" fn"="",
-                                 "Treatment "=""))) |> 
-  flextable() |>  
-  add_footer_lines("Symbols b,c indicate significance in post-hoc test vs. group 2 or 3") |> 
-  set_table_properties(width=1, layout="autofit") 
-
+raw_out$results |>
+  select(Variable, `p(ANOVA)` = multivar_p, contains("fn")) |>
+  rename_with(~ str_replace_all(
+    .x,
+    c(
+      " fn" = "",
+      "Treatment " = ""
+    )
+  )) |>
+  flextable() |>
+  add_footer_lines("Symbols b,c indicate significance in post-hoc test vs. group 2 or 3") |>
+  set_table_properties(width = 1, layout = "autofit")
 ```
 
 \newpage

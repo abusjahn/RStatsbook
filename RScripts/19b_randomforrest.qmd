@@ -3,29 +3,32 @@
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,
-               tidyverse,
-               ggbeeswarm,
-               wrappedtools,  # just tools 
-               palmerpenguins, # data
-               caret, # Classification and Regression Training
-               gmodels, # tools for model fitting
-               easystats, 
-               yardstick,# model performance
-               xgboost,
-               tidymodels,
-               vip,
-               flextable,
-               future.mirai)  # XGBoost
-conflicts_prefer(dplyr::slice, 
-                 dplyr::filter,
-                 dplyr::lag,
-                 palmerpenguins::penguins)
+pacman::p_load(
+  conflicted,
+  tidyverse,
+  ggbeeswarm,
+  wrappedtools, # just tools
+  palmerpenguins, # data
+  caret, # Classification and Regression Training
+  gmodels, # tools for model fitting
+  easystats,
+  yardstick, # model performance
+  xgboost,
+  tidymodels,
+  vip,
+  flextable,
+  future.mirai
+) # XGBoost
+conflicts_prefer(
+  dplyr::slice,
+  dplyr::filter,
+  dplyr::lag,
+  palmerpenguins::penguins
+)
 
-rawdata <- penguins |> 
-  na.omit() |> 
-  mutate(year = factor(year)
-         )
+rawdata <- penguins |>
+  na.omit() |>
+  mutate(year = factor(year))
 ```
 
 Random forrests are an ensemble method that builds multiple decision trees and averages their predictions. This reduces the risk of overfitting and increases the accuracy of the model. The random part comes from the fact that each tree is built on a random subset of the data and a random subset of the variables. The number of trees and the number of variables to consider at each split are hyper-parameters that need to be tuned. (more on tuning in chapter caret)
@@ -33,25 +36,27 @@ Random forrests are an ensemble method that builds multiple decision trees and a
 ## Modelling
 
 ```{r}
-rf_folds <- vfold_cv(rawdata, v = 5, strata = species,repeats = 5 )
-predvars <- ColSeeker(namepattern = c('_'))
+rf_folds <- vfold_cv(rawdata, v = 5, strata = species, repeats = 5)
+predvars <- ColSeeker(namepattern = c("_"))
 rf_recipe <- recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
   update_role(all_of(predvars$names), new_role = "predictor")
 
-rf_grid <- expand.grid(mtry = 2:4) |> 
+rf_grid <- expand.grid(mtry = 2:4) |>
   as_tibble()
-rf_spec <- rand_forest(trees = 1000,
-                       mtry = tune()) |>
+rf_spec <- rand_forest(
+  trees = 1000,
+  mtry = tune()
+) |>
   set_engine("ranger", importance = "impurity") |>
   set_mode("classification")
-rf_workflow <- workflow() |> 
+rf_workflow <- workflow() |>
   add_recipe(rf_recipe) |>
   add_model(rf_spec)
 
 # Fit the model to the data
-plan(mirai_multisession, workers = availableCores()-2) # Use all but 2 cores for parallel processing
-rf_results <- rf_workflow |> 
+plan(mirai_multisession, workers = availableCores() - 2) # Use all but 2 cores for parallel processing
+rf_results <- rf_workflow |>
   tune_grid(
     resamples = rf_folds,
     grid = rf_grid,
@@ -60,18 +65,18 @@ rf_results <- rf_workflow |>
 plan(sequential)
 
 # See the top performing models
-rf_results |> 
-  show_best(metric = "accuracy") |> 
-  select(-.config, -.estimator) |> 
-  mutate(across(where(is.numeric), ~roundR(.x,5,drop0 = TRUE))) |> 
+rf_results |>
+  show_best(metric = "accuracy") |>
+  select(-.config, -.estimator) |>
+  mutate(across(where(is.numeric), ~ roundR(.x, 5, drop0 = TRUE))) |>
   flextable()
 
 # Select the best parameters based on your preferred metric
-rf_best <- rf_results |> 
+rf_best <- rf_results |>
   select_best(metric = "accuracy")
 
 # Visualize the tuning results
-rf_results |> 
+rf_results |>
   collect_metrics() |>
   ggplot(aes(x = mtry, y = mean)) +
   geom_line() +
@@ -79,38 +84,42 @@ rf_results |>
   facet_grid(rows = vars(.metric)) +
   theme_bw()
 
-rf_results |> 
+rf_results |>
   collect_metrics(summarize = FALSE) |>
-  filter(.metric == "accuracy") |> 
+  filter(.metric == "accuracy") |>
   ggplot(aes(x = factor(mtry), y = .estimate)) +
   geom_boxplot(outlier.alpha = 0) +
-  geom_beeswarm(alpha = 0.3,
-                aes(color = .config == rf_best$.config)) +
+  geom_beeswarm(
+    alpha = 0.3,
+    aes(color = .config == rf_best$.config)
+  ) +
   scale_color_manual(
-    "best model", 
+    "best model",
     values = c("darkgrey", "orange"),
-    labels = c("no", "yes")) +
+    labels = c("no", "yes")
+  ) +
   theme_bw()
 
 # Update the workflow with those best parameters
-final_workflow <- rf_workflow |> 
+final_workflow <- rf_workflow |>
   finalize_workflow(rf_best)
 
 # Fit to the entire dataset (or use test split)
-final_fit <- final_workflow |> 
+final_fit <- final_workflow |>
   fit(data = rawdata)
 
-test_predicted <- final_fit |> 
+test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
-  rename_with(~str_remove(.x, "^.pred_"), starts_with(".pred_"))
-
+  rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
 ```
 
 ## Model evaluation
 
 ```{r}
-tidy_metrics <- metric_set(accuracy, kap, f_meas,roc_auc, mn_log_loss)
-tidy_metrics(test_predicted, truth = species, estimate = class,
-             Adelie, Chinstrap, Gentoo) |> 
+tidy_metrics <- metric_set(accuracy, kap, f_meas, roc_auc, mn_log_loss)
+tidy_metrics(test_predicted,
+  truth = species, estimate = class,
+  Adelie, Chinstrap, Gentoo
+) |>
   flextable()
 ```

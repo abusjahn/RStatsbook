@@ -3,26 +3,31 @@
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted,
-               tidyverse,
-               wrappedtools, 
-               palmerpenguins,
-               rpart, rpart.plot,
-               randomForest,
-               caret, gmodels,
-               tidymodels,
-               future.mirai,
-               flextable,
-               ggbeeswarm)
+pacman::p_load(
+  conflicted,
+  tidyverse,
+  wrappedtools,
+  palmerpenguins,
+  rpart, rpart.plot,
+  randomForest,
+  caret, gmodels,
+  tidymodels,
+  future.mirai,
+  flextable,
+  ggbeeswarm
+)
 
 # conflict_scout()
-conflicts_prefer(dplyr::slice, 
-                 dplyr::filter,
-                 palmerpenguins::penguins)
-rawdata <- penguins |> 
+conflicts_prefer(
+  dplyr::slice,
+  dplyr::filter,
+  palmerpenguins::penguins
+)
+rawdata <- penguins |>
   na.omit()
 rawdata <- mutate(rawdata,
-                  ID=paste('P', 1:nrow(rawdata))) |> 
+  ID = paste("P", 1:nrow(rawdata))
+) |>
   select(ID, everything())
 ```
 
@@ -31,14 +36,18 @@ rawdata <- mutate(rawdata,
 When looking at the 2 measures `bill_length_mm` and `flipper_length_mm`, we can see that the 3 species of penguins are separated to a large extend, with the Gentoos having longer flippers than Adelies and Chinstraps, and Adelies and Chinstraps separated by smaller / longer bills. We can define a rough classification rule based on that just by eyeballing the data.
 
 ```{r}
-predvars <- ColSeeker(namepattern = 'length')
-rawplot <- 
-  ggplot(rawdata, 
-         aes(.data[[predvars$names[1]]], 
-             .data[[predvars$names[2]]], color=species))+
-  geom_point()  
-rawplot+
-  geom_hline(yintercept = 206)+
+predvars <- ColSeeker(namepattern = "length")
+rawplot <-
+  ggplot(
+    rawdata,
+    aes(.data[[predvars$names[1]]],
+      .data[[predvars$names[2]]],
+      color = species
+    )
+  ) +
+  geom_point()
+rawplot +
+  geom_hline(yintercept = 206) +
   geom_vline(xintercept = 44)
 ```
 
@@ -49,23 +58,29 @@ A regression tree is following the same logic as the classification rule we defi
 ### Direct call to rpart
 
 ```{r}
-rpart_formula <- paste('species',
-                       paste(predvars$names,
-                             collapse='+'),
-                       sep='~') |> 
+rpart_formula <- paste("species",
+  paste(predvars$names,
+    collapse = "+"
+  ),
+  sep = "~"
+) |>
   as.formula()
-rpart_out <- rpart(formula = rpart_formula,
-                   data = rawdata)
+rpart_out <- rpart(
+  formula = rpart_formula,
+  data = rawdata
+)
 prp(rpart_out,
-    type = 4,
-    extra = 104,
-    digits=4,
-    fallen.leaves = TRUE)
+  type = 4,
+  extra = 104,
+  digits = 4,
+  fallen.leaves = TRUE
+)
 importance <- tibble(
-  Variable=names(rpart_out$variable.importance),
-  Importancescore=rpart_out$variable.importance)
-ggplot(importance, aes(x=Variable,y=Importancescore))+
-  geom_col()+
+  Variable = names(rpart_out$variable.importance),
+  Importancescore = rpart_out$variable.importance
+)
+ggplot(importance, aes(x = Variable, y = Importancescore)) +
+  geom_col() +
   coord_flip()
 ```
 
@@ -74,13 +89,13 @@ ggplot(importance, aes(x=Variable,y=Importancescore))+
 To make model more interesting, we add 2 more variables. We'll switch from the direct call to rpart to the tidy-models approach, as this will allow tuning and better validation strategies. Data is split into training and test sets using cross-validation. As a 1st step predictors are defined:
 
 ```{r}
-predvars <- ColSeeker(namepattern = c('_'))
+predvars <- ColSeeker(namepattern = c("_"))
 ```
 
 Validation is defined as 5 times repeated 5-fold cross-validation, stratified by the target variable to ensure that each fold has a similar distribution of classes. Repeating the cross-validation process multiple times helps to get a more reliable estimate of the model's performance and reduces the variance of the performance estimates.
 
 ```{r}
-tree_folds <- vfold_cv(rawdata, v = 5, strata = species,repeats = 5 )
+tree_folds <- vfold_cv(rawdata, v = 5, strata = species, repeats = 5)
 ```
 
 Data preparation includes one-hot encoding of the categorical predictor.
@@ -88,28 +103,32 @@ Data preparation includes one-hot encoding of the categorical predictor.
 ```{r}
 tree_recipe <- recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
-  update_role(all_of(predvars$names), new_role = "predictor") |> 
+  update_role(all_of(predvars$names), new_role = "predictor") |>
   step_dummy(all_nominal_predictors(), one_hot = TRUE)
 ```
 
 Tuning parameters are hard-coded in a grid of parameters to search over. The `expand.grid()` function is used to create a grid of all combinations of the specified parameters.
 
 ```{r}
-tree_grid <- expand.grid(tree_depth = seq(2, 6, by = 2),
-                         cost_complexity = c(0.01, 0.001),
-                         min_n = seq(5, 20, by = 5)) |>
+tree_grid <- expand.grid(
+  tree_depth = seq(2, 6, by = 2),
+  cost_complexity = c(0.01, 0.001),
+  min_n = seq(5, 20, by = 5)
+) |>
   as_tibble()
 ```
 
 The `tune()` function is used to indicate which parameters we want to tune.
 
 ```{r}
-tree_spec <- decision_tree(cost_complexity = tune(),
-                           tree_depth = tune(),
-                           min_n = tune()) |>
+tree_spec <- decision_tree(
+  cost_complexity = tune(),
+  tree_depth = tune(),
+  min_n = tune()
+) |>
   set_engine("rpart", model = TRUE) |>
   set_mode("classification")
-tree_workflow <- workflow() |> 
+tree_workflow <- workflow() |>
   add_recipe(tree_recipe) |>
   add_model(tree_spec)
 ```
@@ -118,8 +137,8 @@ For the model fitting, parallel computing is used to speed up the tuning process
 
 ```{r}
 # Fit the model to the data
-plan(mirai_multisession, workers = availableCores()-2) # Use all but 2 cores for parallel processing
-tree_results <- tree_workflow |> 
+plan(mirai_multisession, workers = availableCores() - 2) # Use all but 2 cores for parallel processing
+tree_results <- tree_workflow |>
   tune_grid(
     resamples = tree_folds,
     grid = tree_grid,
@@ -131,14 +150,14 @@ plan(sequential)
 See the top performing models
 
 ```{r}
-tree_results |> 
-  show_best(metric = "accuracy") |> 
-  select(-.config, -.estimator) |> 
-  mutate(across(where(is.numeric), ~roundR(.x,5,drop0 = TRUE))) |> 
+tree_results |>
+  show_best(metric = "accuracy") |>
+  select(-.config, -.estimator) |>
+  mutate(across(where(is.numeric), ~ roundR(.x, 5, drop0 = TRUE))) |>
   flextable()
 
 # Select the best parameters based on your preferred metric
-tree_best <- tree_results |> 
+tree_best <- tree_results |>
   select_best(metric = "accuracy")
 ```
 
@@ -151,22 +170,29 @@ tree_results |>
   geom_line(position = position_dodge(.25)) +
   geom_point(position = position_dodge(.25)) +
   scale_color_discrete("cost complexity") +
-  facet_grid(cols = vars(.metric), rows = vars(min_n),
-             labeller = "label_both") +
+  facet_grid(
+    cols = vars(.metric), rows = vars(min_n),
+    labeller = "label_both"
+  ) +
   theme_bw()
 tree_results |>
   collect_metrics(summarize = FALSE) |>
   filter(.metric == "accuracy") |>
   ggplot(aes(x = factor(tree_depth), y = .estimate)) +
   geom_boxplot(outlier.alpha = 0) +
-  geom_beeswarm(alpha = 0.3,
-                aes(color = .config == tree_best$.config)) +
-  facet_grid(rows = vars(min_n), cols = vars(cost_complexity), #scales = "free",
-             labeller = "label_both") +
+  geom_beeswarm(
+    alpha = 0.3,
+    aes(color = .config == tree_best$.config)
+  ) +
+  facet_grid(
+    rows = vars(min_n), cols = vars(cost_complexity), # scales = "free",
+    labeller = "label_both"
+  ) +
   scale_color_manual(
     "best model",
     values = c("darkgrey", "orange"),
-    labels = c("no", "yes")) +
+    labels = c("no", "yes")
+  ) +
   xlab("tree depth") +
   theme_bw()
 ```
@@ -174,17 +200,16 @@ tree_results |>
 Update the workflow with those best parameters
 
 ```{r}
-
-final_workflow <- tree_workflow |> 
+final_workflow <- tree_workflow |>
   finalize_workflow(tree_best)
 
 # Fit to the entire dataset (or use test split)
-final_fit <- final_workflow |> 
+final_fit <- final_workflow |>
   fit(data = rawdata)
 
-test_predicted <- final_fit |> 
+test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
-  rename_with(~str_remove(.x, "^.pred_"), starts_with(".pred_"))
+  rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
 ```
 
 ## Model evaluation
@@ -211,15 +236,20 @@ probability-based metrics:
 
 ```{r}
 CrossTable(test_predicted$class,
-           test_predicted$species,
-           prop.chisq = F, prop.t = F,
-           format = 'SPSS')
+  test_predicted$species,
+  prop.chisq = F, prop.t = F,
+  format = "SPSS"
+)
 
-confusionMatrix(test_predicted$class,
-                test_predicted$species)
+confusionMatrix(
+  test_predicted$class,
+  test_predicted$species
+)
 
-tidy_metrics <- metric_set(accuracy, kap, f_meas,roc_auc, mn_log_loss)
-tidy_metrics(test_predicted, truth = species, estimate = class,
-             Adelie, Chinstrap, Gentoo) |> 
+tidy_metrics <- metric_set(accuracy, kap, f_meas, roc_auc, mn_log_loss)
+tidy_metrics(test_predicted,
+  truth = species, estimate = class,
+  Adelie, Chinstrap, Gentoo
+) |>
   flextable()
 ```

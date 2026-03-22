@@ -1,9 +1,11 @@
 # Covariance / Correlation
 
 ```{r}
-pacman::p_load(conflicted,plotrix,tidyverse, wrappedtools,
-               coin,ggsignif, patchwork, ggbeeswarm,
-               flextable, here, corrr)
+pacman::p_load(
+  conflicted, plotrix, tidyverse, wrappedtools,
+  coin, ggsignif, patchwork, ggbeeswarm,
+  flextable, here, corrr
+)
 load(here("data/bookdata1.RData"))
 ```
 
@@ -13,8 +15,9 @@ Covariance is a measure of the relationship between two random variables. The si
 
 ```{r}
 cov(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
-cov(rawdata |> select(contains("BP")), 
-    use = "pairwise.complete.obs")
+cov(rawdata |> select(contains("BP")),
+  use = "pairwise.complete.obs"
+)
 ```
 
 ## Correlation
@@ -23,8 +26,9 @@ Correlation is a measure of the strength and direction of the linear relationshi
 
 ```{r}
 cor(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
-cor(rawdata |> select(contains("Mri")), 
-    use = "pairwise.complete.obs")
+cor(rawdata |> select(contains("Mri")),
+  use = "pairwise.complete.obs"
+)
 ```
 
 Significance of correlations can be tested:
@@ -33,23 +37,29 @@ Significance of correlations can be tested:
 cor.test(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
 wrappedtools::cortestR(rawdata |> select(contains("BP")))
 wrappedtools::cortestR(rawdata |> select(contains("BP")),
-                       split=TRUE)
-cor_out <- 
+  split = TRUE
+)
+cor_out <-
   wrappedtools::cortestR(rawdata |> select(contains("BP")),
-                       split=TRUE, sign_symbol=FALSE)
+    split = TRUE, sign_symbol = FALSE
+  )
 cor_out
 ```
 
 ## Vizualizations
 
 ```{r}
-corrr::correlate(rawdata |> select(contains("BP"))) |> 
+corrr::correlate(rawdata |> select(contains("BP"))) |>
   corrr::network_plot(min_cor = .05)
-wrappedtools::ggcormat(cor_mat = cor_out$corout,
-                       maxpoint = 15)
-wrappedtools::ggcormat(cor_mat = cor_out$corout,
-                       p_mat = cor_out$pout,
-                       maxpoint = 20)
+wrappedtools::ggcormat(
+  cor_mat = cor_out$corout,
+  maxpoint = 15
+)
+wrappedtools::ggcormat(
+  cor_mat = cor_out$corout,
+  p_mat = cor_out$pout,
+  maxpoint = 20
+)
 ```
 
 ```{r}

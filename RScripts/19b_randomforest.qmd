@@ -1,4 +1,4 @@
-# Random forrests
+# Random forests
 
 ```{r}
 #| output: false

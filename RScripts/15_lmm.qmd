@@ -25,7 +25,7 @@ conflicts_prefer(
 The data are the same as for the lm analyses. This time, passage effect is modeled as a random effect, as we are not interested in the effect of each passage, but want to account for the variation between passages. Future experiments are not expected to have the exact same passage differences. Passage numbers are arbitrary anyway. The numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA.
 
 ```{r}
-rawdata <- read_sav(file = here("Data/Zellbeads.sav")) |>
+rawdata <- read_sav(file = here("data/Zellbeads.sav")) |>
   as_factor() |>
   dplyr::select(-ZahlZellen) |>
   rename(Growth = Wachstum, Treatment = Bedingung) |>

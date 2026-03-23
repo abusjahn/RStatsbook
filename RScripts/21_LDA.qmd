@@ -27,7 +27,6 @@ rawdata <- penguins |>
   na.omit()
 ```
 
-
 ```{r}
 predvars <- ColSeeker(namepattern = c("_mm", "_g"))
 norm_rec <-
@@ -101,10 +100,9 @@ ggplot(lda_data, aes(x = LD1, y = LD2, color = species)) +
   geom_point(alpha = 0.7, size = 2)
 ```
 
-
 ```{r}
 # data(bordeaux)
-bordeaux <- readxl::read_excel(here("Data/bordeaux.xlsx")) |>
+bordeaux <- readxl::read_excel(here("data/bordeaux.xlsx")) |>
   mutate(quality = factor(quality,
     levels = c("bad", "medium", "good")
   )) |>

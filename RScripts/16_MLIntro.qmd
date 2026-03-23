@@ -204,9 +204,9 @@ desc_boot <-
 desc_boot
 ```
 
-<!-- ![](/Graphs/bootstrap_classify.png){fig-align="center"} -->
+<!-- ![](../Graphs/bootstrap_classify.png){fig-align="center"} -->
 
-<!-- ![](/Graphs/Bootstrap_25_0.png){fig-align="center"} -->
+<!-- ![](../Graphs/Bootstrap_25_0.png){fig-align="center"} -->
 
 A large number of bootstrap (\>1000) samples is usually required to obtain stable results. We simulate 50 cases with true mean of 170 and true SD of 10:
 
@@ -221,6 +221,7 @@ experimental_data <-
 ```
 
 Conventional estimates from sample:
+
 ```{r}
 meansd(experimental_data, roundDig = 4)
 meanse(experimental_data, roundDig = 4)
@@ -228,6 +229,7 @@ smean.cl.normal(experimental_data)
 ```
 
 Bootstrap estimates:
+
 ```{r}
 smean.cl.boot(experimental_data, B = n_boot)
 # looped bootstraping
@@ -279,7 +281,7 @@ print(boot_ci)
 
 -   Cross-validation is often repeated multiple times to reduce the variance of the performance estimates and to get a more reliable estimate of the model's performance. 10 repeated 5-fold cross-validations would provide 50 estimates of the model's performance, capturing average as well as possible extreme results.
 
-![](/Graphs/8-Stratified-K-Fold-Cross-Validation.jpg){fig-align="center"}
+![](../Graphs/8-Stratified-K-Fold-Cross-Validation.jpg){fig-align="center"}
 
 \newpage
 
@@ -289,7 +291,7 @@ print(boot_ci)
 
 -   Creates n samples of size n-1
 
-<!-- ![](/Graphs/jackknife_estimate.jpg){fig-align="center"} -->
+<!-- ![](../Graphs/jackknife_estimate.jpg){fig-align="center"} -->
 
 ```{r}
 #| echo: false

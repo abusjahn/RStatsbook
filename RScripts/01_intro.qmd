@@ -30,11 +30,11 @@ If on linux, R2U is useful:
 
 There are many options available to adjust the UI to your liking, some default settings should be changed. There are global and project specific options, both can be found under Menu /Tools. Some useful (IMHO) changes are highlighted:
 
-![](/Graphs/options1.png){fig-align="center"}
+![](../Graphs/options1.png){fig-align="center"}
 
-![](/Graphs/options2.png){fig-align="center"}
+![](../Graphs/options2.png){fig-align="center"}
 
-![](/Graphs/options3.png){fig-align="center"}
+![](../Graphs/options3.png){fig-align="center"}
 
 There are MANY more settings to adjust RStudios appearance and behavior to your liking.
 
@@ -71,15 +71,15 @@ You should have a folder structure something like this:
 
 Now you are ready to create a project in RStudio:
 
-![](/Graphs/project1.png){fig-align="center"}
+![](../Graphs/project1.png){fig-align="center"}
 
 As there is an existing directory, this is what you select.
 
-![](/Graphs/project2.png){fig-align="center"}
+![](../Graphs/project2.png){fig-align="center"}
 
 In this new window you browse to the root folder of your project and create your project. This will create new (possibly hidden) entries:
 
-![](/Graphs/projectfolder.png){fig-align="center"}
+![](../Graphs/projectfolder.png){fig-align="center"}
 
 ### Option 2: Create from a github repository
 

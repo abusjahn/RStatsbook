@@ -85,7 +85,7 @@ start_county <- 5
 
 ## Data structures for simulation
 
-```{r data structure moves}
+```{r data_structure_moves}
 moves <- tibble(
   move = seq_len(n_moves),
   position = NA_integer_
@@ -107,7 +107,7 @@ tictoc::toc()
 
 ## Results
 
-```{r no burnin filter all data}
+```{r no_burnin_filter_all_data}
 visits <- moves |>
   group_by(position) |>
   summarise(Visits = n()) |>
@@ -130,7 +130,7 @@ ggplot(visits, aes(.data[[pop_selected]], Visits)) +
   ggtitle("All moves analyzed")
 ```
 
-```{r after burnin}
+```{r after_burnin}
 visits <- moves |>
   filter(move > n_burnin) |>
   group_by(position) |>
@@ -348,7 +348,7 @@ ggplot(circle_data, aes(x = x, y = y)) +
   theme_void() # Remove background gridlines
 ```
 
-```{r just burnin}
+```{r just_burnin}
 visits <- moves |>
   filter(move <= n_burnin) |>
   group_by(position) |>

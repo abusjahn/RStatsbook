@@ -1,6 +1,6 @@
 # Visualize data with ggplot
 
-While there are various packages providing visualizations, here we are focusing on ggplot2 (grammar of graphics) as a very flexible and versatile approach with many extensions implemented in additional packages. See e.g. [https://exts.ggplot2.tidyverse.org/](https://exts.ggplot2.tidyverse.org/){target = "_blank"}.
+While there are various packages providing visualizations, here we are focusing on ggplot2 (grammar of graphics) as a very flexible and versatile approach with many extensions implemented in additional packages. See e.g. [https://exts.ggplot2.tidyverse.org/](https://exts.ggplot2.tidyverse.org/){target="_blank"}.
 
 ```{r}
 #| output: false
@@ -131,7 +131,7 @@ ggplot(data = mtcars, aes(factor(cyl), color = factor(cyl))) +
 
 ggplot2 comes with various color definitions, many external packages extend that. Manual definition of colors is possible as well. Redefining the mapping between data and aesthetics can be done with scale\_... functions.
 
-[comprehensive overview for color palettes](https://pmassicotte.github.io/paletteer_gallery/){target = "_blank"}
+[comprehensive overview for color palettes](https://pmassicotte.github.io/paletteer_gallery/){target="_blank"}
 
 For the demonstration, I store a plot into a variable, this includes all data and plot definitions, nothing like jpg!
 
@@ -674,7 +674,7 @@ ggplot(diamonds, aes(clarity, price)) +
 
 Themes define everything not-data-related in your figures, like margins, fonts, background color etc. There are many predefined themes, and all can be customized. You can change a theme for all plots to come (theme_update()) or just a single plot ( +theme())
 
-There is an informative blog post [Styling plots](https://www.tidyverse.org/blog/2025/10/ggplot2-styling/){target = "_blank"} that is a good starter.
+There is an informative blog post [Styling plots](https://www.tidyverse.org/blog/2025/10/ggplot2-styling/){target="_blank"} that is a good starter.
 
 ```{r}
 old <- theme_set(theme_wsj())
@@ -743,7 +743,7 @@ plottemp + theme_void()
 
 ## Combining figures with patchwork
 
-More details on [github](https://github.com/thomasp85/patchwork){target = "_blank"}
+More details on [github](https://github.com/thomasp85/patchwork){target="_blank"}
 
 ```{r}
 p1 <- ggplot(mtcars) +

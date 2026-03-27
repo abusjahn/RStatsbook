@@ -38,7 +38,7 @@ rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |>
     .cols = !contains(c("BP", "BMI", "NY"))
   ) |>
   rename(
-    `Size (cm)` = Size, # newname=oldname
+    `Size (cm)` = Size, # newname = oldname
     `Weight (kg)` = Weight
   ) |>
   select(-`Sex M`)

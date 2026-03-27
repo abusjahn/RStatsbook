@@ -57,10 +57,10 @@ move_selection <- function(.counties = counties,
     x = c(1, -1),
     size = 1
   )
-  # if(current_county==1) {
+  # if(current_county == 1) {
   #   coinresult <- 1
   # }
-  # if(current_county==nrow(.counties)) {
+  # if(current_county == nrow(.counties)) {
   #   coinresult <- -1
   # }
   next_county <- current_county + coinresult
@@ -248,31 +248,31 @@ arrow_data <-
   )
 
 
-# Createggplot with circle and labels
+# Create ggplot with circle and labels
 # ggplot(circle_data, aes(x = x, y = y)) +
-#   # geom_point(aes(size = Visits), shape=1) +  # Increase point size for better visibility
-#   geom_circle(aes(r=1,x0=0,y0=0),
-#               color="darkorange2")+
-#   geom_curve(data=arrow_data |>
-#                filter(from<to),
-#              aes(x=from_x,y=from_y,
-#                  xend=to_x,yend=to_y,
-#                  linewidth=count),
-#              arrow=arrow(length=unit(0.1,"inches")),
-#              curvature=-1.0,
-#              color="darkolivegreen")+
-#   geom_curve(data=arrow_data |>
-#                filter(from>to),
-#              aes(x=from_x,y=from_y,
-#                  xend=to_x,yend=to_y,
-#                  linewidth=count),
-#              arrow=arrow(length=unit(0.1,"inches")),
+#   # geom_point(aes(size = Visits), shape = 1) +  # Increase point size for better visibility
+#   geom_circle(aes(r = 1,x0 = 0,y0 = 0),
+#               color = "darkorange2")+
+#   geom_curve(data = arrow_data |>
+#                filter(from < to),
+#              aes(x = from_x,y = from_y,
+#                  xend = to_x,yend = to_y,
+#                  linewidth = count),
+#              arrow = arrow(length = unit(0.1,"inches")),
+#              curvature = -1.0,
+#              color = "darkolivegreen")+
+#   geom_curve(data = arrow_data |>
+#                filter(from > to),
+#              aes(x = from_x,y = from_y,
+#                  xend = to_x,yend = to_y,
+#                  linewidth = count),
+#              arrow = arrow(length = unit(0.1,"inches")),
 #              angle=90,
 #              curvature=-.75,
 #              color="dodgerblue")+
 #   geom_text(aes(label = plotlabel, size=.data[[pop_selected]]),
 #             hjust = 0.5, vjust = 0.5) +  # Adjust text position slightly
-#   scale_size_continuous(range=c(3,7)) +  # Set size of labels
+#   scale_size_continuous(range = c(3,7)) +  # Set size of labels
 #   scale_linewidth_continuous(range=c(.5,3)) +  # Set size of labels
 #   coord_fixed(xlim = c(-radius - radius/5, radius + radius/5), ylim = c(-radius - radius/5, radius + radius/5)) +  # Set axis limits slightly bigger than radius
 #   labs(title = "County population and move count", x = "", y = "",
@@ -283,9 +283,9 @@ arrow_data <-
 
 # Create ggplot with circle and labels
 ggplot(circle_data, aes(x = x, y = y)) +
-  # geom_point(aes(size = Visits), shape=1) +  # Increase point size for better visibility
-  # geom_circle(aes(r=1,x0=0,y0=0),
-  #             color="darkorange2")+
+  # geom_point(aes(size = Visits), shape = 1) +  # Increase point size for better visibility
+  # geom_circle(aes(r = 1,x0 = 0,y0 = 0),
+  #             color = "darkorange2")+
   geom_curve(
     data = arrow_data |>
       filter((from < to & !(to == 9 & from == 1)) | (to == 1 & from == 9)),
@@ -312,7 +312,7 @@ ggplot(circle_data, aes(x = x, y = y)) +
       length = unit(0.1, "inches"),
       type = "closed"
     ),
-    # angle=90,#linewidth=1.5,
+    # angle = 90,#linewidth = 1.5,
     curvature = .75,
     alpha = .6
   ) +
@@ -403,7 +403,7 @@ moves |>
   )
 
 moves |>
-  # filter(move<=n_burnin) |>
+  # filter(move <= n_burnin) |>
   ggplot(aes(move, position)) +
   # geom_point()+
   geom_line() +
@@ -414,7 +414,7 @@ moves |>
   )
 
 moves |>
-  # filter(move<=n_burnin) |>
+  # filter(move <= n_burnin) |>
   ggplot(aes(move, position)) +
   # geom_point()+
   geom_line() +

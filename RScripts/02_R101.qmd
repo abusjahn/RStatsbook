@@ -38,7 +38,6 @@ conflicts_prefer(
 ## Numeric operations
 
 ```{r}
-### simple calculations ####
 2 + 5
 3 * 5
 15 / 3 # not 15:3!!, would create vector 15,14,13 ... 3
@@ -63,10 +62,9 @@ There are rules for valid syntactical names:
 
 -   no mathematical symbols or brackets allowed
 
-To store some value into a variable, use the assignment operator **\<-** ; while it possible to use **=** or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
+To store some value into a variable, use the assignment operator **\<-** ; while it possible to use ** = ** or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
 
 ```{r}
-### Variable names ####
 test <- 1
 test1 <- 1
 # 1test <- 2 # wrong, would result in error
@@ -183,7 +181,9 @@ as.logical(c(0, 1, 5, -7.45678)) # c() combines values into a vector
 
         -   `class(grown_on_glucose)`
 
+## Factors
 Factor: categorical variables with limited sets of distinct values (called levels), internally stored as integers. Everything intended to group subjects or representing categories (like species, tissue type, treatment) should be stored as factor for efficient storage and proper statistical handling in R. In Python, Pandas Categorical and dictionaries are related constructs.
+Factors can be ordered, but beware: this changes behavior in analyses! 
 
 Package forcats provides nice tools for factors!
 
@@ -271,7 +271,6 @@ factor_var2
 
 -   **`as.numeric()`** shows you the underlying "integer tags."
 
--   Use `ordered = TRUE` within the `factor()` function when your categories have a meaningful order (e.g., "Low" \< "Medium" \< "High").
 
 Dates / Time:
 
@@ -293,7 +292,7 @@ class(test2)
 test2
 ```
 
-#### Forcing / casting classes
+## Forcing / casting classes
 
 If the assigned class is not correct or appropriate, it can be changed. Casting functions usually start with `as.` When creating variables filled with NA, use casting functions or specific variants of NA to force type!
 
@@ -314,7 +313,7 @@ class(NA_character_)
 class(NA_Date_) # from package lubridate
 ```
 
-### Indexing variables
+## Indexing variables
 
 The most general kind of indexing is by position, starting with **1**. Negative numbers result in exclusion of position(s). Position indices are provided within square brackets. The index can (and usually will) be a variable instead of hard coded numbers.
 
@@ -336,7 +335,7 @@ head(x = numbers1, n = 3)
 nth(x = numbers1, n = -2) # 2nd to last
 ```
 
-### Usage of variables
+## Usage of variables
 
 Variables are like placeholders for their content, so that you don't have to remember where you left things. Operations on variables are operations on their content. Changing the content of a variable does not automatically save those changes back to the variable, this needs to be done explicitly!
 
@@ -359,7 +358,7 @@ c(2, 4, 6, 8) + c(1, 2, 3)
 
 Functions have the same naming rules as variables, but the name is always followed by opening/closing round brackets, within those brackets function parameters/arguments can be specified to provide input or control behavior:
 
-*FunctionName(parameter1=x1,parameter2=x2,x3,...)*
+*FunctionName(parameter1 = x1,parameter2 = x2,x3,...)*
 
 Most functions have named arguments, those argument names may be omitted as long as parameter values are supplied in the defined order. Arguments may have predefined default values, see help! Some functions like `c()` use unnamed arguments.
 
@@ -504,7 +503,7 @@ markSign0(SignIn = "0.35")
 markSign0(SignIn = "p=3,5%") # wrong input
 
 
-# source("F:/Aktenschrank/Analysen/R/myfunctions.R")
+# source("somepath/R/myfunctions.R")
 ```
 
 ## More complex data types, created by functions
@@ -519,7 +518,7 @@ A matrix is a 2-dimensional data structure, where all elements are of the same c
 my1.Matrix <-
   matrix(
     data = 1:12,
-    # nrow=4, # this is not needed, can be derived from data
+    # nrow = 4, # this is not needed, can be derived from data
     ncol = 3,
     byrow = TRUE, # data are put into row 1 first
     dimnames = list(
@@ -542,7 +541,7 @@ matrix(
   head()
 my2.Matrix <- matrix(c(1, 2, 3, 11, 12, 13),
   nrow = 2, ncol = 3
-) # byrow=FALSE, specified but default
+) # byrow = FALSE, specified but default
 my2.Matrix
 ```
 
@@ -560,7 +559,7 @@ my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 
 \newpage
 
-## Exercise: Matrix
+#### Exercise: Matrix
 
 **Scenario:** Imagine you are a field biologist studying plant distribution. You've set up several quadrants (square frames) in your study area and counted the number of individuals for three different plant species in each quadrant.
 
@@ -773,7 +772,7 @@ rawdata |> pull(`sysRR (mmHg)`)
 
 \newpage
 
-### Exercise: tibble
+#### Exercise: tibble
 
 Think of a cruet_stand / Gewürzmenage
 
@@ -981,9 +980,9 @@ paste0(
 )
 ```
 
-#### case_when / case_match
+#### case_when / replace_when / recode_values / replace_values
 
-When there are many tests to do, `case_when`/`case_replace` or `recode_values`/`replace_values` (`case_match` is deprecated) are nice replacements for `ifelse.` While case_when allows complex conditions, recode_values is used for for simple comparisons:
+When there are many tests to do, `case_when`/`case_replace` or `recode_values`/`replace_values` (`case_match` is deprecated) are nice replacements for `ifelse.` While case_when allows complex conditions, recode_values is used for simple comparisons:
 
 ```{r}
 rawdata <- mutate(
@@ -1018,7 +1017,7 @@ paste0(
 
 \newpage
 
-## Exercise: `for` and `while` loops, and `if`/`ifelse`/`case_xxx`
+### Exercise: `for` and `while` loops, and `if`/`ifelse`/`case_xxx`
 
 #### 1. Analyzing Gene Expression Data (Using `for` loop and `if/else`)
 
@@ -1026,7 +1025,7 @@ paste0(
 
 **Task:**
 
--   **Create Sample Data:** Generate a numeric vector representing expression levels for 20 genes (mean=100, SD=30).
+-   **Create Sample Data:** Generate a numeric vector representing expression levels for 20 genes (mean = 100, SD = 30).
 
 -   **Classify Genes by their Expression Level:**
 

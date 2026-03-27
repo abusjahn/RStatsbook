@@ -61,9 +61,9 @@ with(rawdata, interaction.plot(
   ylab = "Growth", xlab = "Passage",
   trace.label = "Treatment"
 ))
-# p1<-ggplot(rawdata,aes(x=Passage,y=Growth))+
-#    stat_summary(geom='line',fun='mean',aes(color=Treatment))+
-#    stat_summary(geom='line',fun='mean')
+# p1<-ggplot(rawdata,aes(x = Passage,y = Growth))+
+#    stat_summary(geom = 'line',fun = 'mean',aes(color = Treatment))+
+#    stat_summary(geom = 'line',fun = 'mean')
 p1 <- ggplot(rawdata, aes(x = Passage, y = Growth)) +
   stat_summary(
     geom = "line", fun = "mean",
@@ -289,8 +289,8 @@ summary(glht(
 DescTools::DunnettTest(Growth ~ Passage_F, data = rawdata)
 DescTools::DunnettTest(Growth ~ Treatment, data = rawdata)
 pairwise.t.test(rawdata$Growth, rawdata$Treatment, p.adjust.method = "n")
-# mean(rawdata$Growth[which(rawdata$Passage==1 &
-# rawdata$Treatment=='Control')])
+# mean(rawdata$Growth[which(rawdata$Passage == 1 &
+# rawdata$Treatment == 'Control')])
 anova_out$"Pr(>F)"
 # aOut$`Sum Sq`
 summary(lmOut_additive)

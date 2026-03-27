@@ -217,7 +217,7 @@ test_predicted <- final_fit |>
 class-based metrics:
 
 | Metric | Function | Meaning |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Accuracy | accuracy() | The percentage of total predictions that were correct. Simple, but can be misleading if classes are imbalanced |
 | Kappa | kap() | Similar to accuracy, but accounts for the possibility of the agreement occurring by chance |
 | Sensitivity (Recall) | sens() | Out of all actual positives, how many did the model find? (True Positive Rate) |
@@ -228,7 +228,7 @@ class-based metrics:
 probability-based metrics:
 
 | Metric | Function | Meaning |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | ROC AUC | roc_auc() | Measures the model's ability to distinguish between classes across all possible thresholds |
 | PR AUC | pr_auc() | Area under the Precision-Recall curve. Preferred over ROC AUC when the "Positive" class is very rare |
 | Log Loss | mn_log_loss() | Measures how "close" the predicted probability is to the actual binary label (0 or 1). Heavily penalizes being "confidently wrong" |

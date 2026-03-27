@@ -179,9 +179,9 @@ resulttable1a <-
     names_sep = "_"
   )
 # pivot_longer(everything(),
-#              names_to=c("Variable","test"), #.variable
+#              names_to = c("Variable","test"), #.variable
 #              names_sep = "_") |>
-# pivot_wider(names_from=test, values_from=value)
+# pivot_wider(names_from = test, values_from = value)
 head(resulttable1a)
 head(resulttable1)
 
@@ -191,7 +191,7 @@ resulttable2a <-
     levels = c(0, 1),
     labels = c("Placebo", "Verum")
   )) |>
-  # mutate(Testmedication=case_match(Testmedication,
+  # mutate(Testmedication = case_match(Testmedication,
   #                                  0~"Placebo",
   #                                  1~"Verum")) |>
   group_by(Testmedication) |>

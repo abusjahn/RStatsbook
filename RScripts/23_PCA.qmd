@@ -307,10 +307,10 @@ pca_out$rotation
 biplot(pca_out)
 
 autoplot(pca_out)
-autoplot(pca_out, data=rawdata, colour='species')
-autoplot(pca_out, data=rawdata, 
-         colour='species', shape="sex")
-autoplot(pca_out, data=rawdata, colour='species',
+autoplot(pca_out, data = rawdata, colour = 'species')
+autoplot(pca_out, data = rawdata, 
+         colour = 'species', shape = "sex")
+autoplot(pca_out, data = rawdata, colour = 'species',
          loadings = TRUE, loadings.colour = 'black',
          loadings.label = TRUE, loadings.label.size = 4)
 #contribution of variables to component
@@ -322,19 +322,19 @@ autoplot(pca_out, data=rawdata, colour='species',
 pca_out$x |> 
   as_tibble() |> 
   bind_cols(rawdata) |> 
-  ggplot(aes(PC1,PC3,color=species))+
+  ggplot(aes(PC1,PC3,color = species))+
   geom_point()
 
 pca_out$rotation |> 
   as_tibble(rownames = "Variable") |> 
   ggplot(aes(PC1,PC3))+
   # geom_label_repel(aes(label=Variable))+
-  geom_text(aes(label=Variable),
-            hjust=0)+
-  geom_segment(aes(xend=0,yend=0),
-               arrow = arrow(end='first'))+
-  scale_y_continuous(expand=expansion(.2))+
-  scale_x_continuous(expand=expansion(
+  geom_text(aes(label = Variable),
+            hjust = 0)+
+  geom_segment(aes(xend = 0, yend = 0),
+               arrow = arrow(end = 'first'))+
+  scale_y_continuous(expand = expansion(.2))+
+  scale_x_continuous(expand = expansion(
     mult = c(.1,.75)))
 
 pca_loadings <- (pca_out$rotation*2.5) |> 
@@ -342,28 +342,28 @@ pca_loadings <- (pca_out$rotation*2.5) |>
 pca_out$x |> 
   as_tibble() |> 
   cbind(rawdata) |> 
-  ggplot(aes(PC1,PC3,color=species))+
+  ggplot(aes(PC1,PC3,color = species))+
   geom_point()+
   geom_text(
     data=pca_loadings,
-    color="black",
-    aes(label=Variable),
-            hjust=0)+
-  geom_segment(aes(xend=0,yend=0),
-               data=pca_loadings,
-               color="black",
-               arrow = arrow(end='first',
+    color = "black",
+    aes(label = Variable),
+            hjust = 0)+
+  geom_segment(aes(xend = 0, yend = 0),
+               data = pca_loadings,
+               color = "black",
+               arrow = arrow(end = 'first',
                              length = unit(.05,
                                            'npc')))+
-  scale_y_continuous(expand=expansion(.2),
-                     breaks=seq(-10,10,1),
+  scale_y_continuous(expand = expansion(.2),
+                     breaks = seq(-10,10,1),
                      sec.axis = sec_axis(
                        ~(./2.5), 
                        name = "Loading",
                        breaks = seq(-3,10,1)/2.5))+
-  scale_x_continuous(expand=expansion(
+  scale_x_continuous(expand = expansion(
     mult = c(.1,.25)),
-    breaks=seq(-10,10,1),
+    breaks = seq(-10,10,1),
     sec.axis = sec_axis(
       ~(./2.5), name = "Loading",
       breaks = seq(-10,10,1)/2.5))

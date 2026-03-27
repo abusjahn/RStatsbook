@@ -241,10 +241,10 @@ rawdata |>
 ```{r}
 # ORhuman <-
 # tibble(
-#   Predictor=names(ORs),
-#   OR=ORs,
-#   OR_low=CIs[,1],
-#   OR_high=CIs[,2]) |>
+#   Predictor = names(ORs),
+#   OR = ORs,
+#   OR_low = CIs[,1],
+#   OR_high = CIs[,2]) |>
 #   rowwise() |>
 #   mutate(across(-Predictor,
 #                 ~roundR(.x,level = 3)),
@@ -275,11 +275,11 @@ ORreport <-
   ungroup()
 
 #
-#   tibble(Predictor=rownames(CIs)[-1],
-#                    OR=ORs[-1],
-#                    low=CIs[-1,1],
-#                    high=CIs[-1,2],
-#                    `OR (CI95)`=NA)
+#   tibble(Predictor = rownames(CIs)[-1],
+#                    OR = ORs[-1],
+#                    low = CIs[-1,1],
+#                    high = CIs[-1,2],
+#                    `OR (CI95)` = NA)
 # ORrounded <- apply(ORreport[,2:4],MARGIN = 1,roundR)
 # ORreport$`OR (CI95)` <-
 #   paste0(ORrounded[1,],' (',ORrounded[2,],'/',

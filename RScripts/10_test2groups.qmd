@@ -111,7 +111,7 @@ t.test(rawdata$`sysBP V0`,
 ) # pairwise t-test, within subject
 t.test(rawdata$`sysBP V0`,
   rawdata$`sysBP V2`,
-  # alternative="greater", # x>y
+  # alternative = "greater", # x>y
   paired = T
 )$p.value / 2 # pairwise t-test, within subject
 

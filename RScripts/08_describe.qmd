@@ -215,7 +215,7 @@ rawdata |>
   ) |>
   pivot_wider(
     names_from = c(stat, Sex),
-    # names_sep=" ",
+    # names_sep = " ",
     names_glue = "{stat} ({Sex})",
     values_from = value
   ) |>

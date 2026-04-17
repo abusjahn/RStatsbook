@@ -4,10 +4,10 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2026-03-27"
+  date: "2026-04-17"
   page-footer:
     left: |
-      R Intro by Andreas Busjahn
+      R Intro Scripts by Andreas Busjahn
     right: |
       This book was built with <a href="https://quarto.org/">Quarto</a>.
   repo-url: https://github.com/abusjahn/RStatsbook/

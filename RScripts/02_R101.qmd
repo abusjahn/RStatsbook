@@ -62,7 +62,7 @@ There are rules for valid syntactical names:
 
 -   no mathematical symbols or brackets allowed
 
-To store some value into a variable, use the assignment operator **\<-** ; while it possible to use ** = ** or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
+To store some value into a variable, use the assignment operator **\<-** ; while it possible to use \*\* = \*\* or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
 
 ```{r}
 test <- 1
@@ -182,8 +182,8 @@ as.logical(c(0, 1, 5, -7.45678)) # c() combines values into a vector
         -   `class(grown_on_glucose)`
 
 ## Factors
-Factor: categorical variables with limited sets of distinct values (called levels), internally stored as integers. Everything intended to group subjects or representing categories (like species, tissue type, treatment) should be stored as factor for efficient storage and proper statistical handling in R. In Python, Pandas Categorical and dictionaries are related constructs.
-Factors can be ordered, but beware: this changes behavior in analyses! 
+
+Factor: categorical variables with limited sets of distinct values (called levels), internally stored as integers. Everything intended to group subjects or representing categories (like species, tissue type, treatment) should be stored as factor for efficient storage and proper statistical handling in R. In Python, Pandas Categorical and dictionaries are related constructs. Factors can be ordered, but beware: this changes behavior in analyses!
 
 Package forcats provides nice tools for factors!
 
@@ -270,7 +270,6 @@ factor_var2
 -   **`levels()`** shows you the "name tags."
 
 -   **`as.numeric()`** shows you the underlying "integer tags."
-
 
 Dates / Time:
 
@@ -768,6 +767,12 @@ rawdata |> select(where(is.numeric))
 rawdata |> select(`sysRR (mmHg)`)
 rawdata |> select(contains("r"), -contains("rr"))
 rawdata |> pull(`sysRR (mmHg)`)
+rawdata |> slice(1:5)
+rawdata |> slice_tail()
+rawdata |> slice_max(order_by = `sysRR (mmHg)`, n = 5)
+rawdata |> slice_sample(n = 5)
+rawdata |> filter(Sex == "male", `sysRR (mmHg)` > 140) #drops both NA and FALSE
+rawdata |> filter_out(Sex == "male", `sysRR (mmHg)` > 140) #keeps both NA and FALSE
 ```
 
 \newpage

@@ -6,21 +6,21 @@
 
 ### Null hypothesis ?
 
--   Working hypothesis: This is what you expect!\
-    E.g. treatment is lowering blood pressure more than placebo, transgenic animals become obese, bio reactor A is more efficient than B, concentration of substance is correlated with speed of reaction ...
+- Working hypothesis: This is what you expect!\
+  E.g. treatment is lowering blood pressure more than placebo, transgenic animals become obese, bio reactor A is more efficient than B, concentration of substance is correlated with speed of reaction ...
 
--   Null hypothesis: This is what you test!\
-    No difference / relation, BP under therapy = BP under placebo
+- Null hypothesis: This is what you test!\
+  No difference / relation, BP under therapy = BP under placebo
 
 **4 possibilities:**
 
--   Null hypothesis correct, test false positive (case A): alpha-error
+- Null hypothesis correct, test false positive (case A): alpha-error
 
--   Null hypothesis correct, test correct negative (case B)
+- Null hypothesis correct, test correct negative (case B)
 
--   Null hypothesis false, test false negative (case C): beta-error
+- Null hypothesis false, test false negative (case C): beta-error
 
--   Null hypothesis false, test correct positive (case D)
+- Null hypothesis false, test correct positive (case D)
 
 **Significance**: NOT probability of case A, but probability of your data given the NULL hypothesis, calculated from your data, conventionally \<0.05
 
@@ -41,14 +41,14 @@ load(here("data/bookdata1.RData"))
 
 **t-test**
 
--   Assumptions: Continuous data with Normal distribution
+- Assumptions: Continuous data with Normal distribution
 
--   1 or 2 (independent or dependent) samples with/without equal variances
+- 1 or 2 (independent or dependent) samples with/without equal variances
 
--   how big is the mean difference relative to uncertainty?\
-    t = (mean~1~ - mean~2~)/SEM
+- how big is the mean difference relative to uncertainty?\
+  t = (mean~1~ - mean~2~)/SEM
 
--   t follows a t-distribution, allows estimation of probability of t under the NULL hypothesis
+- t follows a t-distribution, allows estimation of probability of t under the NULL hypothesis
 
 ```{r}
 ggplot(rawdata, aes(x = Sex, y = `Size (cm)`)) +
@@ -70,6 +70,9 @@ t.test(
   x = rawdata$`Size (cm)`[which(rawdata$Sex == "f")],
   y = rawdata$`Size (cm)`[which(rawdata$Sex == "m")]
 )
+rawdata$`Size (cm)`[which(rawdata$Sex == "f")]
+rawdata |> filter(Sex == "f") |> pull(`Size (cm)`)
+
 tOut <- t.test(rawdata$`Size (cm)` ~ rawdata$Sex)
 tOut$p.value
 
@@ -104,10 +107,10 @@ print(c(
   mean(rawdata$`sysBP V2`, na.rm = T)
 ))
 
-t.test(rawdata$`sysBP V0`,
-  rawdata$`sysBP V2`,
-  alternative = "greater", # x>y
-  paired = TRUE
+t.test(x = rawdata$`sysBP V0`,
+       y = rawdata$`sysBP V2`,
+       alternative = "greater", # x>y
+       paired = TRUE
 ) # pairwise t-test, within subject
 t.test(rawdata$`sysBP V0`,
   rawdata$`sysBP V2`,
@@ -157,11 +160,11 @@ for (group_i in seq_len(groupvars$count)) {
 
 **Wilcoxon-test / Mann-Whitney U test**
 
--   nonparametric, no distribution is assumed
+- nonparametric, no distribution is assumed
 
--   based on rank-transformed data
+- based on rank-transformed data
 
--   insensitive to extreme values
+- insensitive to extreme values
 
 ```{r}
 ordvars$names
@@ -252,7 +255,7 @@ rawdata |>
     dep_vars = factvars$names[-1],
     indep_var = groupvar, spacer = " "
   ) |>
-  rename_with(~ str_remove(.x, "Testmedication")) |>
+  rename_with(~ str_remove(.x, "Testmedication ")) |>
   rename(`Total sample` = desc_all) |>
   flextable() |>
   align(~ p == " ", j = 1, align = "center") |>
@@ -268,3 +271,5 @@ Compare the 4 measurements in the penguin data between the sex as well as betwee
 Use the basic functions first for at least one phenotype before trying out compare2numvars().
 
 Look at the categorical data year, island, species and sex and run some tests on their independence.
+
+Advanced: Visualize significances, possibly in a loop.

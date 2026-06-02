@@ -1,4 +1,4 @@
-# Interaction in linear models
+# *Interaction in linear models*
 
 ```{r}
 #| output: false
@@ -7,9 +7,9 @@ pacman::p_load(conflicted, tidyverse, car, multcomp, wrappedtools, broom)
 conflicts_prefer(dplyr::select, dplyr::filter)
 ```
 
-For a better understanding, data with defined effect size and interactions will be simulated and analyzed.
+*For a better understanding, data with defined effect size and interactions will be simulated and analyzed.*
 
-## No age effect, no treatment effect, interaction treatment\*agegroup
+## *No age effect, no treatment effect, interaction treatment\*agegroup*
 
 ```{r}
 set.seed(101)
@@ -59,7 +59,7 @@ summary(glht(
 
 \newpage
 
-## Age effect, no treatment effect, interaction treatment\*agegroup
+## *Age effect, no treatment effect, interaction treatment\*agegroup*
 
 ```{r}
 set.seed(1010)
@@ -138,7 +138,7 @@ summary(glht(
 
 \newpage
 
-## Age effect, treatment effect, interaction treatment\*agegroup
+## *Age effect, treatment effect, interaction treatment\*agegroup*
 
 ```{r}
 set.seed(101)
@@ -209,7 +209,7 @@ summary(glht(
 ))
 ```
 
-Ignoring the interaction in the model is no solution. Effect sizes will be wrongly estimated:
+*Ignoring the interaction in the model is no solution. Effect sizes will be wrongly estimated:*
 
 ```{r}
 # falsch!!!
@@ -235,9 +235,56 @@ tidy(lmout_add) |>
   select(1:2)
 ```
 
+## *Interaction in regression-like lm*
+
+```{r}
+set.seed(1111)
+rawdata <- tibble(
+  Agegroup = factor(
+    rep(c("young", "middle", "old"), each = 1000),
+    levels = c("young", "middle", "old")
+  ),
+  BMI = rnorm(3000,25,1.5)
+) |>
+  mutate(Outcome = 
+           case_when(
+             Agegroup == "young" ~
+               100 + BMI * 3,
+             Agegroup == "middle" ~
+               100 + 20 + BMI * 3,
+             Agegroup == "old" ~
+               100 + BMI * 0) + #(3 + (-2))) +
+           rnorm(3000,0,5))
+ggplot(rawdata, aes(
+  x = BMI, y = Outcome,
+  color = Agegroup)) +
+  geom_point(alpha = .2) +
+  geom_smooth(method = "lm") +
+  # geom_smooth(method = "lm", color = "black") +
+  scale_y_continuous(breaks = seq(0,1000,10))
+
+lmout <- lm(Outcome ~ Agegroup * BMI,
+  data = rawdata
+)
+tidy(lmout) |>
+  mutate(p.value = formatP(p.value, mark = TRUE)) |> 
+  select(1:2, 5)
+
+Anova(lmout, type = 3) |>
+  tidy() |>
+  slice(1:4) |>
+  mutate(p.value = formatP(p.value, ndigits = 3, mark = TRUE))
+summary(glht(
+  model = lmout,
+  linfct = mcp(Treatment = "Tukey")
+))
+
+
+```
+
 \newpage
 
-## How to specify interaction in multivariable models
+## *How to specify interaction in multivariable models*
 
 ```{r}
 # all possible interactions
@@ -253,6 +300,11 @@ tidy(lmout_add) |>
 ))
 # some selected interactions
 (lm_out <- lm(mpg ~ wt * (gear + factor(am) + cyl),
+  data = mtcars
+))
+
+(lm_out <- lm(mpg ~ wt + gear + factor(am) + cyl + 
+                wt * cyl + wt * gear,
   data = mtcars
 ))
 ```

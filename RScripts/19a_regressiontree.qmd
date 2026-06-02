@@ -95,6 +95,7 @@ predvars <- ColSeeker(namepattern = c("_"))
 Validation is defined as 5 times repeated 5-fold cross-validation, stratified by the target variable to ensure that each fold has a similar distribution of classes. Repeating the cross-validation process multiple times helps to get a more reliable estimate of the model's performance and reduces the variance of the performance estimates.
 
 ```{r}
+set.seed(2026)
 tree_folds <- vfold_cv(rawdata, v = 5, strata = species, repeats = 5)
 ```
 
@@ -138,12 +139,14 @@ For the model fitting, parallel computing is used to speed up the tuning process
 ```{r}
 # Fit the model to the data
 plan(mirai_multisession, workers = availableCores() - 2) # Use all but 2 cores for parallel processing
+tictoc::tic("tuning timer")
 tree_results <- tree_workflow |>
   tune_grid(
     resamples = tree_folds,
     grid = tree_grid,
     metrics = metric_set(roc_auc, accuracy)
   )
+tictoc::toc()
 plan(sequential)
 ```
 
@@ -212,12 +215,32 @@ test_predicted <- final_fit |>
   rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
 ```
 
+```{r}
+final_out = extract_fit_engine(final_fit)
+prp(final_out,
+    type = 4,
+    extra = 104,
+    digits = 4,
+    fallen.leaves = TRUE
+)
+
+importance <- tibble(
+  Variable = names(final_out$variable.importance),
+  Importancescore = final_out$variable.importance
+) |> 
+  mutate(Variable = fct_reorder(Variable, Importancescore))
+
+ggplot(importance, aes(x = Variable, y = Importancescore)) +
+  geom_col() +
+  coord_flip()
+```
+
 ## Model evaluation
 
 class-based metrics:
 
 | Metric | Function | Meaning |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | Accuracy | accuracy() | The percentage of total predictions that were correct. Simple, but can be misleading if classes are imbalanced |
 | Kappa | kap() | Similar to accuracy, but accounts for the possibility of the agreement occurring by chance |
 | Sensitivity (Recall) | sens() | Out of all actual positives, how many did the model find? (True Positive Rate) |
@@ -228,7 +251,7 @@ class-based metrics:
 probability-based metrics:
 
 | Metric | Function | Meaning |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | ROC AUC | roc_auc() | Measures the model's ability to distinguish between classes across all possible thresholds |
 | PR AUC | pr_auc() | Area under the Precision-Recall curve. Preferred over ROC AUC when the "Positive" class is very rare |
 | Log Loss | mn_log_loss() | Measures how "close" the predicted probability is to the actual binary label (0 or 1). Heavily penalizes being "confidently wrong" |

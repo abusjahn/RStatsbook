@@ -88,8 +88,8 @@ plotdata <- tibble(
 
 p1 <- rawdata |>
   filter(Treatment != "Whatever") |>
-  mutate(Treatment_n = case_match(Treatment, "Control" ~ 0,
-    .default = 1
+  mutate(Treatment_n = recode_values(Treatment, "Control" ~ 0,
+    default = 1
   )) |>
   ggplot(aes(Treatment_n, Growth, color = Passage_F)) +
   geom_beeswarm(alpha = .2, dodge.width = .2) +
@@ -117,8 +117,8 @@ p1 <- rawdata |>
 
 p2 <- rawdata |>
   filter(Treatment != "AngII") |>
-  mutate(Treatment_n = case_match(Treatment, "Control" ~ 0,
-    .default = 1
+  mutate(Treatment_n = recode_values(Treatment, "Control" ~ 0,
+    default = 1
   )) |>
   ggplot(aes(Treatment_n, Growth, color = Passage_F)) +
   geom_beeswarm(alpha = .2, dodge.width = .2) +
@@ -183,8 +183,8 @@ interceptdata <-
 
 p1 <- rawdata |>
   filter(Treatment != "Whatever") |>
-  mutate(Treatment_n = case_match(Treatment, "Control" ~ 0,
-    .default = 1
+  mutate(Treatment_n = recode_values(Treatment, "Control" ~ 0,
+    default = 1
   )) |>
   ggplot(aes(Treatment_n, Growth, color = Passage_F)) +
   geom_beeswarm(alpha = .2, dodge.width = .2) +
@@ -211,8 +211,8 @@ p1 <- rawdata |>
 
 p2 <- rawdata |>
   filter(Treatment != "AngII") |>
-  mutate(Treatment_n = case_match(Treatment, "Control" ~ 0,
-    .default = 1
+  mutate(Treatment_n = recode_values(Treatment, "Control" ~ 0,
+    default = 1
   )) |>
   ggplot(aes(Treatment_n, Growth, color = Passage_F)) +
   geom_beeswarm(alpha = .2, dodge.width = .2) +
@@ -240,4 +240,12 @@ p2 <- rawdata |>
 p1 / p2 + plot_layout(guides = "collect")
 ```
 
+\
+
 This time, the Passage-related lines have individual intercepts AND slopes, indicating that the treatment effects are not exactly identical within the passages.
+
+# Exercise:
+
+With the penguin data, build random intercept and random slope models with bill depth as dependent and weight as independent variable. Treat species (and possibly sex) as the random effects, in which intercept / slope are nested.
+
+Visualize the random effects.

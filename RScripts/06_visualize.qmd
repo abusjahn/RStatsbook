@@ -112,9 +112,9 @@ ggplot(data = diamonds, aes(x = clarity)) +
 
 Some elements (as e.g. the bar or boxplot) know 2 color elements:
 
--   inner color, defined by `fill`
+- inner color, defined by `fill`
 
--   outer frame color, defined by `color`
+- outer frame color, defined by `color`
 
 Other elements (as e.g. the line) only have a single color definition, specified by color. And for some elements (as e.g. dots), it depends. See help for points for examples.
 
@@ -136,15 +136,16 @@ ggplot2 comes with various color definitions, many external packages extend that
 For the demonstration, I store a plot into a variable, this includes all data and plot definitions, nothing like jpg!
 
 ```{r}
-(plottemp <- ggplot(data = diamonds, aes(x = clarity, fill = cut)) +
-  geom_bar())
+plottemp <- ggplot(data = diamonds, aes(x = clarity, fill = cut)) +
+  geom_bar()
+plottemp
 plottemp + scale_fill_brewer(palette = "Set2") # in-built "scale" for fill
 plottemp + scale_fill_grey(name = "cut of diamonds")
 plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
   scale_y_continuous(expand = expansion(mult = c(0, .5))) + # rescaling y
   theme_bw(base_size = 20) +
   theme(panel.grid.major.x = element_blank())
-my_colors <- c("gold", "blue", "violet", "#FF012F", "#01AABC")
+my_colors <- c("gold", "cornflowerblue", "violet", "#FF012F", "#01AABC")
 plottemp + scale_fill_manual(values = my_colors)
 ```
 
@@ -268,19 +269,19 @@ ggplot(mtcars, aes(wt)) +
 
 Vizualize the following:
 
--   count of sex within species
+- count of sex within species
 
--   boxplot+beeswarm for weight and species
+- boxplot+beeswarm for weight and species
 
--   boxplot+beeswarm weight for species AND sex
+- boxplot+beeswarm weight for species AND sex
 
--   scatterplot for flipper length vs. body mass
+- scatterplot for flipper length vs. body mass
 
--   add a regression line to that plot
+- add a regression line to that plot
 
--   do the same scatterplot and regression grouped by species and sex
+- do the same scatterplot and regression grouped by species and sex
 
--   optionally, define your own colors for species (scale or name or rgb)
+- optionally, define your own colors for species (scale or name or rgb)
 
 ## Combining and finetuning aesthetics
 
@@ -366,12 +367,6 @@ p + geom_bar(position = "fill") +
     breaks = seq(0, 1, .2), # steps
     labels = seq(0, 100, 20)
   )
-xlab("Clarity") +
-  scale_y_continuous(
-    name = "Frequency (%)",
-    breaks = seq(0, 1, .2), # steps
-    labels = seq(0, 100, 20)
-  )
 p + geom_bar(position = "fill") +
   scale_y_continuous("Frequency",
     breaks = seq(0, 1, .2),
@@ -388,7 +383,7 @@ p + geom_bar(position = "identity", alpha = .5) # even worse!!
 diamonds |>
   mutate(cut = fct_rev(cut)) |>
   ggplot(aes(clarity, color = cut, group = cut)) +
-  geom_line(stat = "count", position = "identity", lwd = 1.5) +
+  geom_line(stat = "count", position = "identity", lwd = 1) +
   geom_point(stat = "count", size = 5) +
   scale_color_manual(values = c(
     "green", "lightblue",
@@ -499,6 +494,10 @@ When showing many facets, wrapping around after some is useful, less systematic 
 plot_tmp + facet_wrap(facets = vars(cyl))
 plot_tmp + facet_wrap(facets = vars(cyl), ncol = 2)
 
+ggplot(diamonds, aes(carat, price))+
+  geom_point(alpha = .2)+
+  facet_wrap(facets = vars(cut))
+
 # empty combination is dropped
 plot_tmp + facet_wrap(facets = vars(cyl, gear, am), labeller = label_both)
 
@@ -535,9 +534,9 @@ plot_tmp + facet_grid(
 
 ## Exercise 2
 
--   distribution of body mass by species and sex (density, histogram)
+- distribution of body mass by species and sex (density, histogram)
 
--   without / with facetting
+- without / with facetting
 
 ## Showing summaries
 
@@ -568,7 +567,7 @@ ggplot(mtcars, aes(factor(gear), mpg)) +
   ) +
   stat_summary(
     geom = "point", shape = "-",
-    size = 50,
+    size = 30,
     fun = "mean", color = "red"
   ) +
   geom_beeswarm(alpha = .5)

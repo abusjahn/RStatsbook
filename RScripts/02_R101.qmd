@@ -6,11 +6,11 @@ This is going to be the boring technical stuff... We'll get to the more interest
 
 At the beginning of (almost) every script we define packages to be used. This could be done by either
 
--   checking if packages needed are installed and otherwise do so, followed by function `library(packagename)`
+- checking if packages needed are installed and otherwise do so, followed by function `library(packagename)`
 
 OR
 
--   simplifying this using function `p_load()` from package `pacman`; if you want to create fool-proof scripts, check for `pacman` and install if needed.
+- simplifying this using function `p_load()` from package `pacman`; if you want to create fool-proof scripts, check for `pacman` and install if needed.
 
 ```{r}
 # ↑ this is the head of a code chunk
@@ -56,11 +56,11 @@ Decide about computer-friendly (syntactical) or human-friendly names, illegal na
 
 There are rules for valid syntactical names:
 
--   UPPERCASE and lowercase are distinguished
+- UPPERCASE and lowercase are distinguished
 
--   start with letter or symbols as **.\_** , but not with a number
+- start with letter or symbols as **.\_** , but not with a number
 
--   no mathematical symbols or brackets allowed
+- no mathematical symbols or brackets allowed
 
 To store some value into a variable, use the assignment operator **\<-** ; while it possible to use \*\* = \*\* or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
 
@@ -131,55 +131,55 @@ as.logical(c(0, 1, 5, -7.45678)) # c() combines values into a vector
 
 **Learning Objectives:**
 
--   Learn how to create variables (objects) in R using the assignment operator (`<-`).
+- Learn how to create variables (objects) in R using the assignment operator (`<-`).
 
--   Understand different basic data types (classes) in R: `numeric`, `character`, `logical`.
+- Understand different basic data types (classes) in R: `numeric`, `character`, `logical`.
 
--   Practice viewing the content and class of your variables.
+- Practice viewing the content and class of your variables.
 
 **Instructions:**
 
 1.  **Assign a Sample ID:**
 
-    -   Create a variable called `sample_id`.
+    - Create a variable called `sample_id`.
 
-    -   Assign it a unique identifier for your sample. Since it's text, make sure to put it in quotes, e.g., `"ExpA_S001"`.
+    - Assign it a unique identifier for your sample. Since it's text, make sure to put it in quotes, e.g., `"ExpA_S001"`.
 
 2.  **Record the Organism:**
 
-    -   Create a variable called `organism_name`.
+    - Create a variable called `organism_name`.
 
-    -   Assign the scientific name of the organism your sample came from. Again, use quotes, e.g., `"Saccharomyces cerevisiae"`.
+    - Assign the scientific name of the organism your sample came from. Again, use quotes, e.g., `"Saccharomyces cerevisiae"`.
 
 3.  **Record a Measurement:**
 
-    -   You've measured the length of a cell from this sample in micrometers.
+    - You've measured the length of a cell from this sample in micrometers.
 
-    -   Create a variable called `cell_length_um`.
+    - Create a variable called `cell_length_um`.
 
-    -   Assign a numerical value (without quotes) for the length, e.g., `7.5`.
+    - Assign a numerical value (without quotes) for the length, e.g., `7.5`.
 
 4.  **Record a Binary Condition:**
 
-    -   Was this sample grown in the presence of a specific nutrient (e.g., glucose)?
+    - Was this sample grown in the presence of a specific nutrient (e.g., glucose)?
 
-    -   Create a variable called `grown_on_glucose`.
+    - Create a variable called `grown_on_glucose`.
 
-    -   Assign a logical value: `TRUE` if yes, `FALSE` if no (these are special keywords in R, no quotes needed). E.g., `TRUE`.
+    - Assign a logical value: `TRUE` if yes, `FALSE` if no (these are special keywords in R, no quotes needed). E.g., `TRUE`.
 
 5.  **Check Your Work (Content and Class):**
 
-    -   After creating each variable, type the variable name on a new line and press Enter to see its content.
+    - After creating each variable, type the variable name on a new line and press Enter to see its content.
 
-    -   Use the `class()` function to check what type of data R thinks each variable holds. For example:
+    - Use the `class()` function to check what type of data R thinks each variable holds. For example:
 
-        -   `class(sample_id)`
+      - `class(sample_id)`
 
-        -   `class(organism_name)`
+      - `class(organism_name)`
 
-        -   `class(cell_length_um)`
+      - `class(cell_length_um)`
 
-        -   `class(grown_on_glucose)`
+      - `class(grown_on_glucose)`
 
 ## Factors
 
@@ -211,65 +211,65 @@ factor_var2
 
 **Learning Objectives:**
 
--   Understand factors as a way to store **categorical data**.
+- Understand factors as a way to store **categorical data**.
 
--   Learn how to create factors from character data.
+- Learn how to create factors from character data.
 
--   See how to inspect the **levels** (the "name tags") of a factor.
+- See how to inspect the **levels** (the "name tags") of a factor.
 
--   Discover how R internally represents factors as **integers**.
+- Discover how R internally represents factors as **integers**.
 
--   Learn how to create **ordered factors** when the categories have a natural sequence.
+- Learn how to create **ordered factors** when the categories have a natural sequence.
 
 **Instructions:**
 
 1.  **Categorizing by Treatment Group (Unordered Factor):**
 
-    -   Imagine your samples are from different treatment groups: "Control", "Drug A", "Drug B".
+    - Imagine your samples are from different treatment groups: "Control", "Drug A", "Drug B".
 
-    -   First, create a *character variable* for the treatment of one sample
+    - First, create a *character variable* for the treatment of one sample
 
-        *What is its class?*
+      *What is its class?*
 
-    -   Now, convert `sample_treatment` into a **factor**. This tells R it's a category.
+    - Now, convert `sample_treatment` into a **factor**. This tells R it's a category.
 
-        *What is its class now? Notice how R also lists "Levels" when you print it.*
+      *What is its class now? Notice how R also lists "Levels" when you print it.*
 
-    -   To see all the possible "name tags" (categories) R knows for this factor, use `levels()`
+    - To see all the possible "name tags" (categories) R knows for this factor, use `levels()`
 
-        *Why do you think R automatically inferred "Control", "Drug A", "Drug B" as levels, even though you only assigned "Drug A"? (Hint: It hasn't; it only knows "Drug A" for now. We'll fix this in the next step!)*
+      *Why do you think R automatically inferred "Control", "Drug A", "Drug B" as levels, even though you only assigned "Drug A"? (Hint: It hasn't; it only knows "Drug A" for now. We'll fix this in the next step!)*
 
-    -   **The "Integer Tag" Reveal:** To see the hidden integer that R uses for "Drug A", convert the factor to a numeric type:
+    - **The "Integer Tag" Reveal:** To see the hidden integer that R uses for "Drug A", convert the factor to a numeric type:
 
-        *What number did you get? This number corresponds to the alphabetical position of "Drug A" among the levels R currently sees (`Drug A`).*
+      *What number did you get? This number corresponds to the alphabetical position of "Drug A" among the levels R currently sees (`Drug A`).*
 
 2.  **Defining All Levels Explicitly:**
 
-    -   When you create a factor, it's good practice to tell R *all* the possible levels upfront, even if a particular sample only has one of them. This ensures consistency.
+    - When you create a factor, it's good practice to tell R *all* the possible levels upfront, even if a particular sample only has one of them. This ensures consistency.
 
-    -   Re-create `sample_treatment_factor`, but this time specifying all the `levels`:
+    - Re-create `sample_treatment_factor`, but this time specifying all the `levels`:
 
-        *Now, what number do you get from `as.numeric()`? How does it relate to the `levels` you explicitly defined? This demonstrates how the integer tag links to its "name tag" position in the defined levels.*
+      *Now, what number do you get from `as.numeric()`? How does it relate to the `levels` you explicitly defined? This demonstrates how the integer tag links to its "name tag" position in the defined levels.*
 
 3.  **Categorizing by Developmental Stage (Ordered Factor):**
 
-    -   Sometimes, categories have a natural order. For example, developmental stages: "Larva", "Pupa", "Adult". "Adult" is definitely "later" than "Larva".
+    - Sometimes, categories have a natural order. For example, developmental stages: "Larva", "Pupa", "Adult". "Adult" is definitely "later" than "Larva".
 
-    -   Let's create a factor for a sample's developmental stage, making sure R understands the order:
+    - Let's create a factor for a sample's developmental stage, making sure R understands the order:
 
-        *How does the `class()` output differ from `sample_treatment_factor_full`? What integer did "Pupa" get, and why?*
+      *How does the `class()` output differ from `sample_treatment_factor_full`? What integer did "Pupa" get, and why?*
 
 **Key Takeaways:**
 
--   Use **`character`** for free text (like comments or unique IDs).
+- Use **`character`** for free text (like comments or unique IDs).
 
--   Use **`factor`** for **categorical data** (like experimental groups, sexes, genotypes, species names in a fixed list).
+- Use **`factor`** for **categorical data** (like experimental groups, sexes, genotypes, species names in a fixed list).
 
--   Factors are essential for statistical models as they correctly identify groups for comparisons.
+- Factors are essential for statistical models as they correctly identify groups for comparisons.
 
--   **`levels()`** shows you the "name tags."
+- **`levels()`** shows you the "name tags."
 
--   **`as.numeric()`** shows you the underlying "integer tags."
+- **`as.numeric()`** shows you the underlying "integer tags."
 
 Dates / Time:
 
@@ -413,9 +413,11 @@ mtcars |> # inbuild example data, use F1!
     .cols = c(wt, mpg, qsec, disp),
     .fns = meansd
   )) |>
-  pivot_longer(cols = -am, names_to = "Measure") |> # put variables in rows
+  pivot_longer(cols = -am, 
+               names_to = "Measure") |> # put variables in rows
   pivot_wider(
-    id_cols = Measure, names_from = am, # put groups in cols
+    id_cols = Measure, 
+    names_from = am, # put groups in cols
     values_from = value
   )
 ```
@@ -526,7 +528,7 @@ my1.Matrix <-
     )
   )
 print(my1.Matrix)
-data <- seq(from = 1, to = 100, by = 1) # 1:100
+data <- seq(from = 1, to = 200, by = 1) # 1:100
 nrow <- 20
 matrix(
   data = data,
@@ -553,6 +555,7 @@ my1.Matrix[2, 3] # Index:[row,column]
 my1.Matrix[2, ] # all columns
 my1.Matrix[, 2] # all rows
 my1.Matrix[c(1, 3), -2] # exclude column 2
+my1.Matrix[1:3,"col3"]
 my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 ```
 
@@ -566,41 +569,41 @@ my1.Matrix[1, 1] <- NA # Index can be used for writing as well
 
 1.  **Create Your Data:**
 
-    -   You have the following counts:
+    - You have the following counts:
 
-        -   **Species A:** Quadrant 1: 12, Quadrant 2: 8, Quadrant 3: 15
+      - **Species A:** Quadrant 1: 12, Quadrant 2: 8, Quadrant 3: 15
 
-        -   **Species B:** Quadrant 1: 5, Quadrant 2: 10, Quadrant 3: 7
+      - **Species B:** Quadrant 1: 5, Quadrant 2: 10, Quadrant 3: 7
 
-        -   **Species C:** Quadrant 1: 20, Quadrant 2: 14, Quadrant 3: 18
+      - **Species C:** Quadrant 1: 20, Quadrant 2: 14, Quadrant 3: 18
 
-    -   Create a numeric vector for each species' counts (e.g., `species_A_counts <- c(12, 8, 15)`).
+    - Create a numeric vector for each species' counts (e.g., `species_A_counts <- c(12, 8, 15)`).
 
 2.  **Create a Matrix:**
 
-    -   Combine these three vectors into a single matrix. Name this matrix `quadrant_data`.
+    - Combine these three vectors into a single matrix. Name this matrix `quadrant_data`.
 
-    -   Make sure each row represents a species and each column represents a quadrant.
+    - Make sure each row represents a species and each column represents a quadrant.
 
-    -   Set the number of rows (`nrow`) to 3 and the number of columns (`ncol`) to 3.
+    - Set the number of rows (`nrow`) to 3 and the number of columns (`ncol`) to 3.
 
 3.  **Name Rows and Columns:**
 
-    -   Assign row names to your matrix: `"SpeciesA"`, `"SpeciesB"`, `"SpeciesC"`.
+    - Assign row names to your matrix: `"SpeciesA"`, `"SpeciesB"`, `"SpeciesC"`.
 
-    -   Assign column names to your matrix: `"Quadrant1"`, `"Quadrant2"`, `"Quadrant3"`.
+    - Assign column names to your matrix: `"Quadrant1"`, `"Quadrant2"`, `"Quadrant3"`.
 
 4.  **Index Your Matrix (Access Data):**
 
-    -   **Access a single element:** Get the count of `Species B` in `Quadrant 2`.
+    - **Access a single element:** Get the count of `Species B` in `Quadrant 2`.
 
-    -   **Access a full row:** Get all counts for `Species A`.
+    - **Access a full row:** Get all counts for `Species A`.
 
-    -   **Access a full column:** Get all counts from `Quadrant 3`.
+    - **Access a full column:** Get all counts from `Quadrant 3`.
 
-    -   **Access multiple elements/rows/columns:**
+    - **Access multiple elements/rows/columns:**
 
-        -   Get the counts for `Species A` and `Species C` in `Quadrant 1` and `Quadrant 2`.
+      - Get the counts for `Species A` and `Species C` in `Quadrant 1` and `Quadrant 2`.
 
 ### Data frame
 
@@ -733,13 +736,13 @@ rawdata$`Family name`
 
 Differences in addressing data frames and tibbles:
 
--   tibble and `[` always returns tibble
+- tibble and `[` always returns tibble
 
--   tibble and `[[` always returns vector
+- tibble and `[[` always returns vector
 
--   data.frame and `[` may return data.frame (if \>1 column) or vector
+- data.frame and `[` may return data.frame (if \>1 column) or vector
 
--   data.frame and `[[` always returns vector
+- data.frame and `[[` always returns vector
 
 ```{r}
 rawdata_df <- as.data.frame(rawdata)
@@ -760,7 +763,7 @@ rawdata |> select(PatID:Ethnicity, `sysRR (mmHg)`:HR)
 rawdata |>
   select(PatID:Ethnicity, `sysRR (mmHg)`:HR) |>
   slice(1:5)
-rawdata |> select(contains("RR", ignore.case = F))
+rawdata |> select(contains("RR", ignore.case = FALSE))
 rawdata |> select(ends_with("r"))
 rawdata |> select(-contains("name"))
 rawdata |> select(where(is.numeric))
@@ -781,15 +784,15 @@ rawdata |> filter_out(Sex == "male", `sysRR (mmHg)` > 140) #keeps both NA and FA
 
 Think of a cruet_stand / Gewürzmenage
 
--   define n_elements \<- 5\*10\^3
+- define n_elements \<- 5\*10\^3
 
--   create a tibble "menage" with columns saltshaker, peppercaster and n_elements each for saltgrain and pepperflake
+- create a tibble "menage" with columns saltshaker, peppercaster and n_elements each for saltgrain and pepperflake
 
--   print saltshaker (tibble with 1 columns)
+- print saltshaker (tibble with 1 columns)
 
--   print salt (content of column, all saltgrains)
+- print salt (content of column, all saltgrains)
 
--   print 100 saltgrains
+- print 100 saltgrains
 
 ![](../Graphs/menage.jpg)
 
@@ -867,10 +870,7 @@ for (col_i in colnames(rawdata)) {
   cat(col_i, "\n")
   print(str(rawdata |> pull(col_i)))
 }
-## content of elements
-for (col_i in shopping) {
-  print(col_i)
-}
+
 # automatic creation of integer index from elements
 # for(col_i in 1:ncol(rawdata))){
 for (col_i in seq_along(colnames(rawdata))) {
@@ -888,7 +888,6 @@ for (col_i in seq_len(n_gaussvars)) {
   print(colnames(rawdata)[col_i])
 }
 
-n_gaussvars <- 0
 for (col_i in 1:n_gaussvars) {
   print(colnames(rawdata)[col_i])
 }
@@ -960,13 +959,13 @@ if (
 We can get text conditionally:
 
 ```{r}
-test <- "female"
+sex <- "female"
 print(ifelse(test = sex == "male",
   yes = "is male",
   no = "is female"
 ))
 
-p <- .12
+p <- .012
 paste0(
   "That is ",
   ifelse(test = p <= .05, yes = "", no = "not "),
@@ -1030,21 +1029,21 @@ paste0(
 
 **Task:**
 
--   **Create Sample Data:** Generate a numeric vector representing expression levels for 20 genes (mean = 100, SD = 30).
+- **Create Sample Data:** Generate a numeric vector representing expression levels for 20 genes (mean = 100, SD = 30).
 
--   **Classify Genes by their Expression Level:**
+- **Classify Genes by their Expression Level:**
 
-    -   Using a `for` loop, iterate through each gene's expression level.
+  - Using a `for` loop, iterate through each gene's expression level.
 
-    -   Inside the loop, use an `if`/`else if`/`else` statement to categorize each gene:
+  - Inside the loop, use an `if`/`else if`/`else` statement to categorize each gene:
 
-        -   If expression is above 120, print `paste("Gene", i, "is highly expressed:", gene_expression[i])`.
+    - If expression is above 120, print `paste("Gene", i, "is highly expressed:", gene_expression[i])`.
 
-        -   If expression is below 70, print `paste("Gene", i, "is lowly expressed:", gene_expression[i])`.
+    - If expression is below 70, print `paste("Gene", i, "is lowly expressed:", gene_expression[i])`.
 
-        -   Otherwise, print `paste("Gene", i, "is moderately expressed:", gene_expression[i])`.
+    - Otherwise, print `paste("Gene", i, "is moderately expressed:", gene_expression[i])`.
 
-    -   Create a similar loop using `case_when` to simplify the rules.
+  - Create a similar loop using `case_when` to simplify the rules.
 
 #### 2. Simulating Population Growth (Using `while` loop)
 
@@ -1052,29 +1051,29 @@ paste0(
 
 **Task:**
 
--   **Set Initial Conditions:**
+- **Set Initial Conditions:**
 
-    -   Start with `population_size <- 100`.
+  - Start with `population_size <- 100`.
 
-    -   Set a `growth_rate <- 1.1` (meaning 10% increase per generation).
+  - Set a `growth_rate <- 1.1` (meaning 10% increase per generation).
 
-    -   Set a `carrying_capacity <- 1000`.
+  - Set a `carrying_capacity <- 1000`.
 
-    -   Initialize `generation <- 0`.
+  - Initialize `generation <- 0`.
 
--   **Simulate Growth:**
+- **Simulate Growth:**
 
-    -   Use a `while` loop that continues as long as `population_size < carrying_capacity`.
+  - Use a `while` loop that continues as long as `population_size < carrying_capacity`.
 
-    -   Inside the loop:
+  - Inside the loop:
 
-    -   Update `population_size <- population_size * growth_rate`.
+  - Update `population_size <- population_size * growth_rate`.
 
-    -   Increment `generation <- generation + 1`.
+  - Increment `generation <- generation + 1`.
 
-    -   Print the `population_size` and `generation` at each step.
+  - Print the `population_size` and `generation` at each step.
 
--   **Add a Condition:** When at the last run of the loop, print a message indicating how many generations it took to reach the carrying capacity.
+- **Add a Condition:** When at the last run of the loop, print a message indicating how many generations it took to reach the carrying capacity.
 
 #### 3. Classifying Species Based on Traits (Using `for` loop and `ifelse`)
 
@@ -1082,28 +1081,28 @@ paste0(
 
 **Task:**
 
--   **Create Sample Data:**
+- **Create Sample Data:**
 
-    -   `species <- c("Oak", "Maple", "Cherry", "Rose", "Lily", "Daisy", "Sunflower")`
+  - `species <- c("Oak", "Maple", "Cherry", "Rose", "Lily", "Daisy", "Sunflower")`
 
-    -   `leaf_length <- c(15, 12, 8, 4, 18, 5, 25)`
+  - `leaf_length <- c(15, 12, 8, 4, 18, 5, 25)`
 
-    -   `petal_count <- c(0, 0, 5, 20, 6, 30, 0)` (0 for trees, flowers have petals)
+  - `petal_count <- c(0, 0, 5, 20, 6, 30, 0)` (0 for trees, flowers have petals)
 
--   **Categorize Species:**
+- **Categorize Species:**
 
--   Create an empty vector `species_type <- character(length(species))` to store the results.
+- Create an empty vector `species_type <- character(length(species))` to store the results.
 
--   Use a `for` loop to iterate through each species.
+- Use a `for` loop to iterate through each species.
 
--   Inside the loop, use nested `ifelse` statements to determine `species_type` based on these rules:
+- Inside the loop, use nested `ifelse` statements to determine `species_type` based on these rules:
 
-    -   If `petal_count[i] == 0`, it's a "Tree".
+  - If `petal_count[i] == 0`, it's a "Tree".
 
-    -   If `petal_count[i] > 10`, it's a "Many-petaled Flower".
+  - If `petal_count[i] > 10`, it's a "Many-petaled Flower".
 
-    -   If `petal_count[i] > 0`, it's a "Few-petaled Flower".
+  - If `petal_count[i] > 0`, it's a "Few-petaled Flower".
 
--   Assign the result to `species_type[i]`.
+- Assign the result to `species_type[i]`.
 
--   **Display Results:** After the loop, create a data frame or tibble with `species`, `leaf_length`, `petal_count`, and the new `species_type` column.
+- **Display Results:** After the loop, create a data frame or tibble with `species`, `leaf_length`, `petal_count`, and the new `species_type` column.

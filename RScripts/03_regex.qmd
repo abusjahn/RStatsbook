@@ -4,7 +4,7 @@
 
 [Regex cheatsheet](https://rstudio.github.io/cheatsheets/regex.pdf)
 
-[stringr cheatsheet](https://posit.co/wp-content/uploads/2022/10/strings-1.pdf)
+[stringr cheatsheet](https://opensource.posit.co/resources/cheatsheets/strings/)
 
 Regular expressions are a ***powerful*** tool for searching and manipulating text data. They allow you to define specific patterns within sequences, which is particularly useful when analyzing biological data such as DNA or protein sequences. But more mundane, they are terribly useful for practical tasks like finding or renaming variables, correcting common typos, and checking input patterns.
 
@@ -12,17 +12,17 @@ Basic functions like `grep()` or `gsub()` are difficult to use in pipelines and 
 
 **Key symbols and their meanings:**
 
--   **.** (period): Matches any single character except a newline. For example, "A.T" would match "AAT", "AGT", "ACT", etc.
+- **.** (period): Matches any single character except a newline. For example, "A.T" would match "AAT", "AGT", "ACT", etc.
 
--   \+ means 1 ore more occurrences (.+), ? means zero or 1 ocurrence
+- \+ means 1 or more occurrences (.+), ? means zero or 1 ocurrence
 
--   **\[\]** (square brackets): Defines a character class. Any character within the brackets will match. For example, "\[ATGC\]" matches any DNA nucleotide.
+- **\[\]** (square brackets): Defines a character class. Any character within the brackets will match. For example, "\[ATGC\]" matches any DNA nucleotide.
 
--   **{}** (curly braces): Specify the number of occurrences of the preceding element. For example, "A{3}" matches exactly three consecutive "A"s, like in "AAA".
+- **{}** (curly braces): Specify the number of occurrences of the preceding element. For example, "A{3}" matches exactly three consecutive "A"s, like in "AAA".
 
--   **\\d**: Matches any digit (0-9). For example, "\\d+" matches one or more digits, which could be useful for finding numerical identifiers in protein databases.
+- **\\d**: Matches any digit (0-9). For example, "\\d+" matches one or more digits, which could be useful for finding numerical identifiers in protein databases.
 
--   **\\D**: Matches any non-digit character.
+- **\\D**: Matches any non-digit character.
 
 ## Some basic examples:
 
@@ -32,7 +32,6 @@ starttext <- "Did grandma eat all the pizza?"
 str_detect(string = starttext, pattern = "pizza")
 str_detect(string = starttext, pattern = "pasta")
 str_detect(string = starttext, pattern = "e.+a\\?$")
-str_view(string = starttext, pattern = "e.+a\\?$")
 str_view(string = starttext, pattern = "e.+a\\?$")
 str_detect(string = starttext, pattern = "grand[mp]a")
 str_view(string = starttext, pattern = "grand[mp]a")

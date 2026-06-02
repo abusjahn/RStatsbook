@@ -111,19 +111,19 @@ wide_again_data
 
 ### Step 1: Create example data:
 
--   5 subjects per group, 2 groups A/B
+- 5 subjects per group, 2 groups A/B
 
--   3 measurements weight (V1, V2, V3) with random numbers,
+- 3 measurements weight (V1, V2, V3) with random numbers,
 
-    -   means 46, 50,51
+  - means 46, 50,51
 
-    -   SDs 2
+  - SDs 2
 
--   2 measurements length (V1, V3) #no visit 2!
+- 2 measurements length (V1, V3) #no visit 2!
 
-    -   means 120, 135
+  - means 120, 135
 
-    -   SDs 3
+  - SDs 3
 
 ```{r}
 set.seed(42)
@@ -144,9 +144,9 @@ head(rawdata)
 
 ### Step 2: Transform that data to a long form:
 
--   1 column for weight
--   1 column for length
--   1 column for measurement time named "Visit"
+- 1 column for weight
+- 1 column for length
+- 1 column for measurement time named "Visit"
 
 ```{r}
 # with intermediate super_long step
@@ -230,27 +230,27 @@ Sometimes, you might want to see all the measurements for a single individual (e
 
 1.  **Inspect the original data:**
 
-    -   Type `head(ChickWeight)` and `str(ChickWeight)` to understand its current "long" format (each row is a single observation of weight at a specific time for a specific chick).
+    - Type `head(ChickWeight)` and `str(ChickWeight)` to understand its current "long" format (each row is a single observation of weight at a specific time for a specific chick).
 
-    -   Notice the `Time` and `weight` columns.
+    - Notice the `Time` and `weight` columns.
 
 2.  **Transform to Wide Format:**
 
-    -   Use `pivot_wider()` to transform the `ChickWeight` dataset.
+    - Use `pivot_wider()` to transform the `ChickWeight` dataset.
 
-    -   You want `Time` values to become new column names.
+    - You want `Time` values to become new column names.
 
-    -   You want the `weight` values to fill these new columns.
+    - You want the `weight` values to fill these new columns.
 
-    -   Each row should represent a unique `Chick` and `Diet`.
+    - Each row should represent a unique `Chick` and `Diet`.
 
-    -   **Hint:** Think about `id_cols`, `names_from`, and `values_from`.
+    - **Hint:** Think about `id_cols`, `names_from`, and `values_from`.
 
 3.  **Reflect:**
 
-    -   What are the new column names?
+    - What are the new column names?
 
-    -   What does `NA` mean in this new `chick_weight_wide` dataset? (Hint: Not all chicks were measured at all time points, or some started later).
+    - What does `NA` mean in this new `chick_weight_wide` dataset? (Hint: Not all chicks were measured at all time points, or some started later).
 
 ### Part 2: From Wide to Long (`pivot_longer()`)
 
@@ -262,12 +262,12 @@ Imagine you received data from a collaborator where each time point (e.g., Day 0
 
 2.  **Transform to Long Format:**
 
-    -   Use `pivot_longer()` on `chick_weight_wide` (or `chick_weight_wide_example`).
+    - Use `pivot_longer()` on `chick_weight_wide` (or `chick_weight_wide_example`).
 
-    -   You want to gather all the columns that represent `Time` points (e.g., `0`, `2`, `4`, ..., `21`) into two new columns: one for the `Time` itself and one for the `weight` measurement.
+    - You want to gather all the columns that represent `Time` points (e.g., `0`, `2`, `4`, ..., `21`) into two new columns: one for the `Time` itself and one for the `weight` measurement.
 
-    -   **Hint:** Think about `cols`, `names_to`, and `values_to`. You might also need `names_transform` to convert the `Time` column back to a numeric type.
+    - **Hint:** Think about `cols`, `names_to`, and `values_to`. You might also need `names_transform` to convert the `Time` column back to a numeric type.
 
 3.  **Reflect:**
 
-    -   Compare `chick_weight_long` to the original `ChickWeight` dataset. Are they identical in structure (ignoring the order of columns/rows which might vary slightly)?
+    - Compare `chick_weight_long` to the original `ChickWeight` dataset. Are they identical in structure (ignoring the order of columns/rows which might vary slightly)?

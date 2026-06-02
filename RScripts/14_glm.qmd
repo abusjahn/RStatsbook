@@ -76,7 +76,7 @@ rawdata <- rawdata |>
     parity_grp = forcats::fct_lump_n(as.character(parity),
       n = 2, other_level = ">2"
     ) |>
-      fct_rev()
+       fct_rev()
   )
 ```
 
@@ -104,8 +104,9 @@ logreg_out
   broom::tidy() |>
   mutate(p.value = formatP(p.value, ndigits = 5)))
 ## test each OR
-(sum_out <- summary(logreg_out))
-# broom::tidy(logreg_out)
+#(sum_out <- summary(logreg_out))
+
+sum_out <- broom::tidy(logreg_out)
 ```
 
 ## Create structure for ggplot
@@ -125,7 +126,7 @@ OR_plotdata <- tibble(
   OR = ORs[-1],
   CI_low = CIs[-1, 1],
   CI_high = CIs[-1, 2],
-  p = sum_out$coefficients[-1, 4],
+  p = sum_out$p.value[-1],
   Significance = markSign(p),
   Label = paste(Predictor, Significance)
 )
@@ -142,7 +143,7 @@ baseplot <-
 baseplot
 baseplot +
   scale_y_log10(
-    breaks = logrange_15,
+    breaks = logrange_1,
     minor_breaks = logrange_123456789
   ) +
   geom_text(aes(label = Significance), vjust = 1.5, color = "red") +

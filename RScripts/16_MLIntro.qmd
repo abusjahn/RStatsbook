@@ -12,25 +12,25 @@
 
 ## Resampling methods
 
--   Creation of new samples based on one observed sample.
+- Creation of new samples based on one observed sample.
 
--   Helps in creating new synthetic datasets for training machine learning models and to estimate properties of a dataset when the dataset is unknown, difficult to estimate, or when the sample size of the dataset is small.
+- Helps in creating new synthetic datasets for training machine learning models and to estimate properties of a dataset when the dataset is unknown, difficult to estimate, or when the sample size of the dataset is small.
 
--   Resampling Methods
+- Resampling Methods
 
-    -   Permutation tests (also re-randomization tests)
+  - Permutation tests (also re-randomization tests)
 
-    -   Bootstrapping
+  - Bootstrapping
 
-    -   Jackknife (Leave one out validation)
+  - Jackknife (Leave one out validation)
 
-    -   Cross validation
+  - Cross validation
 
 ### Permutation tests
 
--   Permutation reshuffles the observed cases, sampling without replacement, e.g. Random combination of 2 classes (like disease / risk)
+- Permutation reshuffles the observed cases, sampling without replacement, e.g. Random combination of 2 classes (like disease / risk)
 
--   Original:
+- Original:
 
 | Class 1  | Class 2 |
 |----------|---------|
@@ -40,7 +40,7 @@
 | Control  | \-      |
 | Control  | \-      |
 
--   Permutation 1
+- Permutation 1
 
 | Class 1  | Class 2 |
 |----------|---------|
@@ -50,8 +50,8 @@
 | Control  | \-      |
 | Control  | Exposed |
 
--   repeated x times
--   count, how frequent results as "extreme" as the observation occur by coincidence
+- repeated x times
+- count, how frequent results as "extreme" as the observation occur by coincidence
 
 ```{r}
 #| output: false
@@ -133,9 +133,9 @@ The conventional p-value is `r formatP(estimated_p,ndigits = 5)`, while shufflin
 
 ### Bootstrapping
 
--   Bootstrapping selects from the population of observed cases, sampling with replacement.
+- Bootstrapping selects from the population of observed cases, sampling with replacement.
 
--   Bootstrap is a powerful statistical tool used to quantify the uncertainty of a given model.
+- Bootstrap is a powerful statistical tool used to quantify the uncertainty of a given model.
 
 ```{r}
 #| echo: false
@@ -273,13 +273,13 @@ print(boot_ci)
 
 ### Cross validation
 
--   Cross-validation is a resampling method used to evaluate the performance of a model on unseen data.
+- Cross-validation is a resampling method used to evaluate the performance of a model on unseen data.
 
--   It involves partitioning the data into `k` subsets, training the model on one subset (training set) made of k-1 subsets, and evaluating it on the left-out subset (testing set).
+- It involves partitioning the data into `k` subsets, training the model on one subset (training set) made of k-1 subsets, and evaluating it on the left-out subset (testing set).
 
--   This process is repeated `k` times, with each subset serving as the testing set once, and the results are averaged to provide an overall performance estimate.
+- This process is repeated `k` times, with each subset serving as the testing set once, and the results are averaged to provide an overall performance estimate.
 
--   Cross-validation is often repeated multiple times to reduce the variance of the performance estimates and to get a more reliable estimate of the model's performance. 10 repeated 5-fold cross-validations would provide 50 estimates of the model's performance, capturing average as well as possible extreme results.
+- Cross-validation is often repeated multiple times to reduce the variance of the performance estimates and to get a more reliable estimate of the model's performance. 10 repeated 5-fold cross-validations would provide 50 estimates of the model's performance, capturing average as well as possible extreme results.
 
 ![](../Graphs/8-Stratified-K-Fold-Cross-Validation.jpg){fig-align="center"}
 
@@ -287,9 +287,9 @@ print(boot_ci)
 
 ### Jacknife
 
--   Jackknife (or **L**eave **O**ne **O**ut) is resampling without replacement, where one observation is left out at a time to create new samples. It is used to estimate the bias and variance of a statistic, as well as to construct confidence intervals.
+- Jackknife (or **L**eave **O**ne **O**ut) is resampling without replacement, where one observation is left out at a time to create new samples. It is used to estimate the bias and variance of a statistic, as well as to construct confidence intervals.
 
--   Creates n samples of size n-1
+- Creates n samples of size n-1
 
 <!-- ![](../Graphs/jackknife_estimate.jpg){fig-align="center"} -->
 

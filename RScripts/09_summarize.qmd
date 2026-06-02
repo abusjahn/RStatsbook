@@ -129,8 +129,8 @@ mtcars |>
   group_by(am) |>
   summarize(
     across(
-      c(mpg, disp),
-      ~ meansd(.x, add_n = TRUE)
+      .cols = c(mpg, disp),
+      .fns = ~ meansd(.x, add_n = TRUE)
     ),
     .groups = "drop"
   ) |>

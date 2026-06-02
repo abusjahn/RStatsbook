@@ -46,28 +46,28 @@ As a starting point, I suggest creating a folder for everything R-related, e.g. 
 
 ### Option 1: Create manually
 
--   Define location for project folder (often somewhere under C:/Users/SomeName/Documents),\
-    for seminar projects this should be the folder you just created, Rstuff or whatever name you used.
+- Define location for project folder (often somewhere under C:/Users/SomeName/Documents),\
+  for seminar projects this should be the folder you just created, Rstuff or whatever name you used.
 
--   In that folder, create a new folder, e.g. Rexercises
+- In that folder, create a new folder, e.g. Rexercises
 
--   Create useful sub-folders, I recommend /RScripts and /Data as minimal structure; be consistent in naming!!
+- Create useful sub-folders, I recommend /RScripts and /Data as minimal structure; be consistent in naming!!
 
 You should have a folder structure something like this:
 
--   Rstuff
+- Rstuff
 
-    -   Rexercises
+  - Rexercises
 
-        -   RScripts
+    - RScripts
 
-        -   Data
+    - Data
 
-    -   SomeProject
+  - SomeProject
 
-        -   RScripts
+    - RScripts
 
-        -   Data
+    - Data
 
 Now you are ready to create a project in RStudio:
 

@@ -145,7 +145,7 @@ predvars_std <- ColSeeker(namepattern = "_norm")
 ### Data splitting
 
 ```{r}
-set.seed(2026)
+set.seed(202606)
 data_split <- initial_split(
   rawdata,
   prop = 2 / 3,
@@ -164,7 +164,7 @@ For the training data, a model is created and used to (re-)predict the species o
 ```{r}
 knn_recipe <- recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
-  update_role(all_of(predvars$names), new_role = "predictor")
+  update_role(all_of(predvars_std$names), new_role = "predictor")
 
 knn_spec <- nearest_neighbor(neighbors = 5) |>
   set_engine("kknn") |>
@@ -206,7 +206,9 @@ CrossTable(test_results$.pred_class,
   prop.chisq = FALSE, prop.t = FALSE,
   format = "SAS"
 )
-
+caret::confusionMatrix(test_results$.pred_class,
+                       test_results$species
+)
 yardstick::accuracy(data = test_results, truth = species, estimate = .pred_class)
 
 test_results |>

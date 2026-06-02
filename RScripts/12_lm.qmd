@@ -16,8 +16,7 @@ pacman::p_load(
   ggbeeswarm,
   lme4, nlme, merTools,
   easystats, patchwork, here
-) # conflicted,
-# rayshader,av)
+) 
 # pacman::p_unload(DescTools, foreign)
 # conflict_scout()
 conflicts_prefer(
@@ -100,6 +99,7 @@ ggplot(rawdata, aes(Passage, Growth)) +
 ggplot(rawdata, aes(Passage, Growth)) +
   geom_point() +
   scale_x_continuous(breaks = seq(0, 10, 1), limits = c(0, 6)) +
+  scale_y_continuous(breaks = seq(0,1000,10)) +
   geom_smooth(linewidth = 2) +
   geom_smooth(method = lm, se = F, color = "red", fullrange = TRUE)
 ```
@@ -347,17 +347,17 @@ check_model(lmOut_interaction)
 
 In the penguin data, model relationship between
 
--   DV flipper length and IV body weight
+- DV flipper length and IV body weight
 
--   DV bill depth and IV body weight
+- DV bill depth and IV body weight
 
--   DV flipper length and IV species
+- DV flipper length and IV species
 
--   DV flipper length and IV species and sex
+- DV flipper length and IV species and sex
 
--   DV bill depth and IV species and sex
+- DV bill depth and IV species and sex
 
--   DV flipper length and IV species and sex and body weight
+- DV flipper length and IV species and sex and body weight
 
 When appropriate, do post-hoc analyses as well.
 

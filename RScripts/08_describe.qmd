@@ -4,9 +4,9 @@ Descriptive statistics are used to summarize and organize data in a manner that 
 
 ## Typical descriptives
 
--   *mean() / sd() / meansd()*
--   *median() / quantile() / median_quart()*
--   *table() / prop.table() / cat_desc_stats()*
+- *mean() / sd() / meansd()*
+- *median() / quantile() / median_quart()*
+- *table() / prop.table() / cat_desc_stats()*
 
 ## Reading in data
 
@@ -185,7 +185,8 @@ rawdata |>
 rawdata |>
   group_by(Sex) |>
   summarize(across(gaussvars$names,
-    .fns = ~ meansd(.x, range = T)
+    .fns = ~ meansd(.x, range = T,
+                    add_n = T, rangesep = " / ")
   )) |>
   pivot_longer(
     cols = -Sex,
@@ -258,16 +259,16 @@ Analyze the penguins data using summarize, functions can be any of mean/sd/media
 
 Describe species and sex with appropriate statistics as well.
 
--   1 function / 1 variable / no groups
+- 1 function / 1 variable / no groups
 
--   2 functions / 1 variable / no groups
+- 2 functions / 1 variable / no groups
 
--   2 functions / 1 variable / subgroup species
+- 2 functions / 1 variable / subgroup species
 
--   1 function / 4 variables / no groups
+- 1 function / 4 variables / no groups
 
--   1 function / 4 variables / subgroup species
+- 1 function / 4 variables / subgroup species
 
--   2 functions / 4 variables / no subgroups
+- 2 functions / 4 variables / no subgroups
 
--   2 functions / 4 variables / subgroup species
+- 2 functions / 4 variables / subgroup species

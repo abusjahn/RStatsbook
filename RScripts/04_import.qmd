@@ -86,17 +86,17 @@ Package readODS provides similar functionality for OpenOffice/LibreOffice files.
 
 Import from SPSS generic files is implemented in various packages:
 
--   foreign::read.spss is a more base approach,
+- foreign::read.spss is a more base approach,
 
-    -   on the positive side it has an option to read in value labels
+  - on the positive side it has an option to read in value labels
 
-    -   on the other hand it returns lists or data frames, so casting into tibble is advised
+  - on the other hand it returns lists or data frames, so casting into tibble is advised
 
--   haven::read_sav comes from tidyverse
+- haven::read_sav comes from tidyverse
 
-    -   variable- and value-labels are imported into attributes
+  - variable- and value-labels are imported into attributes
 
-    -   as_factor uses value labels
+  - as_factor uses value labels
 
 ```{r}
 import1 <- read.spss(

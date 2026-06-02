@@ -29,6 +29,11 @@ cor(rawdata$`Weight (kg)`, rawdata$`Size (cm)`)
 cor(rawdata |> select(contains("Mri")),
   use = "pairwise.complete.obs"
 )
+cor(rawdata |> select(contains("Mri")),
+  use = "pairwise.complete.obs",
+  method = "spearman"
+)
+corrr::correlate(rawdata |> select(contains("Mri")))
 ```
 
 Significance of correlations can be tested:

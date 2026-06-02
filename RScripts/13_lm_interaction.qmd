@@ -276,7 +276,7 @@ Anova(lmout, type = 3) |>
   mutate(p.value = formatP(p.value, ndigits = 3, mark = TRUE))
 summary(glht(
   model = lmout,
-  linfct = mcp(Treatment = "Tukey")
+  linfct = mcp(Agegroup = "Tukey")
 ))
 
 

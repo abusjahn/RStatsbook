@@ -63,6 +63,7 @@ rawplot +
 ## Scaling
 
 To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame.
+The 'real' scaling will happen later after splitting into training and test data.
 
 ### Center + scale (z-score normalization)
 
@@ -139,7 +140,7 @@ rawdata |>
 ### Definition of predictor variables (IV)
 
 ```{r}
-predvars_std <- ColSeeker(namepattern = "_norm")
+predvars <- ColSeeker(namepattern = "_")
 ```
 
 ### Data splitting
@@ -164,8 +165,28 @@ For the training data, a model is created and used to (re-)predict the species o
 ```{r}
 knn_recipe <- recipe(rawdata) |>
   update_role(species, new_role = "outcome") |>
-  update_role(all_of(predvars_std$names), new_role = "predictor")
+  update_role(all_of(predvars$names), new_role = "predictor") |> 
+  step_normalize()
+```
+If you want to see / analyze / visualize the preprocessd data, you can bake the data like this:
+```{r}
+# View preprocessed training data (new_data = NULL returns the training set)
+rec_normalized |> 
+  prep() |> 
+  bake(new_data = NULL) |> 
+  summarize(across(everything(),
+                   ~meansd(.x,roundDig = 5)))
 
+# Apply the same learned normalization to test data
+rec_normalized |> 
+  prep() |> 
+  bake(new_data = testdata) |> 
+  summarize(across(everything(),
+                   ~meansd(.x,roundDig = 5)))
+```
+
+
+```{r}
 knn_spec <- nearest_neighbor(neighbors = 5) |>
   set_engine("kknn") |>
   set_mode("classification")

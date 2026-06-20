@@ -63,7 +63,7 @@ ggpairs(
     species, sex,
     predvars$names
   ) |>
-    rename_with(~ str_replace(.x, "(.+)_(.+)_.+", "\\1 \\2") |>
+    rename_with(\(x) str_replace(x, "(.+)_(.+)_.+", "\\1 \\2") |>
       str_wrap(8)),
   aes(color = species, alpha = .5)
 )
@@ -386,7 +386,7 @@ cortestR(decathlon |> select(1:10),
 #| fig_width: 6
 #| fig.height: 10
 ggpairs(decathlon |> select(1:10) |>
-  rename_with(~ str_replace(.x, "\\.", " ") |>
+  rename_with(\(x) str_replace(x, "\\.", " ") |>
     str_wrap(8)))
 ```
 

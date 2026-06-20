@@ -136,7 +136,7 @@ summarise(
   rawdata,
   across(
     contains("growth"),
-    ~ meansd(.x, roundDig = 4)
+    \(x) meansd(x, roundDig = 4)
   )
 )
 
@@ -144,7 +144,7 @@ summarise(
   rawdata,
   across(
     contains("growth"),
-    ~ meanse(.x, roundDig = 4)
+    \(x) meanse(x, roundDig = 4)
   )
 )
 

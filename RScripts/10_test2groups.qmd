@@ -255,7 +255,7 @@ rawdata |>
     dep_vars = factvars$names[-1],
     indep_var = groupvar, spacer = " "
   ) |>
-  rename_with(~ str_remove(.x, "Testmedication ")) |>
+  rename_with(\(x) str_remove(x, "Testmedication ")) |>
   rename(`Total sample` = desc_all) |>
   flextable() |>
   align(~ p == " ", j = 1, align = "center") |>

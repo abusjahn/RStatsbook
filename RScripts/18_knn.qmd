@@ -62,8 +62,7 @@ rawplot +
 
 ## Scaling
 
-To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame.
-The 'real' scaling will happen later after splitting into training and test data.
+To avoid the effect of different scales / ranges of the variables, it is desirable to scale the variables. Depending on the distribution of the independent / predictor variables, there are a number of approaches to make center and spread/range of the data comparable. Here use functions from the `recipes` package from tidymodels. To compare the scaled data to the original, we'll keep the original data in the data frame. The 'real' scaling will happen later after splitting into training and test data.
 
 ### Center + scale (z-score normalization)
 
@@ -79,7 +78,7 @@ rec_normalized <- recipe(model_formula, data = rawdata) |>
 penguins_normalized <- rec_normalized |>
   prep() |>
   bake(new_data = rawdata) |>
-  rename_with(~ paste0(.x, "_norm"))
+  rename_with(\(x) paste0(x, "_norm"))
 ```
 
 ### Range transformation
@@ -91,7 +90,7 @@ rec_ranged <- recipe(model_formula, data = rawdata) |>
 penguins_ranged <- rec_ranged |>
   prep() |>
   bake(new_data = rawdata) |>
-  rename_with(~ paste0(.x, "_range"))
+  rename_with(\(x) paste0(x, "_range"))
 ```
 
 ### Percentile transformation
@@ -103,7 +102,7 @@ rec_quantiled <- recipe(model_formula, data = rawdata) |>
 penguins_quantiled <- rec_quantiled |>
   prep() |>
   bake(new_data = rawdata) |>
-  rename_with(~ paste0(.x, "_perc"))
+  rename_with(\(x) paste0(x, "_perc"))
 ```
 
 ### Visual comparison of the scaled data
@@ -168,23 +167,24 @@ knn_recipe <- recipe(rawdata) |>
   update_role(all_of(predvars$names), new_role = "predictor") |> 
   step_normalize()
 ```
+
 If you want to see / analyze / visualize the preprocessd data, you can bake the data like this:
+
 ```{r}
 # View preprocessed training data (new_data = NULL returns the training set)
 rec_normalized |> 
   prep() |> 
   bake(new_data = NULL) |> 
   summarize(across(everything(),
-                   ~meansd(.x,roundDig = 5)))
+                   \(x) meansd(x, roundDig = 5)))
 
 # Apply the same learned normalization to test data
 rec_normalized |> 
   prep() |> 
   bake(new_data = testdata) |> 
   summarize(across(everything(),
-                   ~meansd(.x,roundDig = 5)))
+                   \(x) meansd(x, roundDig = 5)))
 ```
-
 
 ```{r}
 knn_spec <- nearest_neighbor(neighbors = 5) |>
@@ -210,7 +210,7 @@ predictions <- knn_fit |>
   predict(new_data = testdata)
 prob_preds <- knn_fit |>
   predict(new_data = testdata, type = "prob") |>
-  rename_with(~ str_remove(.x, "^.pred_"))
+  rename_with(\(x) str_remove(x, "^.pred_"))
 # Combine with original data to check accuracy
 test_results <- testdata |>
   select(species) |>
@@ -275,7 +275,7 @@ predictions <- knn_fit2 |>
   predict(new_data = penguins_preped)
 prob_preds <- knn_fit2 |>
   predict(new_data = penguins_preped, type = "prob") |>
-  rename_with(~ str_remove(.x, "^.pred_"))
+  rename_with(\(x) str_remove(x, "^.pred_"))
 # Combine with original data to check accuracy
 all_results <- penguins_preped |>
   select(sex) |>

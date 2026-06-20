@@ -121,11 +121,27 @@ resulttable1 |>
 resulttable1 |>
   mutate(across(
     starts_with("p"),
-    ~ formatP(.x,
+    # ~ formatP(.x, ndigits = 4, mark = TRUE)
+    \(x) formatP(x,
       ndigits = 4,
       mark = TRUE
     )
   ))
+```
+
+Side note on anonymous functions:
+
+`mean_function <- function(x) mean(x, na.rm = TRUE)`\
+would create a function `mean_function` with argument `x`.
+
+`\()` is just a shorthand for the same thing\
+`\(x) mean(x, na.rm = TRUE)`\
+creates an unnamed / anonymous function. Anonymous functions let you define a quick, one-off transformation inline — without naming it. They're most useful inside across(), where you want to apply something to multiple columns at once.\
+`across()` iterates over selected columns and applies a function to each. When you just need mean or sum, you may pass the function directly. But when you need extra arguments, an anonymous function wraps it.\
+The `\(x)` form is now preferred over \~mean(.x,...) because it's plain R, works without loading purrr, and makes the argument explicit — which avoids confusion when functions have multiple arguments.
+
+```{r}
+
 ```
 
 Loop Version 2:
@@ -167,9 +183,9 @@ resulttable1a <-
     .cols = # where(is.numeric),
       all_of(numvars$names[-(1:4)]),
     .fns = list(
-      pKS = ~ ksnormal(.x) |>
+      pKS = \(x) ksnormal(x) |>
         formatP(mark = TRUE),
-      pSh = ~ shapiro.test(.x) |>
+      pSh = \(x) shapiro.test(x) |>
         pluck("p.value") |>
         formatP(mark = TRUE)
     )
@@ -197,7 +213,7 @@ resulttable2a <-
   #                                  1~"Verum")) |>
   group_by(Testmedication) |>
   summarize(across(all_of(numvars$names[-(1:4)]),
-    .fns = ~ ksnormal(.x, lillie = FALSE) |>
+    .fns = \(x) ksnormal(x, lillie = FALSE) |>
       formatP(mark = TRUE)
   )) |>
   pivot_longer(-Testmedication,
@@ -215,13 +231,13 @@ resulttable3 <-
   group_by(Testmedication) |>
   summarize(across(all_of(numvars$names[-(1:4)]),
     .fns = list(
-      Mean = ~ mean(.x, na.rm = TRUE) |>
+      Mean = \(x) mean(x, na.rm = TRUE) |>
         roundR(5),
-      Median = ~ median(.x, na.rm = TRUE) |>
+      Median = \(x) median(x, na.rm = TRUE) |>
         roundR(5),
-      pKS = ~ ksnormal(.x) |>
+      pKS = \(x) ksnormal(x) |>
         formatP(mark = TRUE),
-      pSh = ~ shapiro.test(.x) |>
+      pSh = \(x) shapiro.test(x) |>
         pluck("p.value") |>
         formatP(mark = TRUE)
     )
@@ -279,7 +295,7 @@ rawdata <- mutate(
   rawdata,
   across(
     all_of(factvars$names),
-    ~ factor(.x)
+    \(x) factor(x)
   )
 )
 ```

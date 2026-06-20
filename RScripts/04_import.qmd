@@ -29,7 +29,7 @@ View(Medtest_e)
 
 ```{r}
 rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |>
-  rename_with(.fn = ~ str_replace_all(.x,
+  rename_with(.fn = \(x) str_replace_all(x,
     pattern = "_",
     replacement = " "
   )) |>

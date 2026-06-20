@@ -150,14 +150,13 @@ rawdata |>
   # into the summarize function
   summarize(across(all_of(gaussvars$names), # which variables to analyse?
     .fns = list( # which functions to apply?
-      # ~ changes a function into a template
-      n = ~ n(),
-      # .x is the placeholder for the actual values
-      Mean = ~ mean(.x, na.rm = TRUE) |>
+      # \(x) defines an anonymous function; x is the argument (column values)
+      n = \(x) n(),
+      Mean = \(x) mean(x, na.rm = TRUE) |>
         roundR(textout = FALSE),
-      Median = ~ median(.x, na.rm = TRUE) |>
+      Median = \(x) median(x, na.rm = TRUE) |>
         roundR(textout = FALSE),
-      SD = ~ sd(.x, na.rm = TRUE) |>
+      SD = \(x) sd(x, na.rm = TRUE) |>
         roundR(textout = FALSE)
     )
   )) |>
@@ -185,7 +184,7 @@ rawdata |>
 rawdata |>
   group_by(Sex) |>
   summarize(across(gaussvars$names,
-    .fns = ~ meansd(.x, range = T,
+    .fns = \(x) meansd(x, range = T,
                     add_n = T, rangesep = " / ")
   )) |>
   pivot_longer(
@@ -200,12 +199,12 @@ rawdata |>
   group_by(Sex) |>
   summarize(across(gaussvars$names,
     .fns = list(
-      n = ~ n(),
-      Mean = ~ mean(.x, na.rm = TRUE) |>
+      n = \(x) n(),
+      Mean = \(x) mean(x, na.rm = TRUE) |>
         roundR(textout = F),
-      Median = ~ median(.x, na.rm = TRUE) |>
+      Median = \(x) median(x, na.rm = TRUE) |>
         roundR(textout = F),
-      SD = ~ sd(.x, na.rm = TRUE) |>
+      SD = \(x) sd(x, na.rm = TRUE) |>
         roundR(textout = F)
     )
   )) |>
@@ -236,8 +235,8 @@ compare2numvars(
 ) |>
   # select(-desc_all, -p) |>
   rename(overall = desc_all) |>
-  rename_with(.fn = ~ str_remove(.x, "Sex ")) |>
-  rename_with(.cols = "p", .fn = ~ paste(.x, "- value")) |>
+  rename_with(.fn = \(x) str_remove(x, "Sex ")) |>
+  rename_with(.cols = "p", .fn = \(x) paste(x, "- value")) |>
   flextable() |>
   set_table_properties(width = 1, layout = "autofit")
 

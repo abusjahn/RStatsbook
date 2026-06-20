@@ -269,7 +269,7 @@ ORreport <-
   mutate(
     across(
       -Predictor,
-      ~ roundR(.x, level = 3)
+      \(x) roundR(x, level = 3)
     ),
     `OR(CI)` = paste0(OR, " (", OR_low, " / ", OR_high, ")")
   ) |>

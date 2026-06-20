@@ -232,7 +232,7 @@ summary(resamps) |>
   pluck("Accuracy") |>
   as_tibble(rownames = "Model") |>
   mutate(across(-Model,
-    .fns = ~ round(.x, 3)
+    .fns = \(x) round(x, 3)
   )) |>
   flextable() |>
   set_table_properties(width = 1, layout = "autofit")

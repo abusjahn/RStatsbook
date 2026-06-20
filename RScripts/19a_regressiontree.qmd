@@ -156,7 +156,7 @@ See the top performing models
 tree_results |>
   show_best(metric = "accuracy") |>
   select(-.config, -.estimator) |>
-  mutate(across(where(is.numeric), ~ roundR(.x, 5, drop0 = TRUE))) |>
+  mutate(across(where(is.numeric), \(x) roundR(x, 5, drop0 = TRUE))) |>
   flextable()
 
 # Select the best parameters based on your preferred metric
@@ -212,7 +212,7 @@ final_fit <- final_workflow |>
 
 test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
-  rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
+  rename_with(\(x) str_remove(x, "^.pred_"), starts_with(".pred_"))
 ```
 
 ```{r}
@@ -240,7 +240,7 @@ ggplot(importance, aes(x = Variable, y = Importancescore)) +
 class-based metrics:
 
 | Metric | Function | Meaning |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Accuracy | accuracy() | The percentage of total predictions that were correct. Simple, but can be misleading if classes are imbalanced |
 | Kappa | kap() | Similar to accuracy, but accounts for the possibility of the agreement occurring by chance |
 | Sensitivity (Recall) | sens() | Out of all actual positives, how many did the model find? (True Positive Rate) |
@@ -251,7 +251,7 @@ class-based metrics:
 probability-based metrics:
 
 | Metric | Function | Meaning |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | ROC AUC | roc_auc() | Measures the model's ability to distinguish between classes across all possible thresholds |
 | PR AUC | pr_auc() | Area under the Precision-Recall curve. Preferred over ROC AUC when the "Positive" class is very rare |
 | Log Loss | mn_log_loss() | Measures how "close" the predicted probability is to the actual binary label (0 or 1). Heavily penalizes being "confidently wrong" |

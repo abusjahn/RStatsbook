@@ -103,7 +103,7 @@ mtcars |>
 mtcars |>
   summarize(across(
     .cols = c(mpg, disp),
-    .fns = ~ meansd(.x, add_n = TRUE, range = TRUE)
+    .fns = \(x) meansd(x, add_n = TRUE, range = TRUE)
   )) |>
   flextable() |>
   set_table_properties(width = .7, layout = "autofit")
@@ -111,7 +111,7 @@ mtcars |>
 # Variables in rows
 mtcars |>
   summarize(across(c(mpg, disp),
-    .fns = ~ meansd(.x, add_n = TRUE)
+    .fns = \(x) meansd(x, add_n = TRUE)
   )) |>
   pivot_longer(
     cols = everything(),
@@ -130,7 +130,7 @@ mtcars |>
   summarize(
     across(
       .cols = c(mpg, disp),
-      .fns = ~ meansd(.x, add_n = TRUE)
+      .fns = \(x) meansd(x, add_n = TRUE)
     ),
     .groups = "drop"
   ) |>
@@ -143,7 +143,7 @@ mtcars |>
   summarize(
     across(
       c(mpg, disp),
-      ~ meansd(.x, add_n = TRUE)
+      \(x) meansd(x, add_n = TRUE)
     ),
     .groups = "drop"
   ) |>
@@ -169,7 +169,7 @@ mtcars |>
   summarize(across(
     c(mpg, disp),
     .fns = list(
-      MeanSD = ~ meansd(.x,
+      MeanSD = \(x) meansd(x,
         add_n = TRUE
       ),
       MedianQuart = median_quart
@@ -184,7 +184,7 @@ mtcars |>
   summarize(across(
     c(mpg, disp),
     .fns = list(
-      MeanSD = ~ meansd(.x,
+      MeanSD = \(x) meansd(x,
         add_n = TRUE
       ),
       MedianQuart = median_quart
@@ -209,7 +209,7 @@ mtcars |>
     across(
       c(mpg, disp),
       .fns = list(
-        MeanSD = ~ meansd(.x,
+        MeanSD = \(x) meansd(x,
           add_n = TRUE
         ),
         MedianQuart = median_quart
@@ -227,7 +227,7 @@ mtcars |>
     across(
       c(mpg, disp),
       .fns = list(
-        MeanSD = ~ meansd(.x,
+        MeanSD = \(x) meansd(x,
           add_n = TRUE
         ),
         MedianQuart = median_quart
@@ -259,7 +259,7 @@ result_long <-
   summarize(across(
     c(mpg, disp),
     .fns = list(
-      MeanSD = ~ meansd(.x,
+      MeanSD = \(x) meansd(x,
         add_n = TRUE
       ),
       MedianQuart = median_quart

@@ -69,7 +69,7 @@ plan(sequential)
 rf_results |>
   show_best(metric = "accuracy") |>
   select(-.config, -.estimator) |>
-  mutate(across(where(is.numeric), ~ roundR(.x, 5, drop0 = TRUE))) |>
+  mutate(across(where(is.numeric), \(x) roundR(x, 5, drop0 = TRUE))) |>
   flextable()
 
 # Select the best parameters based on your preferred metric
@@ -115,7 +115,7 @@ final_fit |>
   vip::vip(geom = "col", aesthetics = list(fill = "midnightblue"))
 test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
-  rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
+  rename_with(\(x) str_remove(x, "^.pred_"), starts_with(".pred_"))
 ```
 
 ## Model evaluation

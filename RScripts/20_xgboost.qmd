@@ -180,7 +180,7 @@ final_fit <- final_workflow |>
 
 test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
-  rename_with(~ str_remove(.x, "^.pred_"), starts_with(".pred_"))
+  rename_with(\(x) str_remove(x, "^.pred_"), starts_with(".pred_"))
 ```
 
 ### Model evaluation

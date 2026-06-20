@@ -15,6 +15,7 @@ pacman::p_load(
   yardstick, # model performance
   xgboost,
   tidymodels,
+  ranger,
   vip,
   flextable,
   future.mirai
@@ -107,6 +108,8 @@ final_workflow <- rf_workflow |>
 # Fit to the entire dataset (or use test split)
 final_fit <- final_workflow |>
   fit(data = rawdata)
+final_out = extract_fit_engine(final_fit)
+
 final_fit |>
   extract_fit_parsnip() |>
   vip::vip(geom = "col", aesthetics = list(fill = "midnightblue"))
@@ -124,4 +127,6 @@ tidy_metrics(test_predicted,
   Adelie, Chinstrap, Gentoo
 ) |>
   flextable()
+
+CrossTable(test_predicted$class, test_predicted$species)
 ```

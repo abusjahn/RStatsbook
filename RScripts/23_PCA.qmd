@@ -295,7 +295,8 @@ pca_loadings |>
 
 ## base approach
 
-```{pca_out <- prcomp(rawdata |>}
+```{r}
+pca_out <- prcomp(rawdata |>
                     select(predvars$names),
                   center = T,scale. = T)
 summary(pca_out)

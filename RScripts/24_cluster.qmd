@@ -27,7 +27,6 @@ rawdata <- penguins |>
   na.omit()
 ```
 
-
 ```{r}
 predvars <- ColSeeker(namepattern = c("_mm", "_g"))
 
@@ -44,10 +43,9 @@ fviz_nbclust(rawdata |> select(predvars$names),
 )
 ```
 
-
 ```{r}
 kmeans_out <- kmeans(rawdata |> select(predvars$names),
-  centers = 3
+  centers = 3,iter.max = 100
 )
 
 rawdata <-
@@ -82,7 +80,7 @@ fviz_cluster(kmeans_out, rawdata |> select(predvars$names))
 sample(clue::cl_predict(kmeans_out), 10)
 
 kmeans_out6 <- kmeans(rawdata |> select(predvars$names),
-  centers = 6
+  centers = 6, iter.max = 100
 )
 
 rawdata <-
@@ -212,7 +210,6 @@ print(easycluster2)
 plot(easycluster2)
 ```
 
-
 ```{r}
 # 1. Model Specification
 kmeans_spec <- k_means(num_clusters = 3) |>
@@ -229,4 +226,3 @@ kmeans_wflow <- workflow() |>
 kmeans_fit <- kmeans_wflow |> fit(data = rawdata |>
   select(all_of(predvars$names)))
 ```
-

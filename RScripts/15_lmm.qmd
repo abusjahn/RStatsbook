@@ -6,11 +6,11 @@ Linear Mixed-Effects Models (LMMs) are statistical tools used to analyze data wh
 #| output: false
 #| message: false
 pacman::p_load(
-  conflicted, wrappedtools, car, broom,
-  multcomp, tidyverse, DescTools, haven,
+  conflicted, tidyverse, wrappedtools, here, 
+  car, broom, multcomp, DescTools, haven,
   ggbeeswarm,
   lme4, nlme, merTools,
-  easystats, patchwork, here
+  easystats, patchwork
 )
 
 conflicts_prefer(
@@ -245,7 +245,7 @@ p1 / p2 + plot_layout(guides = "collect")
 
 This time, the Passage-related lines have individual intercepts AND slopes, indicating that the treatment effects are not exactly identical within the passages.
 
-# Exercise:
+## Exercise:
 
 With the penguin data, build random intercept and random slope models with bill depth as dependent and weight as independent variable. Treat species (and possibly sex) as the random effects, in which intercept / slope are nested.
 

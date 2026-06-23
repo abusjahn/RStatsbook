@@ -1,15 +1,16 @@
-# *Interaction in linear models*
+# Interaction in linear models
 
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted, tidyverse, car, multcomp, wrappedtools, broom)
+pacman::p_load(conflicted, tidyverse, wrappedtools, 
+               car, multcomp, broom)
 conflicts_prefer(dplyr::select, dplyr::filter)
 ```
 
 *For a better understanding, data with defined effect size and interactions will be simulated and analyzed.*
 
-## *No age effect, no treatment effect, interaction treatment\*agegroup*
+## No age effect, no treatment effect, interaction treatment with agegroup
 
 ```{r}
 set.seed(101)
@@ -59,7 +60,7 @@ summary(glht(
 
 \newpage
 
-## *Age effect, no treatment effect, interaction treatment\*agegroup*
+## Age effect, no treatment effect, interaction treatment with agegroup
 
 ```{r}
 set.seed(1010)
@@ -138,7 +139,7 @@ summary(glht(
 
 \newpage
 
-## *Age effect, treatment effect, interaction treatment\*agegroup*
+## Age effect, treatment effect, interaction treatment with agegroup
 
 ```{r}
 set.seed(101)
@@ -235,7 +236,7 @@ tidy(lmout_add) |>
   select(1:2)
 ```
 
-## *Interaction in regression-like lm*
+## Interaction in regression-like lm
 
 ```{r}
 set.seed(1111)
@@ -284,7 +285,7 @@ summary(glht(
 
 \newpage
 
-## *How to specify interaction in multivariable models*
+## How to specify interaction in multivariable models
 
 ```{r}
 # all possible interactions

@@ -2,9 +2,9 @@
 
 ```{r}
 pacman::p_load(
-  conflicted, plotrix, tidyverse, wrappedtools,
+  conflicted, tidyverse, wrappedtools, here,
   coin, ggsignif, patchwork, ggbeeswarm,
-  flextable, here, corrr
+  flextable, corrr
 )
 load(here("data/bookdata1.RData"))
 ```

@@ -4,10 +4,9 @@ Generalized linear models will be introduced using logistic regression as an exa
 
 ```{r}
 pacman::p_load(
-  car, # Anova()
-  wrappedtools, tidyverse, ggbeeswarm,
-  rpart, rpart.plot,
-  pROC # roc() ggroc()
+  conflicted, tidyverse, wrappedtools, here, flextable,
+  car, ggbeeswarm,
+  pROC, rpart, rpart.plot
 )
 ```
 
@@ -50,48 +49,101 @@ plotdata |>
 
 ## Data preparation
 
-Before the analysis, the data set is cleaned and prepared for the analysis. The age variable is transformed into pentayears, and the parity variable is lumped into two categories. Education is reversed and transformed into a factor.
+Before the analysis, the data set is cleaned and prepared for the analysis. Variables with 0 / 1 are coded as factor No / Yes, variable practice_problems_solved is lumped into three categories. 
 
 ```{r}
-rawdata <- infert |>
-  as_tibble() |>
-  select(-contains("stratum"))
+# rawdata <- infert |>
+#   as_tibble() |>
+#   select(-contains("stratum"))
+rawdata <- 
+  read_csv(here("data/python_learning_exam_performance.csv"))
 head(rawdata)
 ```
 
 ```{r data_cleaning}
-rawdata$age - rawdata$age %% 5
-rawdata$age / 5
-table(rawdata$parity)
-rawdata <- rawdata |>
-  mutate(
-    case = factor(case),
-    induced_f = factor(induced,
-      levels = c("0", "1", "2"),
-      labels = (c("none", "one", "two or more"))
-    ),
-    spontaneous_f = factor(spontaneous),
-    `age [pentayears]` = age / 5,
-    education = forcats::fct_rev(education),
-    parity_grp = forcats::fct_lump_n(as.character(parity),
-      n = 2, other_level = ">2"
-    ) |>
-       fct_rev()
+rawdata <- 
+  mutate(rawdata,
+         across(where(is.character), factor),
+         prior_programming_experience = 
+           factor(prior_programming_experience,
+                  levels = c("None", "Beginner", "Intermediate", "Advanced")),
+         across(where( \(x) is.numeric(x) & all(x %in% 0:1)),
+                \(x) factor(x, levels = c(0,1), labels = c("No", "Yes"))),
+         practice_problems_solved = 
+           cut(practice_problems_solved,
+               breaks = c(0, 55, 65, Inf),
+               labels = c("few", "average", "many")),
   )
 ```
 
 \newpage
 
-## Build model
-
-The model is built using glm() and the output is extracted and transformed. The model is tested using Anova() and summary(). The results are then prepared for plotting.
+## Exploration
 
 ```{r}
+plot_data <- rawdata |> 
+  count(prior_programming_experience, passed_exam) |> 
+  group_by(prior_programming_experience) |> 
+  mutate(
+    proportion = n / sum(n),
+    odds = proportion[passed_exam == "Yes"] / proportion[passed_exam == "No"],
+    odds_label = paste0("Odds:\n", round(odds, 2))
+  ) |> 
+  ungroup()
+rawdata |> 
+  ggplot(aes(prior_programming_experience, fill = fct_rev(passed_exam))) +
+  geom_bar(position = "fill") +
+  geom_label(
+    data = plot_data |> distinct(prior_programming_experience, odds_label),
+    aes(x = prior_programming_experience, y = 0.02, label = odds_label),
+    inherit.aes = FALSE,
+    vjust = 0,
+    fontface = "bold"
+  ) +
+  scale_y_continuous("Frequency", labels = scales::percent) +
+  scale_fill_manual("Exam",
+                    values = c("lightgreen", "salmon"),
+                    labels = c("passed", "not passed"))
+```
+  
+```{r}
+rawdata |> 
+  ggplot(aes(hours_spent_learning_per_week, 
+             fill = fct_rev(passed_exam))) +
+  geom_histogram(position = "fill", binwidth = 2, 
+                 center = 1, closed = "left") +
+  scale_y_continuous("Frequency", labels = scales::percent) +
+  scale_x_continuous(breaks = seq(0,20,2)) +
+  scale_fill_manual("Exam",
+                    values = c("lightgreen", "salmon"),
+                    labels = c("passed", "not passed"))
+rawdata |> 
+  ggplot(aes(age, fill = fct_rev(passed_exam))) +
+  geom_histogram(position = "fill", binwidth = 5, 
+                 center = 1, closed = "left") +
+  scale_y_continuous("Frequency", labels = scales::percent) +
+  # scale_x_continuous(breaks = seq(0,20,2)) +
+  scale_fill_manual("Exam",
+                    values = c("lightgreen", "salmon"),
+                    labels = c("passed", "not passed"))
+```
+
+The probability of passing the exam is going up with more experience and more learning hours, as reflected in the odds of passing. Age does not seem to have a significant effect.  
+  
+## Build model
+
+The model is built using `glm()` and the output is extracted and transformed. The model is tested using `Anova()` and `summary()`. The results are then prepared for plotting.
+
+```{r}
+pred_vars <- ColSeeker(namepattern = ".", 
+                       exclude = c("_id", "exam", 
+                                   "kaggle", "country"))
+glm_formula <- reformulate(pred_vars$names, response = "passed_exam")
 logreg_out <-
   glm(
-    case ~ `age [pentayears]` + education + parity_grp +
-      induced_f + spontaneous_f,
-    family = binomial(), data = rawdata
+    # case ~ `age [pentayears]` + education + parity_grp +
+    #   induced_f + spontaneous_f,
+    glm_formula, family = binomial(), data = rawdata
   )
 logreg_out
 
@@ -115,39 +167,46 @@ sum_out <- broom::tidy(logreg_out)
 OR_plotdata <- tibble(
   Predictor = names(ORs)[-1] |>
     # make names nicer
-    str_replace("_", " ") |>
+    str_replace_all("_", " ") |>
     str_replace_all(c(
-      "(grp)(.)" = "\\1: \\2",
-      "(f)(.)" = "\\1: \\2",
-      "(n)(\\d)" = "\\1: \\2",
-      "`" = ""
+      "([[:lower:]])([[:upper:]])" = "\\1: \\2",
+      "`" = "",
+      "(.)(yes)" = "\\1: \\2",
+      "(solved)(.+)" = "\\1: \\2"
     )) |>
-    str_to_title(),
+    str_to_title() |> 
+    fct_inorder(),
   OR = ORs[-1],
   CI_low = CIs[-1, 1],
   CI_high = CIs[-1, 2],
   p = sum_out$p.value[-1],
   Significance = markSign(p),
-  Label = paste(Predictor, Significance)
+  Label = paste(Predictor, Significance) |> 
+    fct_inorder()
 )
 ```
 
-## create forest plot
+## Create forest plot
 
 ```{r}
-baseplot <-
   ggplot(OR_plotdata, aes(x = Label, y = OR)) +
   geom_pointrange(aes(ymin = CI_low, ymax = CI_high)) +
   geom_hline(yintercept = 1, linewidth = .5, linetype = 2) +
-  coord_flip()
-baseplot
-baseplot +
+  coord_flip() +
+  scale_y_continuous(limits = c(0.1, 1.5 * 10^4)) +
+  xlab(NULL)
+
+ggplot(OR_plotdata, aes(x = Predictor, y = OR)) +
+  geom_pointrange(aes(ymin = CI_low, ymax = CI_high)) +
+  geom_hline(yintercept = 1, linewidth = .5, linetype = 2) +
+  coord_flip() +
   scale_y_log10(
     breaks = logrange_1,
-    minor_breaks = logrange_123456789
-  ) +
-  geom_text(aes(label = Significance), vjust = 1.5, color = "red") +
-  ggtitle("OddsRatios shown on log-scale") +
+    minor_breaks = logrange_123456789,
+    limits = c(0.1, 2*10^4),
+    labels = prettyNum) +
+  geom_text(aes(label = Significance), vjust = 1.25, color = "red") +
+  ggtitle("OddsRatios for passing python exam\nshown on log-scale") +
   xlab(NULL)
 ```
 
@@ -158,7 +217,7 @@ rawdata$pGLM <-
   predict(logreg_out, type = "response") # predict probability 0-1
 # run ROC for cutoff
 roc_out <- roc(
-  response = rawdata$case,
+  response = rawdata$passed_exam,
   predictor = rawdata$pGLM
 )
 youden <- pROC::coords(roc_out,
@@ -178,13 +237,13 @@ tempdata <-
   mutate(
     `prediction` =
       case_when(
-        case == "1" &
+        passed_exam == "Yes" &
           pGLM < youden$threshold ~
           "false negative",
-        case == "0" &
+        passed_exam == "No" &
           pGLM >= youden$threshold
         ~ "false positive",
-        case == "1" & pGLM >= youden$threshold ~
+        passed_exam == "Yes" & pGLM >= youden$threshold ~
           "correct positive",
         .default = "correct negative"
       )
@@ -198,36 +257,39 @@ rawdata |>
   mutate(
     `prediction quality` =
       case_when(
-        case == "1" &
+        passed_exam == "Yes" &
           pGLM < youden$threshold ~
           "false negative",
-        case == "0" &
+        passed_exam == "No" &
           pGLM >= youden$threshold
         ~ "false positive",
         .default = "correct"
       )
   ) |>
-  ggplot(aes(case, pGLM)) +
+  ggplot(aes(passed_exam, pGLM)) +
   geom_boxplot(outlier.alpha = 0) +
   scale_y_continuous(breaks = seq(0, 1, .1)) +
   geom_beeswarm(
-    alpha = .75,
+    alpha = .05, cex = .075,
     aes(color = `prediction quality`)
   ) +
-  scale_color_manual(values = c("seagreen", "firebrick", "magenta")) +
+  scale_color_manual(values = c("seagreen", "firebrick", "magenta"),
+                     ) +
+  guides(
+    color = guide_legend(override.aes = list(alpha = .8))) +
   geom_hline(
-    yintercept = c(.35, youden$threshold, .5),
+    yintercept = c(youden$threshold, .5),
     color = "red",
-    linetype = 2:4
+    linetype = 3:4
   ) +
   annotate(
     geom = "label",
-    x = 1, y = youden$threshold,
+    x = 1.5, y = youden$threshold,
     label = paste(
       "Youden-cutoff:",
       roundR(youden$threshold)
     ),
-    hjust = 1.2, vjust = 0.25
+    hjust = .5, vjust = 0.25
   ) +
   theme(legend.position = "bottom") +
   labs(
@@ -240,24 +302,6 @@ rawdata |>
 ```
 
 ```{r}
-# ORhuman <-
-# tibble(
-#   Predictor = names(ORs),
-#   OR = ORs,
-#   OR_low = CIs[,1],
-#   OR_high = CIs[,2]) |>
-#   rowwise() |>
-#   mutate(across(-Predictor,
-#                 ~roundR(.x,level = 3)),
-#          `OR(CI)` = paste0(OR," (",OR_low," / ",OR_high,")")) |>
-#   ungroup() |>
-#   pull(`OR(CI)`)
-
-# ORhuman <-
-#   paste0(map_chr(ORs,roundR),' (',
-#          apply(CIs,MARGIN = 1,
-#                FUN=function(x){
-#                  paste(roundR(x),collapse=' / ')}), ')')
 ORreport <-
   tibble(
     Predictor = names(ORs),
@@ -275,50 +319,27 @@ ORreport <-
   ) |>
   ungroup()
 
-#
-#   tibble(Predictor = rownames(CIs)[-1],
-#                    OR = ORs[-1],
-#                    low = CIs[-1,1],
-#                    high = CIs[-1,2],
-#                    `OR (CI95)` = NA)
-# ORrounded <- apply(ORreport[,2:4],MARGIN = 1,roundR)
-# ORreport$`OR (CI95)` <-
-#   paste0(ORrounded[1,],' (',ORrounded[2,],'/',
-#          ORrounded[3,],')')
-#
 ORreport |>
+  slice(-1) |> 
   flextable::flextable() |>
   flextable::set_table_properties(width = 1, layout = "autofit")
 cat("&nbsp;\n\n")
 ```
 
-```{r}
-rawdata |>
-  filter(spontaneous_f != "0") |>
-  ggplot(aes(x = age, fill = case)) +
-  geom_histogram(position = "fill") +
-  scale_y_continuous(labels = scales::percent) #+
-# facet_grid(rows = vars(spontaneous_f))
-```
-
 ## Regression tree as alternative to glm
 
 ```{r}
-cn()
-predvars <- ColSeeker(
-  namepattern =
-    c("age$", "edu", "_grp", "_f")
-)
-rtformula <- paste(
-  "case~",
-  paste(predvars$bticked, collapse = "+")
-)
-regtree_out <- rpart(rtformula,
-  minsplit = 5, cp = .001,
+#| fig.height: 6
+regtree_out <- rpart(glm_formula,
+  minsplit = 20, cp = .001,
   data = rawdata
 )
-rpart.plot(regtree_out, type = 2, tweak = 2.0, varlen = 4, faclen = 5, leaf.round = 0)
+rpart.plot(regtree_out, type = 2, tweak = 2.0, 
+           varlen = 10, faclen = 5, leaf.round = 0)
+```
 
+
+```{r}
 importance <-
   as_tibble(regtree_out$variable.importance,
     rownames = "Predictor"
@@ -341,13 +362,13 @@ rawdata$pRT <- predict(regtree_out)[, 2]
 
 # pROC
 roc_out_rt <- roc(
-  response = rawdata$case,
+  response = rawdata$passed_exam,
   predictor = rawdata$pRT
 )
 youden <- pROC::coords(roc_out_rt,
   x = "best",
-  best.method = "youden"
-)
+  best.method = "youden")
+
 youden
 ggroc(roc_out_rt, legacy.axes = T) +
   geom_abline(slope = 1, intercept = 0) +
@@ -359,59 +380,12 @@ ggroc(roc_out_rt, legacy.axes = T) +
 ggroc(list(RTbased = roc_out_rt, GLM_based = roc_out), legacy.axes = T) +
   geom_abline(slope = 1, intercept = 0)
 
-ggplot(rawdata, aes(x = case, y = pRT)) +
+ggplot(rawdata, aes(x = passed_exam, y = pRT)) +
   geom_boxplot(coef = 3) +
   scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1)) +
   geom_hline(
     yintercept = c(.5, youden$threshold),
     color = c("red", "blue"), linetype = 2
   ) +
-  ggbeeswarm::geom_beeswarm()
-ggplot(rawdata, aes(pGLM, pRT, color = case, shape = case)) +
-  geom_point(size = 2) +
-  scale_color_manual(values = c("darkgreen", "red")) +
-  scale_shape_manual(values = c(0, 6)) +
-  stat_summary(fun.data = mean_cl_boot)
-ggplot(rawdata, aes(x = case, y = pRT)) +
-  geom_violin() +
-  scale_y_continuous(breaks = seq(from = 0, to = 1, by = .1)) +
-  geom_hline(yintercept = .5, color = "red")
-```
-
-## Jackknife
-
-```{r}
-rawdata$pRT_JK <- NA_real_
-rawdata$pGLM_JK <- NA_real_
-for (pat_i in 1:nrow(rawdata)) {
-  tempdata <- rawdata[-pat_i, ]
-  regtree_out_tmp <- rpart(rtformula,
-    minsplit = 5,
-    cp = .001, data = tempdata
-  )
-  rawdata$pRT_JK[pat_i] <-
-    predict(regtree_out_tmp,
-      newdata = rawdata[pat_i, ]
-    )[, 2]
-
-  glm_out_tmp <- glm(rtformula,
-    family = binomial(), data = tempdata
-  )
-  rawdata$pGLM_JK[pat_i] <-
-    predict(glm_out_tmp,
-      newdata = rawdata[pat_i, ],
-      type = "response"
-    )
-}
-ggplot(rawdata, aes(case, pRT_JK)) +
-  geom_boxplot()
-rawdata |>
-  dplyr::select(case, pGLM, pGLM_JK, pRT_JK, pRT) |>
-  pivot_longer(
-    cols = c(pGLM, pGLM_JK, pRT_JK, pRT),
-    names_to = "Analysis",
-    values_to = "pAffected"
-  ) |>
-  ggplot(aes(case, pAffected, fill = Analysis)) +
-  geom_boxplot()
+  ggbeeswarm::geom_beeswarm(alpha = .05, cex = 0.075)
 ```

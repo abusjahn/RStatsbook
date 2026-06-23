@@ -11,11 +11,12 @@ All packages necessary will be invoked by p_load. Packages with only a single fu
 #| output: false
 #| message: false
 pacman::p_load(
-  conflicted, wrappedtools, car, nlme, broom, flextable,
-  multcomp, tidyverse, foreign, DescTools, # ez,
+  conflicted, tidyverse, wrappedtools, here, 
+  car, nlme, broom, flextable,
+  multcomp,  foreign, DescTools, 
   ggbeeswarm,
   lme4, nlme, merTools,
-  easystats, patchwork, here
+  easystats, patchwork
 ) 
 # pacman::p_unload(DescTools, foreign)
 # conflict_scout()
@@ -24,7 +25,6 @@ conflicts_prefer(
   dplyr::filter,
   modelbased::standardize
 )
-base_dir <- here::here()
 ```
 
 ## Import / Preparation

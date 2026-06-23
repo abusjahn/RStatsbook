@@ -2,8 +2,8 @@
 
 ```{r}
 pacman::p_load(
-  conflicted, tidyverse, wrappedtools,
-  readxl, readODS, foreign, haven, here
+  conflicted, tidyverse, wrappedtools, here,
+  readxl, readODS, foreign, haven
 )
 ```
 

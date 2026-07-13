@@ -79,8 +79,8 @@ temptibble <- tibble(
 colnames(temptibble)
 rename_with(
   .data = temptibble,
-  .fn = ~ str_replace_all(
-    .x,
+  .fn = \(x) str_replace_all(
+    x,
     c(
       "CAP" = "CUP",
       "_(cm)" = " [\\1]",

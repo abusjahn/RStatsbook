@@ -4,7 +4,7 @@ project:
 book:
   title: "RStatsbook"
   author: "Andreas Busjahn"
-  date: "2026-04-17"
+  date: "2026-07-13"
   page-footer:
     left: |
       R Intro Scripts by Andreas Busjahn
@@ -60,6 +60,8 @@ format:
     monofont: "Cascadia Mono"
     monofontoptions:
       - Scale=0.75
+    template-partials:
+      - passoptions.latex
     include-in-header:
       text: |
         \usepackage{fvextra}

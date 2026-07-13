@@ -1,6 +1,6 @@
 # Logistic regression
 
-Generalized linear models will be introduced using logistic regression as an example. The data set infert contains information were the outcome follows a binomial distribution.
+Generalized linear models will be introduced using logistic regression as an example. The data are coming from a simulation on variables influencing success or failure in a [python exam](https://www.kaggle.com/datasets/emonsharkar/python-learning-and-exam-performance-dataset) where the outcome follows a binomial distribution.
 
 ```{r}
 pacman::p_load(
@@ -49,7 +49,7 @@ plotdata |>
 
 ## Data preparation
 
-Before the analysis, the data set is cleaned and prepared for the analysis. Variables with 0 / 1 are coded as factor No / Yes, variable practice_problems_solved is lumped into three categories. 
+Before the analysis, the data set is cleaned and prepared for the analysis. Variables with 0 / 1 are coded as factor No / Yes, variable practice_problems_solved is lumped into three categories.
 
 ```{r}
 # rawdata <- infert |>
@@ -105,7 +105,7 @@ rawdata |>
                     values = c("lightgreen", "salmon"),
                     labels = c("passed", "not passed"))
 ```
-  
+
 ```{r}
 rawdata |> 
   ggplot(aes(hours_spent_learning_per_week, 
@@ -128,8 +128,8 @@ rawdata |>
                     labels = c("passed", "not passed"))
 ```
 
-The probability of passing the exam is going up with more experience and more learning hours, as reflected in the odds of passing. Age does not seem to have a significant effect.  
-  
+The probability of passing the exam is going up with more experience and more learning hours, as reflected in the odds of passing. Age does not seem to have a significant effect.
+
 ## Build model
 
 The model is built using `glm()` and the output is extracted and transformed. The model is tested using `Anova()` and `summary()`. The results are then prepared for plotting.
@@ -337,7 +337,6 @@ regtree_out <- rpart(glm_formula,
 rpart.plot(regtree_out, type = 2, tweak = 2.0, 
            varlen = 10, faclen = 5, leaf.round = 0)
 ```
-
 
 ```{r}
 importance <-

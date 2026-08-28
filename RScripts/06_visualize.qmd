@@ -15,7 +15,8 @@ pacman::p_load(
   wrappedtools,
   # emojifont,
   patchwork,
-  GGally
+  GGally,
+  ggprism
 )
 conflicts_prefer(
   dplyr::filter,
@@ -267,21 +268,43 @@ ggplot(mtcars, aes(wt)) +
 
 ## Exercise 1
 
-Vizualize the following:
+<!-- Vizualize the following: -->
 
-- count of sex within species
+<!-- - count of sex within species -->
 
-- boxplot+beeswarm for weight and species
+<!-- - boxplot+beeswarm for weight and species -->
 
-- boxplot+beeswarm weight for species AND sex
+<!-- - boxplot+beeswarm weight for species AND sex -->
 
-- scatterplot for flipper length vs. body mass
+<!-- - scatterplot for flipper length vs. body mass -->
 
-- add a regression line to that plot
+<!-- - add a regression line to that plot -->
 
-- do the same scatterplot and regression grouped by species and sex
+<!-- - do the same scatterplot and regression grouped by species and sex -->
 
-- optionally, define your own colors for species (scale or name or rgb)
+<!-- - optionally, define your own colors for species (scale or name or rgb) -->
+
+In this exercise, you will practice building layers and mapping aesthetics in ggplot2 using the penguins dataset.
+
+Note: In the real world, the questions stakeholders ask rarely map 1:1 to column names. Inspect the dataset first to find the right variables!
+
+Task A: Counts & Distributions Bar Chart: Visualize the total count of penguins broken down by sex within each species.
+
+Distribution (2 Variables): Create a hybrid plot combining a boxplot and a beeswarm plot (ggbeeswarm::geom_beeswarm()) to show how penguin weight is distributed across different species.
+
+Distribution (3 Variables): Expand the previous plot to show the weight distribution across both species and sex.
+
+Challenge: Pay attention to how the points sit on top of the boxplots. How can you map the aesthetics so that both variables remain visually distinct and readable?
+
+Task B: Relationships & Regression Basic Scatterplot: Create a scatterplot showing the relationship between a penguin's flipper length (x-axis) and its body mass (y-axis).
+
+Add a Trendline: Add a linear regression line to the scatterplot to visualize the overall trend.
+
+Subgroup Analysis: Modify the scatterplot and regression lines so the data is grouped and visualized by both species and sex without using facets.
+
+Challenge: You have two grouping variables but only one scatterplot. Combine different aesthetics creatively so the viewer can instantly distinguish between an Adélie male, an Adélie female, a Chinstrap male, etc., while keeping the trendlines readable.
+
+Task C: Styling (Optional Challenge) Custom Palette: Manually define your own color palette for the species using custom color names or hex codes.
 
 ## Combining and finetuning aesthetics
 
@@ -335,7 +358,7 @@ ggplot(diamonds, aes(carat, price, color = clarity)) +
 ggplot(diamonds, aes(carat, price, color = clarity)) +
   geom_point() +
   scale_x_log10(
-    breaks = logrange_15,
+    breaks = logrange_12357,
     minor_breaks = logrange_123456789
   ) +
   scale_y_log10(
@@ -364,7 +387,7 @@ p + geom_bar(position = "fill") +
   xlab("Clarity") +
   scale_y_continuous(
     name = "Frequency (%)",
-    breaks = seq(0, 1, .2), # steps
+    breaks = seq(from = 0, to = 1, by = .2), # steps
     labels = seq(0, 100, 20)
   )
 p + geom_bar(position = "fill") +
@@ -611,17 +634,18 @@ p <- round(
 )
 (plottemp <- ggplot(mtcars, aes(as.factor(am), mpg)) +
   geom_boxplot())
-plottemp + geom_signif(
-  comparisons = list(c(1, 2)),
-  # aes(y = 0),
-  textsize = rel(10), vjust = .0,
-  # y_position = max(mtcars$mpg+3),
-  # annotations = paste0("p = ", p),
-  annotations = markSign(p),
-  # annotations = p,
-  tip_length = .02
-) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, .1)))
+plottemp + 
+  geom_signif(
+    comparisons = list(c(1, 2)),
+    # aes(y = 0),
+    textsize = rel(10), vjust = .0,
+    # y_position = max(mtcars$mpg+3),
+    # annotations = paste0("p = ", p),
+    annotations = markSign(p),
+    # annotations = p,
+    tip_length = .02
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, .15)))
 
 plottemp + geom_signif(
   comparisons = list(1:2)
@@ -722,6 +746,8 @@ plottemp + theme_excel() +
   theme(axis.title.x = element_text(face = "bold", hjust = 0.95))
 plottemp + theme_minimal()
 plottemp + theme_void()
+
+plottemp+theme_prism()
 ## install from Github
 # devtools::install_github("jespermaag/gganatogram")
 # gganatogram::gganatogram(
@@ -760,7 +786,7 @@ p3 <- ggplot(mtcars) +
 
 (p1 | p2) /
   (p3 + guides(color = "none")) +
-  plot_annotation(tag_levels = "I") +
+  plot_annotation(tag_levels = "A") +
   plot_layout(guides = "collect")
 ```
 
@@ -783,7 +809,7 @@ for (group_i in c("am", "vs")) {
 }
 ```
 
-The function aes_string(), which expected a character representation instead of a variable name, is deprecated, but may still be suggested by chatbots
+The function aes_string(), which expected a character representation instead of a variable name, is deprecated, but may still be suggested by chat-bots
 
 [more facets...](https://www.data-imaginist.com/2019/a-flurry-of-facets/)
 
@@ -792,3 +818,5 @@ The function aes_string(), which expected a character representation instead of 
 ```{r}
 GGally::ggpairs(mtcars)
 ```
+
+[Colorblinder](https://github.com/clauswilke/colorblindr)

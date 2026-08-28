@@ -98,16 +98,15 @@ rename_with(
 ## Exercise
 
 ```{r}
-testset1 <- c(
+testset1 <- c("weight_mm", "height_cm", "age_yr", "temp_c")
+# replace _ with space
+# replace _ with space and add unit in brackets
+
+testset2 <- c(
   "Meier", "Mayer", "Maier", "Meyer", "Mayr", "Hans Meier",
   "Maya", "Mayor", "Faltermeyer", "Meierhoven"
 )
 # find all variations of the name "Meier" (not Maya or Mayor etc)
-
-testset2 <- c("weight_mm", "height_cm", "age_yr", "temp_c")
-# replace _ with space
-# replace _ with space and add unit in brackets
-
 
 testset3 <- c("1980_12_30", "13.04.2005", "2005/04/25", "24121990")
 # transform into YYYY-MM-DD

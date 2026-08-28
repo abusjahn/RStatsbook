@@ -263,6 +263,9 @@ lmOut_additive <- lm(Growth ~ Passage + Treatment, data = rawdata)
 Anova_out <- Anova(lmOut_additive, type = 2)
 Anova_out$`Pr(>F)`
 tidy(Anova_out)
+
+lmOut_univ <- lm(growthAdj ~ Treatment, data = rawdata)
+anova(lmOut_univ) |> tidy()
 # for comparison, here is the univariable model
 lmOut_uni <- lm(Growth ~ Treatment, data = rawdata)
 a_uni <- anova(lmOut_uni)
@@ -313,8 +316,8 @@ raw_out <- compare_n_numvars(rawdata,
 
 raw_out$results |>
   select(Variable, `p(ANOVA)` = multivar_p, contains("fn")) |>
-  rename_with(~ str_replace_all(
-    .x,
+  rename_with(\(x) str_replace_all(
+    x,
     c(
       " fn" = "",
       "Treatment " = ""
@@ -345,17 +348,23 @@ check_model(lmOut_interaction)
 
 ## Exercise
 
-In the penguin data, model relationship between
+In the penguin data as well as in the Adelies only, model relationship between
+
+1.  regression-like
 
 - DV flipper length and IV body weight
 
 - DV bill depth and IV body weight
+
+2.  anova-like
 
 - DV flipper length and IV species
 
 - DV flipper length and IV species and sex
 
 - DV bill depth and IV species and sex
+
+3.  combined
 
 - DV flipper length and IV species and sex and body weight
 

@@ -102,6 +102,7 @@ typeof(int_num)
 str(int_num)
 integer(length = 3)
 result <- 9^(1 / 2)
+class(result)
 result
 print(result)
 cat(result)
@@ -528,7 +529,7 @@ my1.Matrix <-
     )
   )
 print(my1.Matrix)
-data <- seq(from = 1, to = 200, by = 1) # 1:100
+data <- seq(from = 1, to = 100, by = 1) # 1:100
 nrow <- 20
 matrix(
   data = data,

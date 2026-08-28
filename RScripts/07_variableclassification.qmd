@@ -48,6 +48,24 @@ ks.test(
   )
 )
 
+ggplot(rawdata, aes(`Size (cm)`)) +
+  geom_density(fill = "darkorange") +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = 0,#mean(rawdata$`Size (cm)`),
+      sd = 1#sd(rawdata$`Size (cm)`)
+    ),
+    color = "darkgreen",
+    linewidth = 1.2
+  ) +
+  scale_x_continuous(
+    limits = c(
+      -3,#mean(rawdata$`Size (cm)`) - 3 * sd(rawdata$`Size (cm)`),
+      mean(rawdata$`Size (cm)`) + 3 * sd(rawdata$`Size (cm)`)
+    )
+  )
+
 
 ksnormal(rawdata$`Size (cm)`, lillie = FALSE)
 shapiro.test(rawdata$`Size (cm)`)
@@ -56,6 +74,50 @@ ggplot(rawdata, aes(x = `Size (cm)`)) +
   geom_density(fill = "pink")
 ggplot(rawdata, aes(x = `Size (cm)`, fill = Sex)) +
   geom_density(alpha = .4)
+
+ggplot(rawdata, aes(`Size (cm)`)) +
+  geom_density(aes(fill = Sex), alpha = .5) +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(rawdata |> 
+                    filter(Sex == "m") |> 
+                    pull(`Size (cm)`)),
+      sd = sd(rawdata |> 
+                filter(Sex == "m") |> 
+                pull(`Size (cm)`))
+    ),
+    color = "darkblue",
+    linewidth = 1.2
+  ) +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(rawdata |> 
+                    filter(Sex == "f") |> 
+                    pull(`Size (cm)`)),
+      sd = sd(rawdata |> 
+                filter(Sex == "f") |> 
+                pull(`Size (cm)`))
+    ),
+    color = "darkred",
+    linewidth = 1.2
+  ) +
+  scale_x_continuous(
+    limits = c(
+      mean(rawdata$`Size (cm)`) - 3 * sd(rawdata$`Size (cm)`),
+      mean(rawdata$`Size (cm)`) + 3 * sd(rawdata$`Size (cm)`)
+    )
+  )
+
+# More efficient: ggh4x::stat_theodensity() fits mean/sd per group
+# automatically (via fitdistrplus), so no manual filter()/pull() per group
+# and no hard-coded +/-3 SD limits needed.
+pacman::p_load(ggh4x)
+ggplot(rawdata, aes(`Size (cm)`, colour = Sex, fill = Sex)) +
+  geom_density(alpha = .5, colour = NA) +
+  stat_theodensity(distri = "norm", linewidth = 1.2)
+
 ```
 
 If severe group difference can be expected (case/control, sex ...), exploration and analyses should be done in subgroups.
@@ -115,14 +177,15 @@ head(resulttable1)
 resulttable1 |>
   mutate(
     pKS = formatP(pKS, ndigits = 5),
-    pSh = formatP(pSh, mark = T)
+    pSh = formatP(pSh, mark = TRUE)
   )
 
 resulttable1 |>
   mutate(across(
-    starts_with("p"),
-    # ~ formatP(.x, ndigits = 4, mark = TRUE)
-    \(x) formatP(x,
+    .cols = starts_with("p"),
+    # .fns = formatP
+    # .fns = ~ formatP(.x, ndigits = 4, mark = TRUE)
+    .fns = \(x) formatP(x,
       ndigits = 4,
       mark = TRUE
     )
@@ -191,7 +254,8 @@ resulttable1a <-
     )
   )) |>
   # change output structure to long form
-  pivot_longer(everything(),
+  pivot_longer(
+    cols = everything(),
     names_to = c("Variable", ".value"),
     names_sep = "_"
   )
@@ -216,7 +280,8 @@ resulttable2a <-
     .fns = \(x) ksnormal(x, lillie = FALSE) |>
       formatP(mark = TRUE)
   )) |>
-  pivot_longer(-Testmedication,
+  pivot_longer(
+    cols = -Testmedication,
     names_to = "Measure"
   ) |>
   pivot_wider(

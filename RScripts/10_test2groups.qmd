@@ -52,7 +52,7 @@ load(here("data/bookdata1.RData"))
 
 ```{r}
 ggplot(rawdata, aes(x = Sex, y = `Size (cm)`)) +
-  geom_beeswarm(size = 3) +
+  geom_beeswarm(size = 3, alpha = .5) +
   stat_summary(
     color = "red", size = 1.2, alpha = .7,
     fun.data = "mean_se", fun.args = list(mult = 2)

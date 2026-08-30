@@ -8,6 +8,7 @@ pacman::p_load(
   car, ggbeeswarm,
   pROC, rpart, rpart.plot
 )
+conflicts_prefer(dplyr::filter)
 ```
 
 ## Odds vs. probability
@@ -87,7 +88,7 @@ plot_data <- rawdata |>
   mutate(
     proportion = n / sum(n),
     odds = proportion[passed_exam == "Yes"] / proportion[passed_exam == "No"],
-    odds_label = paste0("Odds:\n", round(odds, 2))
+    odds_label = paste0("Odds:\n", round(odds, 3))
   ) |> 
   ungroup()
 rawdata |> 
@@ -133,6 +134,47 @@ The probability of passing the exam is going up with more experience and more le
 ## Build model
 
 The model is built using `glm()` and the output is extracted and transformed. The model is tested using `Anova()` and `summary()`. The results are then prepared for plotting.
+
+## Univariable model
+
+```{r}
+logreg_out_uni <-
+  glm(
+     passed_exam ~ prior_programming_experience,
+    family = binomial(), data = rawdata
+  )
+logreg_out_uni
+
+# extract/transform model parameters
+(ORs <- exp(logreg_out_uni$coefficients))
+(CIs <- exp(confint(logreg_out_uni)))
+
+counts_none <- rawdata |> 
+  filter(prior_programming_experience == "None") |> 
+  group_by(passed_exam) |> 
+  count()
+counts_beginner <- rawdata |> 
+  filter(prior_programming_experience == "Beginner") |> 
+  group_by(passed_exam) |> 
+  count()
+odds_none <- 
+  counts_none$n[2] / counts_none$n[1]
+odds_beginner <- 
+  counts_beginner$n[2] / counts_beginner$n[1]
+or_beginner <- 
+  odds_beginner / odds_none
+cat("OR Beginner from model:", ORs[2], "directly:", or_beginner,"\n")
+# test model
+(Anova_out_uni <- Anova(logreg_out_uni, type = 2) |>
+    broom::tidy() |>
+    mutate(p.value = formatP(p.value, ndigits = 5)))
+## test each OR
+#(sum_out <- summary(logreg_out))
+
+sum_out <- broom::tidy(logreg_out_uni)
+```
+
+## Multivariable model
 
 ```{r}
 pred_vars <- ColSeeker(namepattern = ".", 

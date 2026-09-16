@@ -70,7 +70,7 @@ norm_recipe <-
 
 ## Step 2: Defining the model using Parsnip package
 
-Here we will explore multiple machine learning approaches to implement in the work. This demonestrates the modularity of tidymodels and how practical it is to use it to test different ML models to decide the best model for your data.
+Here we will explore multiple machine learning approaches to implement in the work. This demonstrates the modularity of tidymodels and how practical it is to use it to test different ML models to decide the best model for your data.
 
 ### 1. Multinomial Regression (`multinom_reg`)
 
@@ -182,7 +182,7 @@ xgb_grid <- grid_space_filling(
   tree_depth(range = c(2, 12)), # Searches between 2 and 10
   trees(range = c(50, 200)),
   learn_rate(),
-  loss_reduction(range = c(0, 10)),
+  loss_reduction(),
   min_n(range = c(5, 20)),
   # finalize(sample_size(), rawdata),
   finalize(mtry(), rawdata),

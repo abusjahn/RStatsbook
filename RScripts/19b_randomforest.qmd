@@ -37,6 +37,7 @@ Random forrests are an ensemble method that builds multiple decision trees and a
 ## Modelling
 
 ```{r}
+set.seed(2026)
 rf_folds <- vfold_cv(rawdata, v = 5, strata = species, repeats = 5)
 predvars <- ColSeeker(namepattern = c("_"))
 rf_recipe <- recipe(rawdata) |>
@@ -61,22 +62,31 @@ rf_results <- rf_workflow |>
   tune_grid(
     resamples = rf_folds,
     grid = rf_grid,
-    metrics = metric_set(roc_auc, accuracy)
+    metrics = metric_set(roc_auc, accuracy, kap)
   )
 plan(sequential)
+```
 
-# See the top performing models
+
+## See the top performing models
+
+```{r}
 rf_results |>
-  show_best(metric = "accuracy") |>
+show_best(metric = "accuracy") |>
   select(-.config, -.estimator) |>
   mutate(across(where(is.numeric), \(x) roundR(x, 5, drop0 = TRUE))) |>
   flextable()
+```
 
-# Select the best parameters based on your preferred metric
+Select the best parameters based on your preferred metric.  
+  
+```{r}
 rf_best <- rf_results |>
   select_best(metric = "accuracy")
-
-# Visualize the tuning results
+```
+Visualize the tuning results  
+  
+```{rf_results |>}
 rf_results |>
   collect_metrics() |>
   ggplot(aes(x = mtry, y = mean)) +
@@ -100,19 +110,45 @@ rf_results |>
     labels = c("no", "yes")
   ) +
   theme_bw()
+```
 
+Fit to the entire dataset (or use test split / new data)
+```{r}
 # Update the workflow with those best parameters
 final_workflow <- rf_workflow |>
   finalize_workflow(rf_best)
 
-# Fit to the entire dataset (or use test split)
 final_fit <- final_workflow |>
   fit(data = rawdata)
-final_out = extract_fit_engine(final_fit)
+```
 
-final_fit |>
-  extract_fit_parsnip() |>
-  vip::vip(geom = "col", aesthetics = list(fill = "midnightblue"))
+## Variable importance
+```{r}
+final_out = extract_fit_engine(final_fit)
+tibble(
+  Predictor = names(importance(final_out)),
+  Importance = importance(final_out)) |> 
+  mutate(Predictor = fct_reorder(.f = Predictor,
+                                 .x = Importance)) |> 
+  ggplot(aes(Predictor, Importance)) +
+  geom_col(fill = "midnightblue", color = "black") +
+  coord_flip()
+
+# # Create an explainer for the workflow
+# explainer <- explain_tidymodels(
+#   model = final_fit,
+#   y = rawdata$species,
+#   data = rawdata,
+#   verbose = TRUE
+# )
+# 
+# # Compute loss-based variable importance
+# VI <- model_parts(explainer)
+# plot(VI)
+
+# final_fit |>
+#   extract_fit_parsnip() |>
+#   vip::vip(geom = "col", aesthetics = list(fill = "midnightblue"))
 test_predicted <- final_fit |>
   augment(new_data = rawdata) |>
   rename_with(\(x) str_remove(x, "^.pred_"), starts_with(".pred_"))

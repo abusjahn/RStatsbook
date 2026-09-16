@@ -139,7 +139,8 @@ rawdata |>
 ### Definition of predictor variables (IV)
 
 ```{r}
-predvars <- ColSeeker(namepattern = "_")
+predvars <- ColSeeker(namepattern = "_",
+                      exclude = "_.+_.+_")
 ```
 
 ### Data splitting

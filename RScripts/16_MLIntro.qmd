@@ -6,6 +6,8 @@
 
 [Tidy Modeling with R](https://www.tmwr.org/)
 
+[Tidy Models Cheat Sheets](https://www.tidymodels.org/cheatsheets/)
+
 ## structured vs. unstructured data
 
 ## supervised vs. unsupervised methods

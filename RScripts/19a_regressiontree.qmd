@@ -14,7 +14,8 @@ pacman::p_load(
   tidymodels,
   future.mirai,
   flextable,
-  ggbeeswarm
+  ggbeeswarm,
+  tictoc
 )
 
 # conflict_scout()
@@ -144,7 +145,7 @@ tree_results <- tree_workflow |>
   tune_grid(
     resamples = tree_folds,
     grid = tree_grid,
-    metrics = metric_set(roc_auc, accuracy)
+    metrics = metric_set(roc_auc, accuracy, kap)
   )
 tictoc::toc()
 plan(sequential)
@@ -154,7 +155,7 @@ See the top performing models
 
 ```{r}
 tree_results |>
-  show_best(metric = "accuracy") |>
+  show_best(metric = "kap") |>
   select(-.config, -.estimator) |>
   mutate(across(where(is.numeric), \(x) roundR(x, 5, drop0 = TRUE))) |>
   flextable()
@@ -216,14 +217,19 @@ test_predicted <- final_fit |>
 ```
 
 ```{r}
+#| fig.height: 5
 final_out = extract_fit_engine(final_fit)
 prp(final_out,
     type = 4,
     extra = 104,
     digits = 4,
+    cex = .5,
     fallen.leaves = TRUE
 )
+```
 
+
+```{r}
 importance <- tibble(
   Variable = names(final_out$variable.importance),
   Importancescore = final_out$variable.importance
@@ -240,7 +246,7 @@ ggplot(importance, aes(x = Variable, y = Importancescore)) +
 class-based metrics:
 
 | Metric | Function | Meaning |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | Accuracy | accuracy() | The percentage of total predictions that were correct. Simple, but can be misleading if classes are imbalanced |
 | Kappa | kap() | Similar to accuracy, but accounts for the possibility of the agreement occurring by chance |
 | Sensitivity (Recall) | sens() | Out of all actual positives, how many did the model find? (True Positive Rate) |
@@ -251,7 +257,7 @@ class-based metrics:
 probability-based metrics:
 
 | Metric | Function | Meaning |
-|----|----|----|
+|------------------------|------------------------|------------------------|
 | ROC AUC | roc_auc() | Measures the model's ability to distinguish between classes across all possible thresholds |
 | PR AUC | pr_auc() | Area under the Precision-Recall curve. Preferred over ROC AUC when the "Positive" class is very rare |
 | Log Loss | mn_log_loss() | Measures how "close" the predicted probability is to the actual binary label (0 or 1). Heavily penalizes being "confidently wrong" |

@@ -128,7 +128,7 @@ ggplot(v2data, aes(
     color = "grey",
     arrow = arrow(length = unit(0.2, "cm"))
   ) +
-  geom_point(aes(0, 0)) +
+  annotate(geom = "point", x =0, y = 0) +
   coord_fixed(ratio = 1, xlim = c(-2.5, 2.5), ylim = c(-2.5, 2.5))
 pc1plot <-
   ggplot(v2data |> slice(1, 101, 201, 301), aes(
@@ -261,7 +261,7 @@ pca_baked |>
   geom_autodensity(alpha = .5) +
   facet_matrix(vars(starts_with("PC")), layer.diag = 2)
 pca_loadings <-
-  pca_preped %>%
+  pca_preped |> 
   tidy(id = "pca_step")
 
 pca_loadings |>
@@ -288,9 +288,10 @@ pca_loadings |>
   geom_segment(aes(xend = PC1, yend = PC2),
     x = 0, y = 0, arrow = arrow(length = unit(0.2, "cm"))
   ) +
-  geom_text(aes(label = terms), check_overlap = TRUE, vjust = 1, hjust = 1) +
+  geom_text(aes(label = terms), check_overlap = TRUE, vjust = 1, hjust = .5) +
   theme_minimal() +
-  labs(title = "Variable Loadings Biplot (PC1 vs PC2)")
+  labs(title = "Variable Loadings Biplot (PC1 vs PC2)")+
+  scale_x_continuous(expand = expansion(.2))
 ```
 
 ## base approach

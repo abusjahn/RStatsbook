@@ -1,6 +1,5 @@
 # Boosted regression trees
 
-
 ```{r}
 #| output: false
 #| message: false
@@ -89,6 +88,7 @@ slice_sample(prediction, n = 10)
 ```{r}
 predvars <- ColSeeker(namepattern = c("_mm", "_g", "island", "sex"))
 
+set.seed(2026)
 xgb_folds <- vfold_cv(rawdata, v = 5, strata = species, repeats = 5)
 
 xgb_recipe <- recipe(rawdata) |>
@@ -118,7 +118,12 @@ xgb_workflow <- workflow() |>
   add_recipe(xgb_recipe) |>
   add_model(xgb_spec)
 
-# Fit the model to the data
+
+```
+
+### Fit the model to the data
+
+```{r}
 plan(mirai_multisession, workers = availableCores() - 2) # Use all but 2 cores for parallel processing
 xgb_results <- xgb_workflow |>
   tune_grid(
@@ -128,18 +133,32 @@ xgb_results <- xgb_workflow |>
   )
 plan(sequential)
 
-# See the top performing models
+
+```
+
+### See the top performing models
+
+```{r}
 xgb_results |>
   show_best(metric = "accuracy") |>
-  select(-.metric, -.estimator) |>
-  flextable()
+  select(-.metric, -.estimator, -n, -std_err, -.config) |>
+  rowwise() |> mutate(across(everything(), roundR)) |> ungroup() |> 
+  flextable() |> 
+  set_table_properties(width = 1, layout = "autofit")
+```
 
+### Select the best parameters based on your preferred metric
 
-# Select the best parameters based on your preferred metric
+```{r}
 xgb_best <- xgb_results |>
   select_best(metric = "accuracy")
 
-# Visualize the tuning results
+
+```
+
+### Visualize the tuning results
+
+```{r}
 xgb_results |>
   collect_metrics() |>
   filter(
@@ -187,7 +206,8 @@ test_predicted <- final_fit |>
 
 ```{r}
 yardstick::conf_mat(test_predicted, truth = species, estimate = class)
-
+caret::confusionMatrix(test_predicted$species,
+                       test_predicted$class)
 tidy_metrics <- metric_set(accuracy, kap, f_meas, roc_auc, mn_log_loss)
 tidy_metrics(test_predicted,
   truth = species, estimate = class,
@@ -209,9 +229,9 @@ test_predicted |>
 ```
 
 ```{r}
-final_fit |>
-  extract_fit_engine() |>
-  vip(geom = "col")
+# final_fit |>
+#   extract_fit_engine() |>
+#   vip(geom = "col")
 
 final_fit |>
   extract_fit_engine() |>

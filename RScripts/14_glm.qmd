@@ -87,12 +87,14 @@ plot_data <- rawdata |>
   group_by(prior_programming_experience) |> 
   mutate(
     proportion = n / sum(n),
-    odds = proportion[passed_exam == "Yes"] / proportion[passed_exam == "No"],
+    odds = proportion[passed_exam == "Yes"] / 
+      proportion[passed_exam == "No"],
     odds_label = paste0("Odds:\n", round(odds, 3))
   ) |> 
   ungroup()
 rawdata |> 
-  ggplot(aes(prior_programming_experience, fill = fct_rev(passed_exam))) +
+  ggplot(aes(prior_programming_experience, 
+             fill = fct_rev(passed_exam))) +
   geom_bar(position = "fill") +
   geom_label(
     data = plot_data |> distinct(prior_programming_experience, odds_label),
@@ -257,6 +259,13 @@ ggplot(OR_plotdata, aes(x = Predictor, y = OR)) +
 ```{r}
 rawdata$pGLM <-
   predict(logreg_out, type = "response") # predict probability 0-1
+
+rawdata |> 
+  group_by(passed_exam, pGLM >= .5) |> 
+  count()
+rawdata |> 
+  group_by(passed_exam, pGLM >= .25) |> 
+  count()
 # run ROC for cutoff
 roc_out <- roc(
   response = rawdata$passed_exam,

@@ -44,28 +44,38 @@ book:
 bibliography: references.bib
 
 format:
-  # html:
-  #   theme: cosmo
-  pdf:
-    latex-auto-install: true
-    # latex-auto-install-force: true
-    latex-auto-mk: true
-    documentclass:  scrreprt #book
+  typst:
+    documentclass: report    # Entspricht im Wesentlichen scrreprt / report in Typst
     papersize: a4
-    link-citations: true
-    linkcolor: black      # Targets internal links (TOC, Figures)
-    urlcolor: blue       # Targets web links
-    citecolor: black      # Targets bibliography links
-    code-block-bg: "#fbfbf2" 
-    monofont: "Cascadia Mono"
-    monofontoptions:
-      - Scale=0.75
-    template-partials:
-      - passoptions.latex
-    include-in-header:
-      text: |
-        \usepackage{fvextra}
-        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+    toc: true                # Inhaltsverzeichnis (falls gewollt)
+    number-sections: true    # Nummerierte Überschriften
+    # Farben für Links (in Typst standardmäßig oft über Funktionen oder Styles)
+    linkcolor: black
+    urlcolor: blue
+    # Code-Blöcke (Typst bringt hier von Haus aus ein sehr sauberes, modernes Styling mit)
+    code-block-bg: "#fbfbf2"
+    monofont: "Cascadia Mono"  # html:
+  #   theme: cosmo
+  # pdf:
+  #   latex-auto-install: true
+  #   # latex-auto-install-force: true
+  #   latex-auto-mk: true
+  #   documentclass:  scrreprt #book
+  #   papersize: a4
+  #   link-citations: true
+  #   linkcolor: black      # Targets internal links (TOC, Figures)
+  #   urlcolor: blue       # Targets web links
+  #   citecolor: black      # Targets bibliography links
+  #   code-block-bg: "#fbfbf2" 
+  #   monofont: "Cascadia Mono"
+  #   monofontoptions:
+  #     - Scale=0.75
+  #   template-partials:
+  #     - passoptions.latex
+  #   include-in-header:
+  #     text: |
+  #       \usepackage{fvextra}
+  #       \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
 
 editor: visual
 highlight-style: atom-one #github pygments

@@ -16,7 +16,8 @@ pacman::p_load(
   # emojifont,
   patchwork,
   GGally,
-  ggprism
+  ggprism,
+  ggh4x # some ggplot hacks
 )
 conflicts_prefer(
   dplyr::filter,
@@ -65,8 +66,8 @@ ggplot(
 
 ***ggplot***( #base definition of plot\
 ***data*** = mtcars, \# what data set to use\
-aes(*x* = **wt**, *y* = **mpg**)) + \# which **variables** bound to *aesthetics*\
-***geom_point***() + \# which geometric form to show the data (bar, boxplot ...)\
+aes(*x* = **wt**, *y* = **mpg**)) + \# which **variables** will be bound to ***aes**thetics*\
+***geom_point***() + \# which **geom**etric form to show the data (bar, boxplot ...)\
 ***scale\_***y_continuous(breaks = seq(0,50,2)) + \# tuning of translation of data into aesthetics\
 ***theme***(legend.position = "bottom") \# all non-data aspects of a plot
 
@@ -130,11 +131,11 @@ ggplot(data = mtcars, aes(factor(cyl), color = factor(cyl))) +
 
 ## Color systems
 
-ggplot2 comes with various color definitions, many external packages extend that. Manual definition of colors is possible as well. Redefining the mapping between data and aesthetics can be done with scale\_... functions.
+ggplot2 comes with various color definitions, many external packages extend that. Manual definition of colors is possible as well. Redefining the mapping between data and aesthetics can be done with scale\_... functions. Manual definitions of colors may use predefined color names ("red"), hexadecimal RGB definitions ("+FF0000"), or different numerical RGBs like rgb(1,0,0) or rgb(255,0,0, maxColorValue = 255)
 
 [comprehensive overview for color palettes](https://pmassicotte.github.io/paletteer_gallery/){target="_blank"}
 
-For the demonstration, I store a plot into a variable, this includes all data and plot definitions, nothing like jpg!
+For the demonstration, plot gets stored into a variable, this includes all data and plot definitions, nothing like jpg!
 
 ```{r}
 plottemp <- ggplot(data = diamonds, aes(x = clarity, fill = cut)) +
@@ -143,9 +144,7 @@ plottemp
 plottemp + scale_fill_brewer(palette = "Set2") # in-built "scale" for fill
 plottemp + scale_fill_grey(name = "cut of diamonds")
 plottemp + scale_fill_grey(name = "cut of\ndiamonds") +
-  scale_y_continuous(expand = expansion(mult = c(0, .5))) + # rescaling y
-  theme_bw(base_size = 20) +
-  theme(panel.grid.major.x = element_blank())
+  theme_bw(base_size = 20) # avoids grey background
 my_colors <- c("gold", "cornflowerblue", "violet", "#FF012F", "#01AABC")
 plottemp + scale_fill_manual(values = my_colors)
 ```
@@ -209,7 +208,7 @@ ggplot(data = mtcars, aes(x = wt, y = mpg)) +
 ggplot(mtcars, aes(x = factor(gear), y = wt)) +
   geom_boxplot() # default 1.5 IQR
 ggplot(mtcars, aes(x = factor(gear), y = wt)) +
-  geom_boxplot(coef = 3) # this extends range of expected values
+  geom_boxplot(coef = 3) # this extends range of expected values / outliers
 ggplot(mtcars, aes(
   x = factor(gear), y = wt,
   fill = factor(cyl)
@@ -262,41 +261,36 @@ ggplot(mtcars, aes(wt)) +
       mean(mtcars$wt) + 3 * sd(mtcars$wt)
     )
   )
+# simplified by package ggh4x
+ggplot(mtcars, aes(wt)) +
+  geom_density(fill = "darkorange") +
+  stat_theodensity(distri = "norm", linewidth = 1.5, color = "darkgreen") + 
+  scale_x_continuous(
+    limits = c(
+      mean(mtcars$wt) - 3 * sd(mtcars$wt),
+      mean(mtcars$wt) + 3 * sd(mtcars$wt)
+    )
+  )
+
 ```
 
 \newpage
 
 ## Exercise 1
 
-<!-- Vizualize the following: -->
-
-<!-- - count of sex within species -->
-
-<!-- - boxplot+beeswarm for weight and species -->
-
-<!-- - boxplot+beeswarm weight for species AND sex -->
-
-<!-- - scatterplot for flipper length vs. body mass -->
-
-<!-- - add a regression line to that plot -->
-
-<!-- - do the same scatterplot and regression grouped by species and sex -->
-
-<!-- - optionally, define your own colors for species (scale or name or rgb) -->
-
 In this exercise, you will practice building layers and mapping aesthetics in ggplot2 using the penguins dataset.
 
 Note: In the real world, the questions stakeholders ask rarely map 1:1 to column names. Inspect the dataset first to find the right variables!
 
-Task A: Counts & Distributions Bar Chart: Visualize the total count of penguins broken down by sex within each species.
+**Task A**: Counts & Variations Bar Chart: Visualize the total count of penguins broken down by sex within each species.
 
-Distribution (2 Variables): Create a hybrid plot combining a boxplot and a beeswarm plot (ggbeeswarm::geom_beeswarm()) to show how penguin weight is distributed across different species.
+Variability (2 Variables): Create a hybrid plot combining a boxplot and a beeswarm plot (ggbeeswarm::geom_beeswarm()) to show how penguin weight is distributed across different species.
 
-Distribution (3 Variables): Expand the previous plot to show the weight distribution across both species and sex.
+Variability (3 Variables): Expand the previous plot to show the weight distribution across both species and sex.
 
 Challenge: Pay attention to how the points sit on top of the boxplots. How can you map the aesthetics so that both variables remain visually distinct and readable?
 
-Task B: Relationships & Regression Basic Scatterplot: Create a scatterplot showing the relationship between a penguin's flipper length (x-axis) and its body mass (y-axis).
+**Task B**: Relationships & Regression Basic Scatterplot: Create a scatterplot showing the relationship between a penguin's flipper length (x-axis) and its body mass (y-axis).
 
 Add a Trendline: Add a linear regression line to the scatterplot to visualize the overall trend.
 
@@ -551,6 +545,14 @@ plot_tmp + facet_grid(
   rows = vars(gear), cols = vars(cyl),
   labeller = label_both, scales = "free_y"
 )
+
+ggplot(diamonds, aes(price)) +
+  geom_density() +
+  stat_theodensity(distri = "norm", linewidth = 0.5, color = "red") +
+  scale_x_continuous(breaks = 10^(3:5)) +
+  facet_grid(rows = vars(clarity), cols = vars(cut),
+             scales = "free",
+             margins = TRUE)
 ```
 
 \newpage
@@ -574,7 +576,7 @@ plottemp + stat_summary(color = "red")
 plottemp + stat_summary(
   fun.data = "mean_se",
   color = "red"
-)
+) # y-label still uninformative!
 plottemp + stat_summary(
   fun.data = "mean_sdl",
   fun.args = list(mult = 1),
@@ -660,7 +662,7 @@ ggplot(diamonds, aes(clarity, price)) +
       c(1, 2), c(1, 3), c(1, 4), c(1, 5),
       c(1, 6), c(1, 7), c(1, 8)
     ),
-    # map_signif_level = TRUE,
+    map_signif_level = TRUE,
     step_increase = 0.15
   ) +
   ggtitle("nominal p-values!!")
@@ -685,7 +687,7 @@ ggplot(diamonds, aes(clarity, price)) +
       c(1, 2), c(2, 3), c(3, 4), c(4, 5),
       c(5, 6), c(6, 7), c(7, 8)
     ),
-    map_signif_level = TRUE,
+    map_signif_level = markSign, # instead of TRUE: alternative function
     extend_line = -.005
   ) +
   ggtitle("nominal p-values!!") +

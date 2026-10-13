@@ -54,14 +54,48 @@ load(here("data/bookdata1.RData"))
 ggplot(rawdata, aes(x = Sex, y = `Size (cm)`)) +
   geom_beeswarm(size = 3, alpha = .5) +
   stat_summary(
-    color = "red", size = 1.2, alpha = .7,
+    color = "red", size = 1.2, alpha = .7, 
     fun.data = "mean_se", fun.args = list(mult = 2)
   ) +
   ylab("size (mean \u00B1 2*SEM)")
 
+# emphasis on the non-overlapping CIs:
+size_summary <- rawdata |>
+  group_by(Sex) |>
+  summarise(
+    mean_size = mean(`Size (cm)`, na.rm = T),
+    se_size = sd(`Size (cm)`, na.rm = T) / sqrt(n()),
+    .groups = "drop"
+  ) |>
+  mutate(
+    lower = mean_size - 2 * se_size,
+    upper = mean_size + 2 * se_size)
+  
+ggplot(rawdata, aes(x = Sex, y = `Size (cm)`)) +
+  geom_beeswarm(size = 3, alpha = .5) +
+  geom_rect(
+    data = size_summary |> 
+      mutate(x_pos = as.numeric(factor(Sex))),
+    aes(xmin = 0.75, xmax = 2.25,
+        ymin = lower, ymax = upper),
+    alpha = .1, fill = "red", color = "darkgrey",
+    inherit.aes = FALSE
+  ) +
+  geom_point(
+    data = size_summary,
+    aes(x = Sex, y = mean_size),
+    color = "red", size = 4,
+    inherit.aes = FALSE
+  ) +
+  stat_summary(
+    color = "red", size = 1.2, alpha = .7, 
+    fun.data = "mean_se", fun.args = list(mult = 2)
+  ) +
+  ylab("size (mean ± 2*SEM)")
+
 rawdata |>
   group_by(Sex) |>
-  summarize(
+  summarise(
     MeanSE = meanse(`Size (cm)`),
     SD = sd(`Size (cm)`)
   )
@@ -100,8 +134,7 @@ t_var_test(
   formula = "`Size (cm)`~Sex",
   cutoff = .1
 )
-
-
+# pairwise t-test, within subject
 print(c(
   mean(rawdata$`sysBP V0`, na.rm = T),
   mean(rawdata$`sysBP V2`, na.rm = T)
@@ -111,13 +144,14 @@ t.test(x = rawdata$`sysBP V0`,
        y = rawdata$`sysBP V2`,
        alternative = "greater", # x>y
        paired = TRUE
-) # pairwise t-test, within subject
+) 
 t.test(rawdata$`sysBP V0`,
   rawdata$`sysBP V2`,
   # alternative = "greater", # x>y
   paired = T
-)$p.value / 2 # pairwise t-test, within subject
+)$p.value / 2 
 
+# 1-sample test
 t.test(rawdata$`Size (cm)`, mu = 173)
 
 groupvars <- ColSeeker(namepattern = c("Sex", "Test"))

@@ -176,14 +176,14 @@ If you want to see / analyze / visualize the preprocessd data, you can bake the 
 rec_normalized |> 
   prep() |> 
   bake(new_data = NULL) |> 
-  summarize(across(everything(),
+  summarise(across(everything(),
                    \(x) meansd(x, roundDig = 5)))
 
 # Apply the same learned normalization to test data
 rec_normalized |> 
   prep() |> 
   bake(new_data = testdata) |> 
-  summarize(across(everything(),
+  summarise(across(everything(),
                    \(x) meansd(x, roundDig = 5)))
 ```
 

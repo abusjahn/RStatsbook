@@ -82,7 +82,7 @@ long_data <- pivot_wider(very_long_data,
 long_data
 ```
 
-Alternatively in 1 step, value column names will be extracted from parts of the wide colnames. This requires either a name pattern or a separator:
+As a better alternative with 1 step, value column names will be extracted from parts of the wide colnames. This requires either a separator (often something like "\_") or a name pattern as regex with "(" and ")" indicating extraction parts:
 
 ```{r}
 long_data <- pivot_longer(
@@ -90,10 +90,12 @@ long_data <- pivot_longer(
   cols = contains("Time"),
   names_to = c(".value", "Time"), # .value will be replaced dynamically
   # names_sep = "Time"
-  names_pattern = "(Var\\d+)(Time\\d+)"
+  names_pattern = "(Var\\d+)Time(\\d+)"
 )
 long_data
 ```
+
+In this example, (Var\\d+) finds Var1, Var2, and Var3; they go into .value and will be used as the new colnames. Times serves as a separator, (\\d+) finds 1 and 2, they go into column Time.
 
 ## Example 3: long to wide
 
@@ -102,7 +104,7 @@ wide_again_data <- pivot_wider(
   data = long_data,
   names_from = Time,
   values_from = Var1:Var2,
-  names_glue = "{.value}@{Time}"
+  names_glue = "{.value}@{Time}" #cosmetic change from Var1_1 to Var1@Time1
 )
 wide_again_data
 ```
@@ -155,7 +157,7 @@ rawdata_long <-
   pivot_longer(
     data = rawdata,
     cols = contains("V"),
-    names_to = c(
+    names_to = c(          # splits weight_V1 into weight and V1
       "what_was_measured",
       "Visit"
     ),

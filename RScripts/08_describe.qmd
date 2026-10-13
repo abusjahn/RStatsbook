@@ -28,13 +28,14 @@ load(here("data/bookdata1.RData"))
 ## Graphical exploration should start before descriptive statistics
 
 ```{r}
-ggplot(rawdata, aes(`sysBP V0`, `diaBP V0`)) +
-  geom_point() +
-  geom_smooth(se = F) +
-  geom_smooth(
-    method = "lm", color = "red",
-    fill = "gold", alpha = .15
-  )
+ggplot(rawdata, aes(Testmedication, `sysBP V0`, color = Sex)) +
+  stat_summary(
+    fun.data = mean_cl_normal,
+    position =  position_dodge(width = .15)) +
+  stat_summary(geom = "line", fun = \(x) mean(x, na.rm = TRUE),
+               aes(group = Sex), linetype = 3,
+               position =  position_dodge(width = .15)) +
+  ylab("systolic BP (mean \u00b1 95% CI)")
 ```
 
 ## Gaussian variables
@@ -174,7 +175,7 @@ rawdata |>
 
 ```{r}
 rawdata |>
-  group_by(Testmedication, Sex) |>
+  group_by(Testmedication, Sex) |> # describe subgroups
   summarise(
     WeightSummary = meansd(`Weight (kg)`, add_n = TRUE),
     .groups = "drop"
@@ -184,11 +185,11 @@ rawdata |>
 
 rawdata |>
   group_by(Sex) |>
-  summarize(across(gaussvars$names,
-    .fns = \(x) meansd(x, range = T,
+  summarise(across(gaussvars$names,
+    .fns = \(x) meansd(x, range = TRUE,
                     add_n = T, rangesep = " / ")
   )) |>
-  pivot_longer(
+  pivot_longer( # cosmetics
     cols = -Sex,
     names_to = "Measure"
   ) |>
@@ -198,7 +199,7 @@ rawdata |>
 
 rawdata |>
   group_by(Sex) |>
-  summarize(across(gaussvars$names,
+  summarise(across(gaussvars$names,
     .fns = list(
       n = \(x) n(),
       Mean = \(x) mean(x, na.rm = TRUE) |>
@@ -220,7 +221,6 @@ rawdata |>
     names_glue = "{stat} ({Sex})",
     values_from = value
   ) |>
-  #  select(-starts_with("n")) |>
   flextable() |>
   set_table_properties(width = 1, layout = "autofit")
 
@@ -234,7 +234,6 @@ compare2numvars(
   indep_var = "Sex",
   gaussian = TRUE
 ) |>
-  # select(-desc_all, -p) |>
   rename(overall = desc_all) |>
   rename_with(.fn = \(x) str_remove(x, "Sex ")) |>
   rename_with(.cols = "p", .fn = \(x) paste(x, "- value")) |>

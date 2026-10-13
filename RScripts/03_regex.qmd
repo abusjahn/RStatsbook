@@ -26,6 +26,8 @@ Basic functions like `grep()` or `gsub()` are difficult to use in pipelines and 
 
 ## Some basic examples:
 
+### Finding something
+
 ```{r}
 pacman::p_load(tidyverse)
 starttext <- "Did grandma eat all the pizza?"
@@ -35,7 +37,10 @@ str_detect(string = starttext, pattern = "e.+a\\?$")
 str_view(string = starttext, pattern = "e.+a\\?$")
 str_detect(string = starttext, pattern = "grand[mp]a")
 str_view(string = starttext, pattern = "grand[mp]a")
+```
 
+### Replacing something
+```{r}
 str_replace(
   string = starttext,
   pattern = "ma",
@@ -106,11 +111,12 @@ testset2 <- c(
   "Meier", "Mayer", "Maier", "Meyer", "Mayr", "Hans Meier",
   "Maya", "Mayor", "Faltermeyer", "Meierhoven"
 )
-# find all variations of the name "Meier" (not Maya or Mayor etc)
+# find all variations of the name "Meier" (not Maya or Mayor etc given in 2nd row)
 
 testset3 <- c("1980_12_30", "13.04.2005", "2005/04/25", "24121990")
 # transform into YYYY-MM-DD
 
+# advanced!!
 testset4 <- c("pw2000", "That1sb3tt3r", "M@kesSense?", "NoDigits@this1")
 # test pwd strength, rules: Upper, lower, special char, number, min 8 char long
 ```

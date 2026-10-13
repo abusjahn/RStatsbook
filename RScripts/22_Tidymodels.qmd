@@ -421,7 +421,7 @@ What the Output Table Means
 When this code works, you will see a table (a `tibble`) with several columns. Here is how to read them:
 
 |  |  |
-|------------------------------------|------------------------------------|
+|----|----|
 | **Column** | **What it tells you** |
 | **`wflow_id`** | Which model/recipe combo this is (e.g., `base_rf` for Random Forest). |
 | **`.metric`** | What is being measured (`accuracy` or `roc_auc`). |

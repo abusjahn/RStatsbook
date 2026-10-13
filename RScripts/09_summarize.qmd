@@ -10,7 +10,7 @@ pacman::p_load(
 1 variable / 1 function / no groups
 
 ```{r}
-summarize(
+summarise(
   .data = mtcars,
   MeanSD = meansd(mpg)
 ) |>
@@ -22,7 +22,7 @@ summarize(
 ```{r}
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     MeanSD = meansd(mpg),
     .groups = "drop"
   ) |>
@@ -30,7 +30,7 @@ mtcars |>
 # groups in columns
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     MeanSD = meansd(mpg),
     .groups = "drop"
   ) |>
@@ -46,7 +46,7 @@ mtcars |>
 1 variable / 2 functions / no groups
 
 ```{r}
-summarize(
+summarise(
   .data = mtcars,
   `MeanSD mpg` = meansd(mpg, roundDig = 3),
   `MedianQuartiles mpg` = median_quart(mpg, roundDig = 3)
@@ -60,7 +60,7 @@ summarize(
 ```{r}
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     `MeanSD mpg` = meansd(mpg),
     `MedianQuartiles mpg` = median_quart(mpg),
     .groups = "drop"
@@ -70,7 +70,7 @@ mtcars |>
 # groups in columns
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     `MeanSD mpg` = meansd(mpg),
     `MedianQuartiles mpg` = median_quart(mpg),
     .groups = "drop"
@@ -93,7 +93,7 @@ mtcars |>
 ```{r}
 # no function arguments
 mtcars |>
-  summarize(across(
+  summarise(across(
     .cols = c(mpg, disp),
     .fns = meansd
   )) |>
@@ -101,7 +101,7 @@ mtcars |>
   set_table_properties(width = .7, layout = "autofit")
 # with function arguments
 mtcars |>
-  summarize(across(
+  summarise(across(
     .cols = c(mpg, disp),
     .fns = \(x) meansd(x, add_n = TRUE, range = TRUE)
   )) |>
@@ -110,7 +110,7 @@ mtcars |>
 
 # Variables in rows
 mtcars |>
-  summarize(across(c(mpg, disp),
+  summarise(across(c(mpg, disp),
     .fns = \(x) meansd(x, add_n = TRUE)
   )) |>
   pivot_longer(
@@ -127,7 +127,7 @@ mtcars |>
 ```{r}
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     across(
       .cols = c(mpg, disp),
       .fns = \(x) meansd(x, add_n = TRUE)
@@ -140,7 +140,7 @@ mtcars |>
 # Variables in rows
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     across(
       c(mpg, disp),
       \(x) meansd(x, add_n = TRUE)
@@ -166,7 +166,7 @@ mtcars |>
 ```{r}
 # with/without function arguments
 mtcars |>
-  summarize(across(
+  summarise(across(
     c(mpg, disp),
     .fns = list(
       MeanSD = \(x) meansd(x,
@@ -181,7 +181,7 @@ mtcars |>
 
 # Variables in rows
 mtcars |>
-  summarize(across(
+  summarise(across(
     c(mpg, disp),
     .fns = list(
       MeanSD = \(x) meansd(x,
@@ -205,7 +205,7 @@ mtcars |>
 # with/without function arguments
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     across(
       c(mpg, disp),
       .fns = list(
@@ -213,8 +213,8 @@ mtcars |>
           add_n = TRUE
         ),
         MedianQuart = median_quart
-      )
-    ),
+      ),
+      .names = "{.col}_{.fn}"), # default, but good to know!
     .groups = "drop"
   ) |>
   flextable() |>
@@ -223,7 +223,7 @@ mtcars |>
 # Variables in rows, groups in columns
 mtcars |>
   group_by(am) |>
-  summarize(
+  summarise(
     across(
       c(mpg, disp),
       .fns = list(
@@ -247,7 +247,8 @@ mtcars |>
     names_vary = "slowest"
   ) |>
   flextable() |>
-  separate_header(split = "[:_]") |>
+  separate_header(split = "[:_]") |> # cosmetics for header
+  vline(j = 3) |> # make group-split more obvious
   set_table_properties(width = 1, layout = "autofit")
 
 # pivoting to have variables in rows V2
@@ -256,7 +257,7 @@ mtcars |>
 result_long <-
   mtcars |>
   group_by(am) |>
-  summarize(across(
+  summarise(across(
     c(mpg, disp),
     .fns = list(
       MeanSD = \(x) meansd(x,
@@ -273,7 +274,8 @@ result_long <-
   )
 result_long |>
   flextable() |>
-  merge_v(j = 1) |>
+  merge_v(j = 1) |> # remove double entries
+  hline(i = 2) |> # make group-split obvious
   set_table_properties(width = 1, layout = "autofit")
 
 result <-

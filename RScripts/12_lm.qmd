@@ -32,16 +32,16 @@ conflicts_prefer(
 Data are read from an SPSS file. Numeric column Passage is mutated into a factor as Passage_F, this is necessary for group comparisons in ANOVA. The call to here() expands the path to a file from the project directory to the full system path.
 
 ```{r}
-rawdata <- foreign::read.spss(
+rawdata <- foreign::read.spss( # the acual import
   file = here("data/Zellbeads.sav"),
   use.value.labels = T, to.data.frame = T
 ) |>
-  as_tibble() |>
-  dplyr::select(-ZahlZellen) |>
-  rename(Growth = Wachstum, Treatment = Bedingung) |>
-  mutate(
-    Passage_F = factor(Passage),
-    Treatment = fct_recode(Treatment,
+  as_tibble() |> # adjustment of structure: data-frame to tibble
+  dplyr::select(-ZahlZellen) |> # unselecting unused cols
+  rename(Growth = Wachstum, Treatment = Bedingung) |> # cosmetic changes
+  mutate(  # adjustment of content :
+    Passage_F = factor(Passage),  # class change
+    Treatment = fct_recode(Treatment, # factor-level change
       Control = "Kontrolle"
     )
   )
@@ -60,9 +60,6 @@ with(rawdata, interaction.plot(
   ylab = "Growth", xlab = "Passage",
   trace.label = "Treatment"
 ))
-# p1<-ggplot(rawdata,aes(x = Passage,y = Growth))+
-#    stat_summary(geom = 'line',fun = 'mean',aes(color = Treatment))+
-#    stat_summary(geom = 'line',fun = 'mean')
 p1 <- ggplot(rawdata, aes(x = Passage, y = Growth)) +
   stat_summary(
     geom = "line", fun = "mean",
@@ -118,13 +115,14 @@ tidy(regressionOut)
 (anova_out <- anova(regressionOut))
 anova_out$`Pr(>F)` #|> na.omit()
 tidy(anova_out)
-# summary(regressionOut)
+
+summary(regressionOut)
 # str(regressionOut)
 ```
 
 #### Adjusting
 
-To take out the variance due to Passage effects, we can use the residuals and shift them to the original mean:
+To take out the variance due to Passage effects (passage-adjusted growth), we can use the residuals and shift them to the original mean:
 
 ```{r}
 rawdata <-

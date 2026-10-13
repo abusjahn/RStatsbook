@@ -2,6 +2,8 @@
 
 This is going to be the boring technical stuff... We'll get to the more interesting topics in the next chapters.
 
+As a general structure, I'll try to make a distinction between more basic solutions to a task and rather 'cosmetic' touches.
+
 ## Script preparation / basic setup
 
 At the beginning of (almost) every script we define packages to be used. This could be done by either
@@ -65,7 +67,7 @@ There are rules for valid syntactical names:
 To store some value into a variable, use the assignment operator **\<-** ; while it possible to use \*\* = \*\* or **-\>** , this is rather unusual. Assignments are silent, so either a call of the variable, or `print()` / `cat()` function are needed to inspect. Alternatively, put brackets around assignment: (varname \<- content).
 
 ```{r}
-test <- 1
+test <- 1 # putting spaces around symbols like <- is good style
 test1 <- 1
 # 1test <- 2 # wrong, would result in error
 `1test` <- 2 # this would be possible
@@ -112,7 +114,7 @@ class(char_var)
 typeof(char_var)
 character(length = 5)
 logical_var <- TRUE # can be abbreviated to T
-logical_var2 <- FALSE # or F, seen as bad style
+logical_var2 <- FALSE # or F, but seen as bad style
 class(logical_var)
 typeof(logical_var)
 logical(length = 3)
@@ -184,7 +186,8 @@ as.logical(c(0, 1, 5, -7.45678)) # c() combines values into a vector
 
 ## Factors
 
-Factor: categorical variables with limited sets of distinct values (called levels), internally stored as integers. Everything intended to group subjects or representing categories (like species, tissue type, treatment) should be stored as factor for efficient storage and proper statistical handling in R. In Python, Pandas Categorical and dictionaries are related constructs. Factors can be ordered, but beware: this changes behavior in analyses!
+Factors are categorical variables with limited sets of distinct values (called levels).\
+**The "Integer with a Name Tag" Concept:** Think of it this way: R stores factors internally as numbers (integers), but it "tags" these numbers with meaningful labels (the "name tags"). For example, R might store "Male" as `1` and "Female" as `2`, but it always displays "Male" and "Female" to you. This saves memory and makes computations efficient, while keeping your data interpretable. Everything intended to group subjects or representing categories (like species, tissue type, treatment) should be stored as factor for efficient storage and proper statistical handling in R. In Python, Pandas Categorical and dictionaries are related constructs. Factors can be ordered, but beware: this changes behavior in analyses!
 
 Package forcats provides nice tools for factors!
 
@@ -208,8 +211,6 @@ factor_var2
 
 **Scenario:** Beyond just individual measurements, biologists often need to categorize samples based on different experimental conditions, genetic backgrounds, or developmental stages. R uses a special data type called **factors** for this. Factors are crucial because they tell R that your data belongs to discrete groups, which is very important for statistical analysis!
 
-**The "Integer with a Name Tag" Concept:** Think of it this way: R stores factors internally as numbers (integers), but it "tags" these numbers with meaningful labels (the "name tags"). For example, R might store "Male" as `1` and "Female" as `2`, but it always displays "Male" and "Female" to you. This saves memory and makes computations efficient, while keeping your data interpretable.
-
 **Learning Objectives:**
 
 - Understand factors as a way to store **categorical data**.
@@ -226,7 +227,7 @@ factor_var2
 
 1.  **Categorizing by Treatment Group (Unordered Factor):**
 
-    - Imagine your samples are from different treatment groups: "Control", "Drug A", "Drug B".
+    - Imagine your samples are from different treatments: "Control", "Drug A", "Drug B".
 
     - First, create a *character variable* for the treatment of one sample
 
@@ -410,7 +411,7 @@ mtcars |> # inbuild example data, use F1!
   )) |> # #change into better class
   filter(vs == 1) |> # filter out V-shaped
   group_by(am) |> # ask for grouped analysis
-  summarize(across(
+  summarise(across(
     .cols = c(wt, mpg, qsec, disp),
     .fns = meansd
   )) |>
@@ -842,7 +843,7 @@ t_out |> pluck("p.value")
 
 ### Loops
 
-Repetitive tasks like computation of descriptive statistics over many variables or repeated simulations of data can be declared inside of a loop. There are functions (like summarize(across(...))) that create those repetitions internally, but often doing this explicitly improves readability or helps solving various tasks like describing AND plotting data.
+Repetitive tasks like computation of descriptive statistics over many variables or repeated simulations of data can be declared inside of a loop. There are functions (like summarise(across(...))) that create those repetitions internally, but often doing this explicitly improves readability or helps solving various tasks like describing AND plotting data.
 
 #### for-loop
 
@@ -1026,7 +1027,7 @@ paste0(
 
 #### 1. Analyzing Gene Expression Data (Using `for` loop and `if/else`)
 
-**Scenario:** You have a dataset of gene expression levels (e.g., RNA-seq counts) for several genes across different samples. You want to identify genes that are either highly expressed or lowly expressed based on a threshold.
+**Scenario:** You have a data-set of gene expression levels (e.g., RNA-seq counts) for several genes across different samples. You want to identify genes that are either highly expressed or lowly expressed based on a threshold.
 
 **Task:**
 

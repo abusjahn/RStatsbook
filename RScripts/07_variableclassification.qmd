@@ -3,7 +3,7 @@
 ```{r}
 #| output: false
 #| message: false
-pacman::p_load(conflicted, wrappedtools, tidyverse, here)
+pacman::p_load(conflicted, wrappedtools, tidyverse, here, ggh4x)
 conflicts_prefer(dplyr::filter)
 rawdata <- readRDS(here("data/rawdata.rds"))
 ```
@@ -20,8 +20,8 @@ Other tests would be e.g. Anderson-Darling, and the Cramer-von Mises test, see p
 
 ```{r}
 ggplot(rawdata, aes(`Size (cm)`)) +
-  geom_density(fill = "darkorange") +
-  stat_function(
+  geom_density(fill = "darkorange") + # the actual density plot
+  stat_function( #theoretical distribution as comparison
     fun = dnorm,
     args = list(
       mean = mean(rawdata$`Size (cm)`),
@@ -29,8 +29,8 @@ ggplot(rawdata, aes(`Size (cm)`)) +
     ),
     color = "darkgreen",
     linewidth = 1.2
-  ) +
-  scale_x_continuous(
+  ) + 
+  scale_x_continuous( # cosmetics on axis
     limits = c(
       mean(rawdata$`Size (cm)`) - 3 * sd(rawdata$`Size (cm)`),
       mean(rawdata$`Size (cm)`) + 3 * sd(rawdata$`Size (cm)`)
@@ -40,14 +40,18 @@ ggplot(rawdata, aes(`Size (cm)`)) +
 ks.test(
   x = rawdata$`Size (cm)`,
   "pnorm",
-  mean = mean(rawdata$`Size (cm)`,
+  mean = mean(rawdata$`Size (cm)`, # essential!
     na.rm = TRUE
   ),
-  sd = sd(rawdata$`Size (cm)`,
+  sd = sd(rawdata$`Size (cm)`,  
     na.rm = TRUE
   )
 )
 
+```
+If calling ks.test with defaults: this is what you'd be testing:
+
+```{r}
 ggplot(rawdata, aes(`Size (cm)`)) +
   geom_density(fill = "darkorange") +
   stat_function(
@@ -115,7 +119,7 @@ ggplot(rawdata, aes(`Size (cm)`)) +
 # and no hard-coded +/-3 SD limits needed.
 pacman::p_load(ggh4x)
 ggplot(rawdata, aes(`Size (cm)`, colour = Sex, fill = Sex)) +
-  geom_density(alpha = .5, colour = NA) +
+  geom_density(alpha = .25) +
   stat_theodensity(distri = "norm", linewidth = 1.2)
 
 ```
@@ -129,7 +133,7 @@ rawdata |>
   ksnormal()
 rawdata |>
   group_by(Sex) |>
-  summarize(
+  summarise(
     n = n(),
     p_KS = ksnormal(`Size (cm)`, lillie = FALSE),
     p_KSlilli = ksnormal(`Size (cm)`),
@@ -203,9 +207,6 @@ creates an unnamed / anonymous function. Anonymous functions let you define a qu
 `across()` iterates over selected columns and applies a function to each. When you just need mean or sum, you may pass the function directly. But when you need extra arguments, an anonymous function wraps it.\
 The `\(x)` form is now preferred over \~mean(.x,...) because it's plain R, works without loading purrr, and makes the argument explicit — which avoids confusion when functions have multiple arguments.
 
-```{r}
-
-```
 
 Loop Version 2:
 
@@ -218,17 +219,16 @@ resulttable2 <- tibble(
   .rows = 0
 )
 for (var_i in numvars$names) {
-  ks_tmp <- by(
-    data = rawdata[[var_i]],
-    INDICES = rawdata$Testmedication,
-    FUN = ksnormal,
-    lillie = FALSE
-  )
+  ks_tmp <- 
+    rawdata |> 
+    group_by(Testmedication) |> 
+    summarise(pKS = ksnormal(.data[[var_i]],
+                             lillie = FALSE))
   resulttable2 <- add_row(resulttable2,
     Measures = var_i,
-    pKS_Placebo = ks_tmp[[1]] |>
+    pKS_Placebo = ks_tmp$pKS[1] |>
       formatP(mark = TRUE), # added rounding/formatting
-    pKS_Verum = ks_tmp[[2]] |>
+    pKS_Verum = ks_tmp$pKS[2] |>
       formatP(mark = TRUE)
   )
 }
@@ -242,7 +242,7 @@ across() - Version:
 ```{r}
 resulttable1a <-
   rawdata |>
-  summarize(across(
+  summarise(across(
     .cols = # where(is.numeric),
       all_of(numvars$names[-(1:4)]),
     .fns = list(
@@ -276,15 +276,15 @@ resulttable2a <-
   #                                  0~"Placebo",
   #                                  1~"Verum")) |>
   group_by(Testmedication) |>
-  summarize(across(all_of(numvars$names[-(1:4)]),
-    .fns = \(x) ksnormal(x, lillie = FALSE) |>
+  summarise(across(all_of(numvars$names[-(1:4)]),
+    .fns = \(x) ksnormal(x, lillie = FALSE) |> # single function
       formatP(mark = TRUE)
   )) |>
-  pivot_longer(
+  pivot_longer( # cosmetic changes to put vars in rows
     cols = -Testmedication,
     names_to = "Measure"
   ) |>
-  pivot_wider(
+  pivot_wider( # and grups in columns
     names_from = Testmedication,
     values_from = value
   )
@@ -294,8 +294,8 @@ head(resulttable2)
 resulttable3 <-
   rawdata |>
   group_by(Testmedication) |>
-  summarize(across(all_of(numvars$names[-(1:4)]),
-    .fns = list(
+  summarise(across(all_of(numvars$names[-(1:4)]),
+    .fns = list( # list of functions
       Mean = \(x) mean(x, na.rm = TRUE) |>
         roundR(5),
       Median = \(x) median(x, na.rm = TRUE) |>
@@ -365,7 +365,7 @@ rawdata <- mutate(
 )
 ```
 
-To make data accessible for other scripts, data can be saved:
+To make data accessible for other scripts, data will be saved as a binary memory dump:
 
 ```{r}
 save(rawdata,

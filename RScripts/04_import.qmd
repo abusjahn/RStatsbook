@@ -28,7 +28,7 @@ View(Medtest_e)
 ### Tidy Excel files
 
 ```{r}
-rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |>
+rawdata <- read_excel(path = here("data/Medtest_e.xlsx")) |> # cosmetic changes beyond importing:
   rename_with(.fn = \(x) str_replace_all(x,
     pattern = "_",
     replacement = " "

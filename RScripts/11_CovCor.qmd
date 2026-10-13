@@ -4,7 +4,7 @@
 pacman::p_load(
   conflicted, tidyverse, wrappedtools, here,
   coin, ggsignif, patchwork, ggbeeswarm,
-  flextable, corrr
+  flextable, corrr, correlation, corrplot
 )
 load(here("data/bookdata1.RData"))
 ```
@@ -49,6 +49,8 @@ cor_out <-
     split = TRUE, sign_symbol = FALSE
   )
 cor_out
+
+correlation::correlation(rawdata |> select(contains("Mri")))
 ```
 
 ## Vizualizations
@@ -60,11 +62,12 @@ wrappedtools::ggcormat(
   cor_mat = cor_out$corout,
   maxpoint = 15
 )
-wrappedtools::ggcormat(
-  cor_mat = cor_out$corout,
-  p_mat = cor_out$pout,
-  maxpoint = 20
-)
+corrplot::corrplot(cor(rawdata |> select(contains("Mri")),
+                       use = "pairwise.complete.obs"
+))
+corrplot::corrplot.mixed(cor(rawdata |> select(contains("Mri")),
+                       use = "pairwise.complete.obs"
+))
 ```
 
 ```{r}

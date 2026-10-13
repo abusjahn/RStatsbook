@@ -159,17 +159,17 @@ for (move_i in seq_len(nrow(moves_from_to))) {
 moves_to <- moves_from_to |>
   filter(to != from) |>
   group_by(to) |>
-  summarize(moves_to = sum(count)) |>
+  summarise(moves_to = sum(count)) |>
   mutate(County = LETTERS[to])
 moves_from <- moves_from_to |>
   filter(to != from) |>
   group_by(from) |>
-  summarize(moves_from = sum(count)) |>
+  summarise(moves_from = sum(count)) |>
   mutate(County = LETTERS[from])
 moves_stay <- moves_from_to |>
   filter(to == from) |>
   group_by(from) |>
-  summarize(moves_stay = sum(count)) |>
+  summarise(moves_stay = sum(count)) |>
   mutate(County = LETTERS[from])
 moves_from_to_stay <-
   full_join(moves_from, moves_to) |>
